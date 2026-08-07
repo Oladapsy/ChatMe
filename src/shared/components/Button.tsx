@@ -1,0 +1,96 @@
+import React from "react";
+import {
+  TouchableOpacity,
+  TouchableOpacityProps,
+  StyleSheet,
+  ActivityIndicator,
+  ViewStyle,
+  useColorScheme,
+} from "react-native";
+import { Colors } from "@/shared/constants/colors";
+import { Typography } from "@/shared/components/Typography";
+
+export type ButtonVariant = "filled" | "outlined" | "text";
+
+export interface ButtonProps extends TouchableOpacityProps {
+  title: string;
+  variant?: ButtonVariant;
+  loading?: boolean;
+  disabled?: boolean;
+  fullWidth?: boolean;
+  style?: ViewStyle | ViewStyle[];
+  onPress: () => void;
+}
+
+export function Button({
+  title,
+  variant = "filled",
+  loading = false,
+  disabled = false,
+  fullWidth = true,
+  style,
+  onPress,
+  ...props
+}: ButtonProps) {
+  const scheme = useColorScheme();
+  const themeColors = Colors[scheme === "dark" ? "dark" : "light"];
+
+  const isFilled = variant === "filled";
+  const isOutlined = variant === "outlined";
+
+  // Determine dynamic background and text colors based on variant & state
+  const backgroundColor = isFilled ? themeColors.primary : "transparent";
+
+  const borderColor = isOutlined ? themeColors.primary : "transparent";
+
+  const textColor = isFilled ? themeColors.text : themeColors.textSecondary;
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      disabled={disabled || loading}
+      style={[
+        styles.button,
+        fullWidth && styles.fullWidth,
+        {
+          backgroundColor,
+          borderColor,
+          borderWidth: isOutlined ? 1.5 : 0,
+        },
+        (disabled || loading) && styles.disabled,
+        style,
+      ]}
+      {...props}
+    >
+      {loading ? (
+        <ActivityIndicator color={textColor} size="small" />
+      ) : (
+        <Typography
+          variant="body"
+          weight="semibold"
+          color={textColor}
+          align="center"
+        >
+          {title}
+        </Typography>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  button: {
+    height: 52,
+    borderRadius: 26,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  fullWidth: {
+    width: "100%",
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+});
