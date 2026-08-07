@@ -1,6 +1,6 @@
 export const Colors = {
   light: {
-    primary: '#52B788', // ChatMe Emerald Green
+    primary: '#52B788',
     gradient: ['#F5FEF8', '#F8FFFA', '#FFFFFF'] as [string, string, ...string[]],
     background: '#FFFFFF',
     cardBackground: '#FFFFFF',
@@ -11,7 +11,7 @@ export const Colors = {
   dark: {
     primary: '#52B788',
     gradient: ['#081C2C', '#081C2C', '#081C2C'] as [string, string, ...string[]],
-    background: '#081C2C', // Dark Navy background from mockup
+    background: '#081C2C',
     cardBackground: '#0F283D',
     text: '#FFFFFF',
     textSecondary: '#9CA3AF',
