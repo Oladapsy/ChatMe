@@ -8,7 +8,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { Colors } from "@/shared/constants/colors";
-import { Typography } from "@/shared/components/Typography";
+import { Typography, TypographyWeight } from "@/shared/components/Typography";
 
 export type ButtonVariant = "filled" | "outlined" | "text";
 
@@ -18,6 +18,7 @@ export interface ButtonProps extends TouchableOpacityProps {
   loading?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
+  textWeight?: TypographyWeight; // Added textWeight prop
   style?: ViewStyle | ViewStyle[];
   onPress: () => void;
 }
@@ -28,6 +29,7 @@ export function Button({
   loading = false,
   disabled = false,
   fullWidth = true,
+  textWeight = "semibold",
   style,
   onPress,
   ...props
@@ -43,7 +45,9 @@ export function Button({
 
   const borderColor = isOutlined ? themeColors.primary : "transparent";
 
-  const textColor = isFilled ? themeColors.text : themeColors.textSecondary;
+  const textColor = isFilled
+    ? themeColors.buttonText
+    : themeColors.textSecondary;
 
   return (
     <TouchableOpacity
@@ -68,7 +72,7 @@ export function Button({
       ) : (
         <Typography
           variant="body"
-          weight="semibold"
+          weight={textWeight}
           color={textColor}
           align="center"
         >
@@ -81,8 +85,8 @@ export function Button({
 
 const styles = StyleSheet.create({
   button: {
-    height: 52,
-    borderRadius: 26,
+    height: 56,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
