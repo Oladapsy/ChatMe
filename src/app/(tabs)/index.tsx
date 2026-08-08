@@ -25,6 +25,8 @@ export default function HomeScreen() {
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
+  const topHeaderBg = isDark ? "#163043" : themeColors.primary;
+
   const [showPinModal, setShowPinModal] = useState(true);
   const [chats, setChats] = useState<Chat[]>(MOCK_CHATS);
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,14 +36,14 @@ export default function HomeScreen() {
   const filteredChats = useMemo(() => {
     if (!searchQuery.trim()) return chats;
     return chats.filter((chat) =>
-      chat.name.toLowerCase().includes(searchQuery.toLowerCase())
+      chat.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [chats, searchQuery]);
 
   // Selection toggle logic
   const handleToggleSelect = (id: string) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -52,8 +54,8 @@ export default function HomeScreen() {
       prev.map((item) =>
         targetIds.includes(item.id)
           ? { ...item, isPinned: !item.isPinned }
-          : item
-      )
+          : item,
+      ),
     );
     setSelectedIds([]);
   };
@@ -64,8 +66,8 @@ export default function HomeScreen() {
       prev.map((item) =>
         targetIds.includes(item.id)
           ? { ...item, isMuted: !item.isMuted }
-          : item
-      )
+          : item,
+      ),
     );
     setSelectedIds([]);
   };
@@ -84,7 +86,9 @@ export default function HomeScreen() {
 
   return (
     <MySafeAreaView color={themeColors.primary}>
-      <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <View
+        style={[styles.container, { backgroundColor: themeColors.background }]}
+      >
         {/* Dynamic Header Section */}
         <HeaderSection
           selectedCount={selectedIds.length}
