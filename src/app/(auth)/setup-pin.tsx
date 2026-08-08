@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { StyleSheet, View, TouchableOpacity, useColorScheme } from "react-native";
+import { StyleSheet, View, useColorScheme } from "react-native";
 import { useRouter } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
+import { BackButton } from "@/shared/components/BackButton";
 import Keypad from "@/shared/components/Keypad";
 import { Colors } from "@/shared/constants/colors";
-import ChevronLeft from "@/assets/icons/auth/chevron-left.svg";
 
 const PIN_LENGTH = 4;
 
@@ -26,7 +26,7 @@ export default function SetupPinScreen() {
       if (updatedPin.length === PIN_LENGTH) {
         setTimeout(() => {
           console.log("PIN Created:", updatedPin.join(""));
-        //   router.replace("/(tabs)");
+          router.replace("/(tabs)");
         }, 300);
       }
     }
@@ -39,25 +39,11 @@ export default function SetupPinScreen() {
   return (
     <MySafeAreaView color={themeColors.background}>
       <View style={styles.container}>
-        {/* Header */}
+        {/* Header Section */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={[
-              styles.backButton,
-              {
-                borderColor: isDark ? "#2D4B63" : "#E5E7EB",
-                backgroundColor: isDark ? "#1F3C51" : "#FFFFFF",
-              },
-            ]}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-          >
-            {ChevronLeft ? (
-              <ChevronLeft width={20} height={20} color={themeColors.text} />
-            ) : (
-              <Typography>←</Typography>
-            )}
-          </TouchableOpacity>
+          <View style={styles.backButtonWrapper}>
+            <BackButton />
+          </View>
 
           <Typography
             variant="h1"
@@ -79,7 +65,7 @@ export default function SetupPinScreen() {
             Make sure the code is safe and no one{"\n"}else knows.
           </Typography>
 
-          {/* 4 Pin Indicator Dots */}
+          {/* 4 PIN Indicator Dots */}
           <View style={styles.dotContainer}>
             {Array.from({ length: PIN_LENGTH }).map((_, index) => {
               const isFilled = index < pin.length;
@@ -94,9 +80,8 @@ export default function SetupPinScreen() {
                         : "transparent",
                       borderColor: isFilled
                         ? themeColors.primary
-                        : isDark
-                        ? "#2D4B63"
-                        : "#E5E7EB",
+                        : themeColors.border ||
+                          (isDark ? "#2D4B63" : "#E5E7EB"),
                     },
                   ]}
                 />
@@ -125,13 +110,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     alignItems: "center",
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  backButtonWrapper: {
     alignSelf: "flex-start",
     marginBottom: 32,
   },
