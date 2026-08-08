@@ -1,27 +1,26 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import {
-  StyleSheet,
-  View,
-  TextInput,
-  TouchableOpacity,
-  Keyboard,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
-  useColorScheme,
-  NativeSyntheticEvent,
-  TextInputKeyPressEventData,
+    Keyboard,
+    KeyboardAvoidingView,
+    NativeSyntheticEvent,
+    Platform,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    useColorScheme,
+    View,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
 
+import { BackButton } from "@/shared/components/BackButton";
+import { Button } from "@/shared/components/Button";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
-import { Button } from "@/shared/components/Button";
-import { BackButton } from "@/shared/components/BackButton";
 import { Colors } from "@/shared/constants/colors";
 
 const OTP_LENGTH = 4;
-const RESEND_TIMER = 60;
+const RESEND_TIMER = 30;
 
 export default function OtpVerificationScreen() {
   const router = useRouter();
@@ -68,9 +67,9 @@ export default function OtpVerificationScreen() {
     }
   };
 
-  // Handle backspace navigation between boxes
+  // Handle backspace navigation between boxes using inline generic event typing
   const handleKeyPress = (
-    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
+    e: NativeSyntheticEvent<{ key: string }>,
     index: number,
   ) => {
     if (e.nativeEvent.key === "Backspace" && !otp[index] && index > 0) {

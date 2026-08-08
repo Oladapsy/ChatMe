@@ -29,7 +29,7 @@ export function BackButton({ onPress }: BackButtonProps) {
         styles.container,
         {
           borderColor: themeColors.border,
-          backgroundColor: themeColors.card,
+          backgroundColor: themeColors.cardBackground,
         },
       ]}
       onPress={handlePress}
