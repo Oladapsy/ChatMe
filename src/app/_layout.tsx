@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { Colors } from "@/shared/constants/colors";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Prevent auto-hiding until fonts are fully loaded
 SplashScreen.preventAutoHideAsync();
@@ -36,20 +37,21 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: themeColors.background },
-      }}
-    >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="onboarding" />
-      <Stack.Screen name="(auth)/verify-otp" />
-      <Stack.Screen name="(auth)/setup-profile" />
-      <Stack.Screen name="(auth)/upload-photo" />
-      <Stack.Screen name="(auth)/setup-pin" />
-      <Stack.Screen name="(tabs)" />
-    </Stack>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: themeColors.background },
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="onboarding" />
+        <Stack.Screen name="(auth)/verify-otp" />
+        <Stack.Screen name="(auth)/setup-profile" />
+        <Stack.Screen name="(auth)/upload-photo" />
+        <Stack.Screen name="(auth)/setup-pin" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </GestureHandlerRootView>
   );
 }
-  

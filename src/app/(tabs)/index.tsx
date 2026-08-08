@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   StyleSheet,
   View,
   Image,
+  FlatList,
   TouchableOpacity,
   useColorScheme,
 } from "react-native";
@@ -11,6 +12,10 @@ import { useRouter } from "expo-router";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import PinPromptModal from "@/features/security/components/PinPromptModal";
+import { HeaderSection } from "@/features/chats/components/HeaderSection";
+import { SwipeableChatRow } from "@/features/chats/components/SwipeableChatRow";
+import { MOCK_CHATS } from "@/features/chats/data/mockChats";
+import { Chat } from "@/features/chats/types/chat";
 import { Colors } from "@/shared/constants/colors";
 import PlusIcon from "@/assets/icons/shared/plus.svg";
 
@@ -21,73 +26,158 @@ export default function HomeScreen() {
   const themeColors = Colors[isDark ? "dark" : "light"];
 
   const [showPinModal, setShowPinModal] = useState(true);
+  const [chats, setChats] = useState<Chat[]>(MOCK_CHATS);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Filter chats by search query
+  const filteredChats = useMemo(() => {
+    if (!searchQuery.trim()) return chats;
+    return chats.filter((chat) =>
+      chat.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [chats, searchQuery]);
+
+  // Selection toggle logic
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  // Actions
+  const handlePin = (chatToPin?: Chat) => {
+    const targetIds = chatToPin ? [chatToPin.id] : selectedIds;
+    setChats((prev) =>
+      prev.map((item) =>
+        targetIds.includes(item.id)
+          ? { ...item, isPinned: !item.isPinned }
+          : item
+      )
+    );
+    setSelectedIds([]);
+  };
+
+  const handleMute = (chatToMute?: Chat) => {
+    const targetIds = chatToMute ? [chatToMute.id] : selectedIds;
+    setChats((prev) =>
+      prev.map((item) =>
+        targetIds.includes(item.id)
+          ? { ...item, isMuted: !item.isMuted }
+          : item
+      )
+    );
+    setSelectedIds([]);
+  };
+
+  const handleArchive = (chatToArchive?: Chat) => {
+    const targetIds = chatToArchive ? [chatToArchive.id] : selectedIds;
+    setChats((prev) => prev.filter((item) => !targetIds.includes(item.id)));
+    setSelectedIds([]);
+  };
+
+  const handleDelete = (chatToDelete?: Chat) => {
+    const targetIds = chatToDelete ? [chatToDelete.id] : selectedIds;
+    setChats((prev) => prev.filter((item) => !targetIds.includes(item.id)));
+    setSelectedIds([]);
+  };
 
   return (
-    <MySafeAreaView color={themeColors.background}>
-      <View style={styles.container}>
-        {/* Header Title */}
-        <View style={styles.header}>
-          <Typography
-            variant="h1"
-            size={24}
-            weight="bold"
-            color={themeColors.text}
-          >
-            Chats
-          </Typography>
-        </View>
+    <MySafeAreaView color={themeColors.primary}>
+      <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+        {/* Dynamic Header Section */}
+        <HeaderSection
+          selectedCount={selectedIds.length}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClearSelection={() => setSelectedIds([])}
+          onPin={() => handlePin()}
+          onMute={() => handleMute()}
+          onArchive={() => handleArchive()}
+          onDelete={() => handleDelete()}
+        />
 
-        {/* Empty State Banner Content */}
-        <View style={styles.emptyContainer}>
-          {/* Avatar Overlap Cluster */}
-          <View style={styles.avatarCluster}>
-            <Image
-              source={{ uri: "https://i.pravatar.cc/100?img=1" }}
-              style={[styles.avatar, styles.avatar1]}
-            />
-            <Image
-              source={{ uri: "https://i.pravatar.cc/100?img=2" }}
-              style={[styles.avatar, styles.avatar2]}
-            />
-            <Image
-              source={{ uri: "https://i.pravatar.cc/100?img=3" }}
-              style={[styles.avatar, styles.avatar3]}
-            />
-            <Image
-              source={{ uri: "https://i.pravatar.cc/100?img=4" }}
-              style={[styles.avatar, styles.avatar4]}
-            />
-            <View
-              style={[
-                styles.avatar,
-                styles.avatarCount,
-                { backgroundColor: isDark ? "#1F3C51" : "#E5E7EB" },
-              ]}
-            >
-              <Typography
-                size={12}
-                weight="bold"
-                color={themeColors.textSecondary}
+        {/* Chat List or Empty State */}
+        {filteredChats.length > 0 ? (
+          <FlatList
+            data={filteredChats}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => {
+              const isSelected = selectedIds.includes(item.id);
+              return (
+                <SwipeableChatRow
+                  chat={item}
+                  isSelected={isSelected}
+                  onPress={() => {
+                    if (selectedIds.length > 0) {
+                      handleToggleSelect(item.id);
+                    } else {
+                      // Navigate to specific chat screen when built
+                      console.log("Open chat:", item.name);
+                    }
+                  }}
+                  onLongPress={() => handleToggleSelect(item.id)}
+                  onPin={handlePin}
+                  onMute={handleMute}
+                  onArchive={handleArchive}
+                  onDelete={handleDelete}
+                />
+              );
+            }}
+            contentContainerStyle={styles.listContent}
+          />
+        ) : (
+          /* Empty State Banner Content */
+          <View style={styles.emptyContainer}>
+            <View style={styles.avatarCluster}>
+              <Image
+                source={{ uri: "https://i.pravatar.cc/100?img=1" }}
+                style={[styles.avatar, styles.avatar1]}
+              />
+              <Image
+                source={{ uri: "https://i.pravatar.cc/100?img=2" }}
+                style={[styles.avatar, styles.avatar2]}
+              />
+              <Image
+                source={{ uri: "https://i.pravatar.cc/100?img=3" }}
+                style={[styles.avatar, styles.avatar3]}
+              />
+              <Image
+                source={{ uri: "https://i.pravatar.cc/100?img=4" }}
+                style={[styles.avatar, styles.avatar4]}
+              />
+              <View
+                style={[
+                  styles.avatar,
+                  styles.avatarCount,
+                  { backgroundColor: isDark ? "#1F3C51" : "#E5E7EB" },
+                ]}
               >
-                26+
-              </Typography>
+                <Typography
+                  size={12}
+                  weight="bold"
+                  color={themeColors.textSecondary}
+                >
+                  26+
+                </Typography>
+              </View>
             </View>
-          </View>
 
-          <Typography
-            variant="body"
-            size={13}
-            align="center"
-            color={themeColors.textSecondary}
-            style={styles.description}
-          >
-            <Typography size={13} weight="bold" color={themeColors.text}>
-              Mom, Sir Silbert, Cody Fisher
-            </Typography>{" "}
-            and 26+ contact found on Chatme, try sending a message to them or
-            just saying hello.
-          </Typography>
-        </View>
+            <Typography
+              variant="body"
+              size={13}
+              align="center"
+              color={themeColors.textSecondary}
+              style={styles.description}
+            >
+              <Typography size={13} weight="bold" color={themeColors.text}>
+                Mom, Sir Silbert, Cody Fisher
+              </Typography>{" "}
+              and 26+ contact found on Chatme, try sending a message to them or
+              just saying hello.
+            </Typography>
+          </View>
+        )}
 
         {/* Floating Action Button */}
         <TouchableOpacity
@@ -114,10 +204,9 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 20,
   },
-  header: {
-    paddingVertical: 16,
+  listContent: {
+    paddingVertical: 8,
   },
   emptyContainer: {
     flex: 1,

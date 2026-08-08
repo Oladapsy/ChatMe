@@ -4,11 +4,11 @@ import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 
 // SVG Icons
-import CloseIcon from "@/assets/icons/shared/close.svg";
-import PinIcon from "@/assets/icons/shared/pin.svg";
-import MuteIcon from "@/assets/icons/shared/mute.svg";
-import ArchiveIcon from "@/assets/icons/shared/archive.svg";
-import TrashIcon from "@/assets/icons/shared/trash.svg";
+import CloseIcon from "@/assets/icons/shared/plus.svg";
+import PinIcon from "@/assets/icons/chat/pin.svg";
+import MuteIcon from "@/assets/icons/chat/mute.svg";
+import ArchiveIcon from "@/assets/icons/chat/archive.svg";
+import TrashIcon from "@/assets/icons/chat/trash.svg";
 
 interface SelectionHeaderProps {
   selectedCount: number;

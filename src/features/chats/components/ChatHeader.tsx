@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
-import SearchIcon from "@/assets/icons/shared/search.svg";
+import SearchIcon from "@/assets/icons/chat/search.svg";
 
 interface ChatHeaderProps {
   searchQuery: string;
