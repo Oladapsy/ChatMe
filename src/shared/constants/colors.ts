@@ -8,6 +8,7 @@ export const Colors = {
     textSecondary: "#6E8597",
     buttonText: "#FFFFFF",
     dot: "#E5E7EB",
+    onboardingTop: "#F5FEF8",
   },
   dark: {
     primary: "#57B77D",
@@ -18,5 +19,6 @@ export const Colors = {
     textSecondary: "#6E8597",
     buttonText: "#FFFFFF",
     dot: "#E5E7EB",
+    onboardingTop: "#163043",
   },
 };

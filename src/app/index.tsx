@@ -116,13 +116,15 @@ export default function Index() {
             <View style={[styles.slide, { width }]}>
               <View style={styles.illustrationContainer}>
                 {SvgIllustration ? (
-                  <SvgIllustration width={"100%"} height={"100%"} />
+                  <SvgIllustration width={"100%"} height={"115%"} />
                 ) : null}
               </View>
 
               <View style={styles.textContainer}>
                 <Typography
                   variant="h1"
+                  size={24}
+                  lineHeight={32}
                   weight="bold"
                   align="center"
                   color={themeColors.text}
@@ -196,10 +198,9 @@ const styles = StyleSheet.create({
   slide: {
     flex: 1,
     alignItems: "center",
-    paddingHorizontal: 32,
   },
   illustrationContainer: {
-    flex: 0.6,
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
@@ -208,6 +209,7 @@ const styles = StyleSheet.create({
     flex: 0.4,
     alignItems: "center",
     paddingTop: 32,
+    paddingHorizontal: 32,
   },
   description: {
     marginTop: 12,
