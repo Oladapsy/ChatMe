@@ -25,7 +25,7 @@ const RESEND_TIMER = 30;
 export default function OtpVerificationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ phone?: string }>();
-  const phone = params.phone || "+62 85-830-544-382";
+  const phone = params.phone || "unknown number";
 
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
