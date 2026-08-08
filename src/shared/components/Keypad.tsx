@@ -14,21 +14,23 @@ interface KeypadProps {
   onDelete: () => void;
 }
 
+const KEYS = [
+  ["1", "2", "3"],
+  ["4", "5", "6"],
+  ["7", "8", "9"],
+  ["", "0", "delete"],
+];
+
 export default function Keypad({ onPressDigit, onDelete }: KeypadProps) {
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
-  const keys = [
-    ["1", "2", "3"],
-    ["4", "5", "6"],
-    ["7", "8", "9"],
-    ["", "0", "delete"],
-  ];
+  const keyBgColor = themeColors.cardBackground || (isDark ? "#1F3C51" : "#F9FAFB");
 
   return (
     <View style={styles.container}>
-      {keys.map((row, rowIndex) => (
+      {KEYS.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.row}>
           {row.map((key, keyIndex) => {
             if (key === "") {
@@ -39,10 +41,7 @@ export default function Keypad({ onPressDigit, onDelete }: KeypadProps) {
               return (
                 <TouchableOpacity
                   key={keyIndex}
-                  style={[
-                    styles.key,
-                    { backgroundColor: isDark ? "#1F3C51" : "#F9FAFB" },
-                  ]}
+                  style={[styles.key, { backgroundColor: keyBgColor }]}
                   onPress={onDelete}
                   activeOpacity={0.7}
                 >
@@ -58,10 +57,7 @@ export default function Keypad({ onPressDigit, onDelete }: KeypadProps) {
             return (
               <TouchableOpacity
                 key={keyIndex}
-                style={[
-                  styles.key,
-                  { backgroundColor: isDark ? "#1F3C51" : "#F9FAFB" },
-                ]}
+                style={[styles.key, { backgroundColor: keyBgColor }]}
                 onPress={() => onPressDigit(key)}
                 activeOpacity={0.7}
               >
