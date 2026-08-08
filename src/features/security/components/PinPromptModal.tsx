@@ -1,5 +1,11 @@
 import React from "react";
-import { Modal, StyleSheet, View, TouchableOpacity, useColorScheme } from "react-native";
+import {
+  Modal,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Button } from "@/shared/components/Button";
 import { Colors } from "@/shared/constants/colors";
@@ -26,16 +32,17 @@ export default function PinPromptModal({
         <View
           style={[
             styles.card,
-            { backgroundColor: isDark ? "#162B3A" : "#FFFFFF" },
+            { backgroundColor: isDark ? "#163043" : "#FFFFFF" },
           ]}
         >
           {/* Top Floating Lock Icon */}
-          <View style={[styles.iconBadge, { backgroundColor: themeColors.primary + "1A" }]}>
-            {LockIcon ? (
-              <LockIcon width={24} height={24} color={themeColors.primary} />
-            ) : (
-              <Typography size={20}>🔒</Typography>
-            )}
+          <View
+            style={[
+              styles.iconBadge,
+            { backgroundColor: isDark ? "#1F3C51" : "#FFFFFF" },
+            ]}
+          >
+            <LockIcon width={24} height={24} color={themeColors.primary} />
           </View>
 
           <Typography

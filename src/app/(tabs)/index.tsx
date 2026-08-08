@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Image, TouchableOpacity, useColorScheme } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
 import { useRouter } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
@@ -21,7 +27,12 @@ export default function HomeScreen() {
       <View style={styles.container}>
         {/* Header Title */}
         <View style={styles.header}>
-          <Typography variant="h1" size={24} weight="bold" color={themeColors.text}>
+          <Typography
+            variant="h1"
+            size={24}
+            weight="bold"
+            color={themeColors.text}
+          >
             Chats
           </Typography>
         </View>
@@ -53,7 +64,11 @@ export default function HomeScreen() {
                 { backgroundColor: isDark ? "#1F3C51" : "#E5E7EB" },
               ]}
             >
-              <Typography size={12} weight="bold" color={themeColors.textSecondary}>
+              <Typography
+                size={12}
+                weight="bold"
+                color={themeColors.textSecondary}
+              >
                 26+
               </Typography>
             </View>
