@@ -94,13 +94,7 @@ export default function HomeScreen() {
           style={[styles.fab, { backgroundColor: themeColors.primary }]}
           activeOpacity={0.8}
         >
-          {PlusIcon ? (
-            <PlusIcon width={24} height={24} color="#FFFFFF" />
-          ) : (
-            <Typography size={24} color="#FFF">
-              +
-            </Typography>
-          )}
+          <PlusIcon width={24} height={24} color="#FFFFFF" />
         </TouchableOpacity>
 
         {/* PIN Security Modal Prompt */}

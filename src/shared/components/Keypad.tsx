@@ -46,17 +46,11 @@ export default function Keypad({ onPressDigit, onDelete }: KeypadProps) {
                   onPress={onDelete}
                   activeOpacity={0.7}
                 >
-                  {BackspaceIcon ? (
-                    <BackspaceIcon
-                      width={22}
-                      height={22}
-                      color={themeColors.text}
-                    />
-                  ) : (
-                    <Typography weight="bold" color={themeColors.text}>
-                      ⌫
-                    </Typography>
-                  )}
+                  <BackspaceIcon
+                    width={22}
+                    height={22}
+                    color={themeColors.text}
+                  />
                 </TouchableOpacity>
               );
             }

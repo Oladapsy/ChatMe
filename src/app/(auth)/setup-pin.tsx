@@ -47,7 +47,7 @@ export default function SetupPinScreen() {
 
           <Typography
             variant="h1"
-            size={22}
+            size={24}
             weight="bold"
             align="center"
             color={themeColors.text}
@@ -57,7 +57,7 @@ export default function SetupPinScreen() {
 
           <Typography
             variant="body"
-            size={13}
+            size={14}
             align="center"
             color={themeColors.textSecondary}
             style={styles.subtitle}
@@ -80,8 +80,7 @@ export default function SetupPinScreen() {
                         : "transparent",
                       borderColor: isFilled
                         ? themeColors.primary
-                        : themeColors.border ||
-                          (isDark ? "#2D4B63" : "#E5E7EB"),
+                        : themeColors.border
                     },
                   ]}
                 />

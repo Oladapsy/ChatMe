@@ -18,7 +18,8 @@ export default function Index() {
       if (!hasSeen) {
         router.replace("/onboarding");
       } else {
-        setLoading(false);
+        // setLoading(false);
+        router.replace("/(tabs)");
       }
     } catch {
       setLoading(false);
