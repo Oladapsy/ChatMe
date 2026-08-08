@@ -3,7 +3,6 @@ import {
   StyleSheet,
   View,
   TextInput,
-  TouchableOpacity,
   Keyboard,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
@@ -15,11 +14,11 @@ import { useRouter } from "expo-router";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Button } from "@/shared/components/Button";
+import { BackButton } from "@/shared/components/BackButton";
 import { Colors } from "@/shared/constants/colors";
 
-// Icons
-import ChevronLeft from "@/assets/icons/auth/chevron-left.svg";
-import UserIcon from "@/assets/icons/profile/user.svg"; // Replace with your user icon SVG
+
+import UserIcon from "@/assets/icons/profile/user.svg";
 
 export default function SetupProfileScreen() {
   const router = useRouter();
@@ -35,7 +34,6 @@ export default function SetupProfileScreen() {
   const handleNext = () => {
     if (!isValidName) return;
     console.log("Saving user name:", name.trim());
-    // Navigate to next step or main tabs
     router.replace("/(auth)/upload-photo");
   };
 
@@ -47,24 +45,9 @@ export default function SetupProfileScreen() {
           style={styles.container}
         >
           <View style={styles.content}>
-            {/* Back Button */}
-            <TouchableOpacity
-              style={[
-                styles.backButton,
-                {
-                  borderColor: isDark ? "#2D4B63" : "#E5E7EB",
-                  backgroundColor: isDark ? "#1F3C51" : "#FFFFFF",
-                },
-              ]}
-              onPress={() => router.back()}
-              activeOpacity={0.7}
-            >
-              {ChevronLeft ? (
-                <ChevronLeft width={20} height={20} color={themeColors.text} />
-              ) : (
-                <Typography>←</Typography>
-              )}
-            </TouchableOpacity>
+            <View style={styles.backButtonWrapper}>
+              <BackButton />
+            </View>
 
             {/* Header Text */}
             <Typography
@@ -102,12 +85,10 @@ export default function SetupProfileScreen() {
               style={[
                 styles.inputContainer,
                 {
-                  backgroundColor: isDark ? "#1F3C51" : "#F9FAFB",
+                  backgroundColor: themeColors.inputBackground,
                   borderColor: isFocused
                     ? themeColors.primary
-                    : isDark
-                      ? "#2D4B63"
-                      : "#E5E7EB",
+                    : themeColors.border,
                 },
               ]}
             >
@@ -166,13 +147,7 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: 16,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  backButtonWrapper: {
     marginBottom: 24,
   },
   title: {
