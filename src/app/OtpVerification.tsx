@@ -101,7 +101,6 @@ export default function OtpVerificationScreen() {
           style={styles.container}
         >
           <View style={styles.content}>
-            {/* Reusable Back Button */}
             <View style={styles.backButtonWrapper}>
               <BackButton />
             </View>
