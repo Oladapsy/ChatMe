@@ -8,8 +8,8 @@ import {
   useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import PinPromptModal from "@/features/security/components/PinPromptModal";
 import { HeaderSection } from "@/features/chats/components/HeaderSection";
@@ -25,6 +25,7 @@ export default function HomeScreen() {
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
+  // Header background color: #163043 in dark mode, Primary Green in light mode
   const topHeaderBg = isDark ? "#163043" : themeColors.primary;
 
   const [showPinModal, setShowPinModal] = useState(true);
@@ -85,11 +86,14 @@ export default function HomeScreen() {
   };
 
   return (
-    <MySafeAreaView color={themeColors.primary}>
-      <View
-        style={[styles.container, { backgroundColor: themeColors.background }]}
+    <View
+      style={[styles.container, { backgroundColor: themeColors.background }]}
+    >
+      {/* Dynamic Header Section scoped to top inset */}
+      <SafeAreaView
+        edges={["top"]}
+        style={{ backgroundColor: topHeaderBg }}
       >
-        {/* Dynamic Header Section */}
         <HeaderSection
           selectedCount={selectedIds.length}
           searchQuery={searchQuery}
@@ -100,12 +104,15 @@ export default function HomeScreen() {
           onArchive={() => handleArchive()}
           onDelete={() => handleDelete()}
         />
+      </SafeAreaView>
 
-        {/* Chat List or Empty State */}
+      {/* Main Content Area */}
+      <View style={styles.content}>
         {filteredChats.length > 0 ? (
           <FlatList
             data={filteredChats}
             keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
             renderItem={({ item }) => {
               const isSelected = selectedIds.includes(item.id);
               return (
@@ -116,7 +123,6 @@ export default function HomeScreen() {
                     if (selectedIds.length > 0) {
                       handleToggleSelect(item.id);
                     } else {
-                      // Navigate to specific chat screen when built
                       console.log("Open chat:", item.name);
                     }
                   }}
@@ -128,7 +134,6 @@ export default function HomeScreen() {
                 />
               );
             }}
-            contentContainerStyle={styles.listContent}
           />
         ) : (
           /* Empty State Banner Content */
@@ -182,31 +187,34 @@ export default function HomeScreen() {
             </Typography>
           </View>
         )}
-
-        {/* Floating Action Button */}
-        <TouchableOpacity
-          style={[styles.fab, { backgroundColor: themeColors.primary }]}
-          activeOpacity={0.8}
-        >
-          <PlusIcon width={24} height={24} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        {/* PIN Security Modal Prompt */}
-        <PinPromptModal
-          visible={showPinModal}
-          onAccept={() => {
-            setShowPinModal(false);
-            router.push("/(auth)/setup-pin");
-          }}
-          onDecline={() => setShowPinModal(false)}
-        />
       </View>
-    </MySafeAreaView>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: themeColors.primary }]}
+        activeOpacity={0.8}
+      >
+        <PlusIcon width={24} height={24} color="#FFFFFF" />
+      </TouchableOpacity>
+
+      {/* PIN Security Modal Prompt */}
+      <PinPromptModal
+        visible={showPinModal}
+        onAccept={() => {
+          setShowPinModal(false);
+          router.push("/(auth)/setup-pin");
+        }}
+        onDecline={() => setShowPinModal(false)}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  content: {
     flex: 1,
   },
   listContent: {
