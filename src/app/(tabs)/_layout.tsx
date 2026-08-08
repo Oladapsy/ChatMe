@@ -1,11 +1,13 @@
 import React from "react";
 import { useColorScheme } from "react-native";
 import { Tabs } from "expo-router";
+
 import Phone from "@/assets/icons/tabs/phone.svg";
 import Chat from "@/assets/icons/tabs/chat.svg";
 import Settings from "@/assets/icons/tabs/settings.svg";
 
 import { Colors } from "@/shared/constants/colors";
+import {Fonts} from "@/shared/constants/fonts";
 
 export default function TabLayout() {
   const scheme = useColorScheme();
@@ -17,18 +19,19 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: themeColors.primary,
-        tabBarInactiveTintColor: isDark ? "#6B7280" : "#9CA3AF",
+        tabBarInactiveTintColor: themeColors.textSecondary,
         tabBarStyle: {
-          backgroundColor: isDark ? "#0D1B2A" : "#FFFFFF",
-          borderTopColor: isDark ? "#1F3C51" : "#E5E7EB",
-          borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 8,
+          backgroundColor: themeColors.tabBg,
+          elevation: 0,
+          shadowOpacity: 0.1,
+          height: 80,
+          paddingBottom: 12,
+          paddingTop: 10,
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: "600",
+          fontWeight: "700",
+          marginTop: 4,
         },
       }}
     >
@@ -37,7 +40,7 @@ export default function TabLayout() {
         options={{
           title: "Call",
           tabBarIcon: ({ color }) => (
-            <Phone width={22} height={22} color={color} />
+            <Phone width={24} height={24} color={color} />
           ),
         }}
       />
@@ -47,7 +50,7 @@ export default function TabLayout() {
         options={{
           title: "Chats",
           tabBarIcon: ({ color }) => (
-            <Chat width={22} height={22} color={color} />
+            <Chat width={24} height={24} color={color} />
           ),
         }}
       />
@@ -57,7 +60,7 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           tabBarIcon: ({ color }) => (
-            <Settings width={22} height={22} color={color} />
+            <Settings width={24} height={24} color={color} />
           ),
         }}
       />
