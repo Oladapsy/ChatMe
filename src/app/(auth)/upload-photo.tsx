@@ -3,11 +3,8 @@ import {
   StyleSheet,
   View,
   Image,
-  TouchableOpacity,
-  Modal,
   ActivityIndicator,
   useColorScheme,
-  TouchableWithoutFeedback,
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -16,13 +13,14 @@ import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Button } from "@/shared/components/Button";
 import { BackButton } from "@/shared/components/BackButton";
+import { PhotoPickerModal } from "@/shared/components/PhotoPickerModal";
 import { Colors } from "@/shared/constants/colors";
 
 // Icons
-import CameraIcon from "@/assets/icons/auth/camera.svg";
-import GalleryIcon from "@/assets/icons/auth/gallery.svg";
 import CheckCircleIcon from "@/assets/icons/auth/checkIcon.svg";
-import PlaceholderGraphic from "@/assets/icons/auth/profilePlaceholder.svg";
+import PlaceholderGraphic from "@/assets/icons/auth/Placeholder.svg";
+import AddPhotoIcon from "@/assets/icons/auth/add-a-photo.svg";
+import UploadingBg from "@/assets/icons/auth/uploading.svg";
 
 type UploadStatus = "idle" | "uploading" | "success";
 
@@ -137,13 +135,7 @@ export default function UploadPhotoScreen() {
                     { backgroundColor: themeColors.primary },
                   ]}
                 >
-                  {CameraIcon ? (
-                    <CameraIcon width={16} height={16} color="#FFFFFF" />
-                  ) : (
-                    <Typography color="#FFF" size={12}>
-                      📷
-                    </Typography>
-                  )}
+                  <AddPhotoIcon width={20} height={20} color="#FFFFFF" />
                 </View>
               </View>
             )}
@@ -151,8 +143,8 @@ export default function UploadPhotoScreen() {
             {status === "uploading" && (
               <View style={styles.uploadingContainer}>
                 <View style={styles.placeholderContainer}>
-                  {PlaceholderGraphic ? (
-                    <PlaceholderGraphic width={160} height={160} />
+                  {UploadingBg ? (
+                    <UploadingBg width={160} height={160} />
                   ) : (
                     <View
                       style={[
@@ -228,64 +220,13 @@ export default function UploadPhotoScreen() {
           )}
         </View>
 
-        {/* Picker Modal */}
-        <Modal
+        {/* Modular Picker Modal */}
+        <PhotoPickerModal
           visible={showPickerModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowPickerModal(false)}
-        >
-          <TouchableWithoutFeedback onPress={() => setShowPickerModal(false)}>
-            <View style={styles.modalOverlay}>
-              <TouchableWithoutFeedback>
-                <View
-                  style={[
-                    styles.modalContent,
-                    { backgroundColor: themeColors.cardBackground },
-                  ]}
-                >
-                  <TouchableOpacity
-                    style={styles.optionRow}
-                    onPress={handleTakePhone}
-                    activeOpacity={0.7}
-                  >
-                    <CameraIcon
-                      width={25}
-                      height={25}
-                      color={themeColors.primary}
-                    />
-                    <Typography
-                      variant="body"
-                      weight="medium"
-                      color={themeColors.text}
-                    >
-                      Take Photo
-                    </Typography>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.optionRow}
-                    onPress={handleChooseFromLibrary}
-                    activeOpacity={0.7}
-                  >
-                    <GalleryIcon
-                      width={20}
-                      height={20}
-                      color={themeColors.primary}
-                    />
-                    <Typography
-                      variant="body"
-                      weight="medium"
-                      color={themeColors.text}
-                    >
-                      Choose From Library
-                    </Typography>
-                  </TouchableOpacity>
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+          onClose={() => setShowPickerModal(false)}
+          onTakePhoto={handleTakePhone}
+          onChooseFromLibrary={handleChooseFromLibrary}
+        />
       </View>
     </MySafeAreaView>
   );
@@ -309,6 +250,7 @@ const styles = StyleSheet.create({
   previewSection: {
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 100,
   },
   placeholderContainer: {
     position: "relative",
@@ -334,11 +276,11 @@ const styles = StyleSheet.create({
   },
   floatingIcon: {
     position: "absolute",
-    right: 8,
-    top: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    right: 0,
+    top: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
@@ -356,23 +298,5 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingBottom: 24,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-    justifyContent: "flex-end",
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  modalContent: {
-    borderRadius: 20,
-    padding: 20,
-    gap: 16,
-  },
-  optionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 12,
   },
 });
