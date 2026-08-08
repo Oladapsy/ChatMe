@@ -11,6 +11,7 @@ export const Colors = {
     buttonText: "#FFFFFF",
     dot: "#E5E7EB",
     onboardingTop: "#F5FEF8",
+    error: "#EF4444",
   },
   dark: {
     primary: "#57B77D",
@@ -24,5 +25,6 @@ export const Colors = {
     buttonText: "#FFFFFF",
     dot: "#254156",
     onboardingTop: "#163043",
+    error: "#EF4444",
   },
 };

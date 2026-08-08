@@ -3,6 +3,7 @@ import {
   StyleSheet,
   View,
   Image,
+  TouchableOpacity,
   ActivityIndicator,
   useColorScheme,
 } from "react-native";
@@ -34,7 +35,6 @@ export default function UploadPhotoScreen() {
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [showPickerModal, setShowPickerModal] = useState(false);
 
-  // Request permissions and open camera
   const handleTakePhone = async () => {
     setShowPickerModal(false);
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
@@ -55,7 +55,6 @@ export default function UploadPhotoScreen() {
     }
   };
 
-  // Request permissions and open image library
   const handleChooseFromLibrary = async () => {
     setShowPickerModal(false);
     const permissionResult =
@@ -78,15 +77,19 @@ export default function UploadPhotoScreen() {
     }
   };
 
-  // Process image upload
   const processImageUpload = (uri: string) => {
     setImageUri(uri);
     setStatus("uploading");
 
-    // Simulate network upload delay
     setTimeout(() => {
       setStatus("success");
     }, 2000);
+  };
+
+  // Resets the state back to default
+  const handleRemovePhoto = () => {
+    setImageUri(null);
+    setStatus("idle");
   };
 
   const handleNext = () => {
@@ -118,17 +121,12 @@ export default function UploadPhotoScreen() {
           {/* Preview & Status Display */}
           <View style={styles.previewSection}>
             {status === "idle" && (
-              <View style={styles.placeholderContainer}>
-                {PlaceholderGraphic ? (
-                  <PlaceholderGraphic width={160} height={160} />
-                ) : (
-                  <View
-                    style={[
-                      styles.avatarCircle,
-                      { backgroundColor: themeColors.cardBackground },
-                    ]}
-                  />
-                )}
+              <TouchableOpacity
+                style={styles.placeholderContainer}
+                onPress={() => setShowPickerModal(true)}
+                activeOpacity={0.8}
+              >
+                <PlaceholderGraphic width={160} height={160} />
                 <View
                   style={[
                     styles.floatingIcon,
@@ -137,22 +135,13 @@ export default function UploadPhotoScreen() {
                 >
                   <AddPhotoIcon width={20} height={20} color="#FFFFFF" />
                 </View>
-              </View>
+              </TouchableOpacity>
             )}
 
             {status === "uploading" && (
               <View style={styles.uploadingContainer}>
                 <View style={styles.placeholderContainer}>
-                  {UploadingBg ? (
-                    <UploadingBg width={160} height={160} />
-                  ) : (
-                    <View
-                      style={[
-                        styles.avatarCircle,
-                        { backgroundColor: themeColors.cardBackground },
-                      ]}
-                    />
-                  )}
+                  <UploadingBg width={160} height={160} />
                   <View
                     style={[
                       styles.floatingIcon,
@@ -177,7 +166,11 @@ export default function UploadPhotoScreen() {
 
             {status === "success" && imageUri && (
               <View style={styles.successContainer}>
-                <View style={styles.avatarWrapper}>
+                <TouchableOpacity
+                  style={styles.avatarWrapper}
+                  onPress={() => setShowPickerModal(true)}
+                  activeOpacity={0.8}
+                >
                   <Image
                     source={{ uri: imageUri }}
                     style={styles.avatarImage}
@@ -190,7 +183,7 @@ export default function UploadPhotoScreen() {
                   >
                     <CheckCircleIcon width={16} height={16} color="#FFFFFF" />
                   </View>
-                </View>
+                </TouchableOpacity>
 
                 <Typography
                   variant="body"
@@ -201,6 +194,33 @@ export default function UploadPhotoScreen() {
                 >
                   Done! Your photo{"\n"}successfully uploaded
                 </Typography>
+
+                {/* Change or Remove Options */}
+                <View style={styles.actionRow}>
+                  <TouchableOpacity onPress={() => setShowPickerModal(true)}>
+                    <Typography
+                      variant="body"
+                      size={14}
+                      weight="bold"
+                      color={themeColors.primary}
+                    >
+                      Change photo
+                    </Typography>
+                  </TouchableOpacity>
+
+                  <Typography color={themeColors.textSecondary}>•</Typography>
+
+                  <TouchableOpacity onPress={handleRemovePhoto}>
+                    <Typography
+                      variant="body"
+                      size={14}
+                      weight="medium"
+                      color={themeColors.error}
+                    >
+                      Remove
+                    </Typography>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </View>
@@ -250,7 +270,7 @@ const styles = StyleSheet.create({
   previewSection: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 100,
+    marginTop: 60,
   },
   placeholderContainer: {
     position: "relative",
@@ -258,11 +278,6 @@ const styles = StyleSheet.create({
     height: 160,
     justifyContent: "center",
     alignItems: "center",
-  },
-  avatarCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
   },
   avatarWrapper: {
     position: "relative",
@@ -295,6 +310,12 @@ const styles = StyleSheet.create({
   statusText: {
     marginTop: 24,
     lineHeight: 22,
+  },
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 16,
   },
   footer: {
     paddingBottom: 24,
