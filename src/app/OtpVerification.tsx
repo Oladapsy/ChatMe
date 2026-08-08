@@ -9,16 +9,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   useColorScheme,
+  NativeSyntheticEvent,
+  TextInputKeyPressEventData,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Button } from "@/shared/components/Button";
+import { BackButton } from "@/shared/components/BackButton";
 import { Colors } from "@/shared/constants/colors";
-
-// Back Arrow Icon (Replace with your actual back icon SVG or library)
-// import ChevronLeft from "@/assets/icons/shared/chevron-left.svg";
 
 const OTP_LENGTH = 4;
 const RESEND_TIMER = 60;
@@ -47,11 +47,11 @@ export default function OtpVerificationScreen() {
     return () => clearInterval(interval);
   }, [timer]);
 
-  // Handle single character entry and auto-focus next
+  // Handle single character entry and auto-focus next box
   const handleChangeText = (text: string, index: number) => {
     const cleanText = text.replace(/[^0-9]/g, "");
 
-    // Handle full code paste
+    // Handle complete code paste
     if (cleanText.length >= OTP_LENGTH) {
       const codeArray = cleanText.slice(0, OTP_LENGTH).split("");
       setOtp(codeArray);
@@ -60,7 +60,7 @@ export default function OtpVerificationScreen() {
     }
 
     const newOtp = [...otp];
-    newOtp[index] = cleanText.slice(-1); // Take last entered digit
+    newOtp[index] = cleanText.slice(-1);
     setOtp(newOtp);
 
     if (cleanText && index < OTP_LENGTH - 1) {
@@ -68,8 +68,11 @@ export default function OtpVerificationScreen() {
     }
   };
 
-  // Handle backspace navigation
-  const handleKeyPress = (e: any, index: number) => {
+  // Handle backspace navigation between boxes
+  const handleKeyPress = (
+    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
+    index: number,
+  ) => {
     if (e.nativeEvent.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -82,7 +85,6 @@ export default function OtpVerificationScreen() {
     setTimer(RESEND_TIMER);
     setOtp(Array(OTP_LENGTH).fill(""));
     inputRefs.current[0]?.focus();
-    console.log("Resending verification code to:", phone);
   };
 
   const handleVerify = () => {
@@ -100,24 +102,10 @@ export default function OtpVerificationScreen() {
           style={styles.container}
         >
           <View style={styles.content}>
-            {/* Back Button */}
-            <TouchableOpacity
-              style={[
-                styles.backButton,
-                {
-                  borderColor: isDark ? "#2D4B63" : "#E5E7EB",
-                  backgroundColor: isDark ? "#1F3C51" : "#FFFFFF",
-                },
-              ]}
-              onPress={() => router.back()}
-              activeOpacity={0.7}
-            >
-              {/* {ChevronLeft ? (
-                <ChevronLeft width={20} height={20} color={themeColors.text} />
-              ) : (
-                <Typography>←</Typography>
-              )} */}
-            </TouchableOpacity>
+            {/* Reusable Back Button */}
+            <View style={styles.backButtonWrapper}>
+              <BackButton />
+            </View>
 
             {/* Header Text */}
             <Typography
@@ -148,7 +136,7 @@ export default function OtpVerificationScreen() {
               </Typography>
             </Typography>
 
-            {/* 4 OTP Input Boxes */}
+            {/* OTP Input Fields */}
             <View style={styles.otpContainer}>
               {otp.map((digit, index) => {
                 const isFocused = focusedIndex === index;
@@ -158,12 +146,10 @@ export default function OtpVerificationScreen() {
                     style={[
                       styles.otpBox,
                       {
-                        backgroundColor: isDark ? "#1F3C51" : "#F9FAFB",
+                        backgroundColor: themeColors.inputBackground,
                         borderColor: isFocused
                           ? themeColors.primary
-                          : isDark
-                            ? "#2D4B63"
-                            : "#E5E7EB",
+                          : themeColors.border,
                       },
                     ]}
                   >
@@ -186,7 +172,7 @@ export default function OtpVerificationScreen() {
               })}
             </View>
 
-            {/* Resend Code Timer */}
+            {/* Resend Code Section */}
             <View style={styles.resendContainer}>
               <Typography
                 variant="body"
@@ -250,13 +236,7 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: 16,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  backButtonWrapper: {
     marginBottom: 24,
   },
   title: {

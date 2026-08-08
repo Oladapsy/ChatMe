@@ -43,7 +43,10 @@ export default function PhoneAuthScreen() {
     if (!isValidNumber) return;
     const fullNumber = `${selectedCountry.code}${phoneNumber}`;
     console.log("Proceeding with phone number:", fullNumber);
-    router.push({ pathname: "/(auth)/verify-otp", params: { phone: fullNumber } });
+    router.push({
+      pathname: "/(auth)/verify-otp",
+      params: { phone: fullNumber },
+    });
   };
 
   return (
@@ -117,7 +120,7 @@ export default function PhoneAuthScreen() {
                 </Typography>
                 <Typography
                   variant="body"
-                  weight="semibold"
+                  weight="bold"
                   color={themeColors.text}
                 >
                   {selectedCountry.code}

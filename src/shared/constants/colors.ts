@@ -1,9 +1,11 @@
 export const Colors = {
   light: {
     primary: "#57B77D",
-    // gradient: ['#F5FEF8', '#F8FFFA', '#FFFFFF'] as [string, string, ...string[]],
     background: "#FFFFFF",
-    // cardBackground: '#FFFFFF',
+    cardBackground: "#FFFFFF",
+    border: "#E5E7EB",
+    inputBackground: "#F9FAFB",
+    keypadBackground: "#F9FAFB",
     text: "#081C2C",
     textSecondary: "#6E8597",
     buttonText: "#FFFFFF",
@@ -12,13 +14,15 @@ export const Colors = {
   },
   dark: {
     primary: "#57B77D",
-    // gradient: ['#081C2C', '#081C2C', '#081C2C'] as [string, string, ...string[]],
     background: "#081C2C",
-    // cardBackground: '#0F283D',
+    cardBackground: "#163043",
+    border: "#254156",
+    inputBackground: "#163043",
+    keypadBackground: "#163043",
     text: "#FFFFFF",
     textSecondary: "#6E8597",
     buttonText: "#FFFFFF",
-    dot: "#E5E7EB",
+    dot: "#254156",
     onboardingTop: "#163043",
   },
 };
