@@ -7,6 +7,7 @@ import {
   Modal,
   ActivityIndicator,
   useColorScheme,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -14,10 +15,10 @@ import * as ImagePicker from "expo-image-picker";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Button } from "@/shared/components/Button";
+import { BackButton } from "@/shared/components/BackButton";
 import { Colors } from "@/shared/constants/colors";
 
-// Icons (Replace with your actual SVGs or components)
-import ChevronLeft from "@/assets/icons/auth/chevron-left.svg";
+// Icons
 import CameraIcon from "@/assets/icons/auth/camera.svg";
 import GalleryIcon from "@/assets/icons/auth/gallery.svg";
 import CheckCircleIcon from "@/assets/icons/auth/checkIcon.svg";
@@ -79,7 +80,7 @@ export default function UploadPhotoScreen() {
     }
   };
 
-  // Simulate or perform image upload process
+  // Process image upload
   const processImageUpload = (uri: string) => {
     setImageUri(uri);
     setStatus("uploading");
@@ -92,32 +93,17 @@ export default function UploadPhotoScreen() {
 
   const handleNext = () => {
     console.log("Uploaded photo URI:", imageUri);
-    // Route to home/main tabs after completing auth setup
     router.replace("/(tabs)");
   };
 
   return (
     <MySafeAreaView color={themeColors.background}>
       <View style={styles.container}>
-        {/* Main Content Header */}
+        {/* Header Section */}
         <View style={styles.content}>
-          <TouchableOpacity
-            style={[
-              styles.backButton,
-              {
-                borderColor: isDark ? "#2D4B63" : "#E5E7EB",
-                backgroundColor: isDark ? "#1F3C51" : "#FFFFFF",
-              },
-            ]}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-          >
-            {ChevronLeft ? (
-              <ChevronLeft width={20} height={20} color={themeColors.text} />
-            ) : (
-              <Typography>←</Typography>
-            )}
-          </TouchableOpacity>
+          <View style={styles.backButtonWrapper}>
+            <BackButton />
+          </View>
 
           <Typography
             variant="h1"
@@ -131,7 +117,7 @@ export default function UploadPhotoScreen() {
             Upload a photo
           </Typography>
 
-          {/* Graphic / Photo Preview Container */}
+          {/* Preview & Status Display */}
           <View style={styles.previewSection}>
             {status === "idle" && (
               <View style={styles.placeholderContainer}>
@@ -141,11 +127,10 @@ export default function UploadPhotoScreen() {
                   <View
                     style={[
                       styles.avatarCircle,
-                      { backgroundColor: isDark ? "#1F3C51" : "#E5E7EB" },
+                      { backgroundColor: themeColors.cardBackground },
                     ]}
                   />
                 )}
-                {/* Floating Camera Icon */}
                 <View
                   style={[
                     styles.floatingIcon,
@@ -172,11 +157,10 @@ export default function UploadPhotoScreen() {
                     <View
                       style={[
                         styles.avatarCircle,
-                        { backgroundColor: isDark ? "#1F3C51" : "#E5E7EB" },
+                        { backgroundColor: themeColors.cardBackground },
                       ]}
                     />
                   )}
-                  {/* Uploading Spinner Badge */}
                   <View
                     style={[
                       styles.floatingIcon,
@@ -194,7 +178,7 @@ export default function UploadPhotoScreen() {
                   align="center"
                   style={styles.statusText}
                 >
-                  Wait a second, your photo{"\n"}still uploading
+                  Wait a second, your photo{"\n"}is still uploading
                 </Typography>
               </View>
             )}
@@ -202,21 +186,17 @@ export default function UploadPhotoScreen() {
             {status === "success" && imageUri && (
               <View style={styles.successContainer}>
                 <View style={styles.avatarWrapper}>
-                  <Image source={{ uri: imageUri }} style={styles.avatarImage} />
-                  {/* Floating Green Checkmark */}
+                  <Image
+                    source={{ uri: imageUri }}
+                    style={styles.avatarImage}
+                  />
                   <View
                     style={[
                       styles.floatingIcon,
                       { backgroundColor: themeColors.primary },
                     ]}
                   >
-                    {CheckCircleIcon ? (
-                      <CheckCircleIcon width={16} height={16} color="#FFFFFF" />
-                    ) : (
-                      <Typography color="#FFF" size={12}>
-                        ✓
-                      </Typography>
-                    )}
+                    <CheckCircleIcon width={16} height={16} color="#FFFFFF" />
                   </View>
                 </View>
 
@@ -248,67 +228,63 @@ export default function UploadPhotoScreen() {
           )}
         </View>
 
-        {/* Image Source Selection Modal */}
+        {/* Picker Modal */}
         <Modal
           visible={showPickerModal}
           transparent
           animationType="fade"
           onRequestClose={() => setShowPickerModal(false)}
         >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowPickerModal(false)}
-          >
-            <View
-              style={[
-                styles.modalContent,
-                { backgroundColor: isDark ? "#1F3C51" : "#FFFFFF" },
-              ]}
-            >
-              <TouchableOpacity
-                style={styles.optionRow}
-                onPress={handleTakePhone}
-                activeOpacity={0.7}
-              >
-                {CameraIcon ? (
-                  <CameraIcon width={20} height={20} color={themeColors.primary} />
-                ) : (
-                  <Typography size={18}>📷</Typography>
-                )}
-                <Typography
-                  variant="body"
-                  weight="medium"
-                  color={themeColors.text}
+          <TouchableWithoutFeedback onPress={() => setShowPickerModal(false)}>
+            <View style={styles.modalOverlay}>
+              <TouchableWithoutFeedback>
+                <View
+                  style={[
+                    styles.modalContent,
+                    { backgroundColor: themeColors.cardBackground },
+                  ]}
                 >
-                  Take Photo
-                </Typography>
-              </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.optionRow}
+                    onPress={handleTakePhone}
+                    activeOpacity={0.7}
+                  >
+                    <CameraIcon
+                      width={25}
+                      height={25}
+                      color={themeColors.primary}
+                    />
+                    <Typography
+                      variant="body"
+                      weight="medium"
+                      color={themeColors.text}
+                    >
+                      Take Photo
+                    </Typography>
+                  </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.optionRow}
-                onPress={handleChooseFromLibrary}
-                activeOpacity={0.7}
-              >
-                {GalleryIcon ? (
-                  <GalleryIcon
-                    width={20}
-                    height={20}
-                    color={themeColors.primary}
-                  />
-                ) : (
-                  <Typography size={18}>🖼️</Typography>
-                )}
-                <Typography
-                  variant="body"
-                  weight="medium"
-                  color={themeColors.text}
-                >
-                  Choose From Library
-                </Typography>
-              </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.optionRow}
+                    onPress={handleChooseFromLibrary}
+                    activeOpacity={0.7}
+                  >
+                    <GalleryIcon
+                      width={20}
+                      height={20}
+                      color={themeColors.primary}
+                    />
+                    <Typography
+                      variant="body"
+                      weight="medium"
+                      color={themeColors.text}
+                    >
+                      Choose From Library
+                    </Typography>
+                  </TouchableOpacity>
+                </View>
+              </TouchableWithoutFeedback>
             </View>
-          </TouchableOpacity>
+          </TouchableWithoutFeedback>
         </Modal>
       </View>
     </MySafeAreaView>
@@ -324,13 +300,7 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: 16,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  backButtonWrapper: {
     marginBottom: 24,
   },
   title: {
