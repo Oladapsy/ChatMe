@@ -90,7 +90,7 @@ export default function OtpVerificationScreen() {
     if (!isComplete) return;
     const code = otp.join("");
     console.log("Verifying OTP:", code);
-    // router.push("/(auth)/setup-profile");
+    router.push("/(auth)/setup-profile");
   };
 
   return (
