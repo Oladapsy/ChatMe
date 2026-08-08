@@ -36,7 +36,7 @@ export default function SetupProfileScreen() {
     if (!isValidName) return;
     console.log("Saving user name:", name.trim());
     // Navigate to next step or main tabs
-    // router.replace("/(tabs)");
+    router.replace("/(auth)/upload-photo");
   };
 
   return (
@@ -106,8 +106,8 @@ export default function SetupProfileScreen() {
                   borderColor: isFocused
                     ? themeColors.primary
                     : isDark
-                    ? "#2D4B63"
-                    : "#E5E7EB",
+                      ? "#2D4B63"
+                      : "#E5E7EB",
                 },
               ]}
             >
@@ -117,7 +117,9 @@ export default function SetupProfileScreen() {
                     width={20}
                     height={20}
                     color={
-                      isFocused ? themeColors.primary : themeColors.textSecondary
+                      isFocused
+                        ? themeColors.primary
+                        : themeColors.textSecondary
                     }
                   />
                 ) : (
