@@ -68,6 +68,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingLeft: 24,
     paddingRight: 11,
+    marginTop: -80,
   },
   avatarCluster: {
     flexDirection: "row",
