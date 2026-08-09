@@ -14,16 +14,18 @@ export function ChatHeader({ searchQuery, onSearchChange }: ChatHeaderProps) {
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
-  // Header background: #163043 in dark mode, Primary Green in light mode
-  const headerBgColor = isDark ? "#163043" : themeColors.primary;
+  // header bg color
+  const headerBgColor = isDark
+    ? themeColors.onboardingTop
+    : themeColors.primary;
 
   return (
     <View style={[styles.banner, { backgroundColor: headerBgColor }]}>
       <Typography
         variant="h1"
-        size={22}
+        size={24}
         weight="bold"
-        color="#FFFFFF"
+        color="white"
         style={styles.title}
       >
         Chats
@@ -42,7 +44,11 @@ export function ChatHeader({ searchQuery, onSearchChange }: ChatHeaderProps) {
           },
         ]}
       >
-        <SearchIcon width={18} height={18} color="#94A3B8" />
+        <SearchIcon
+          width={18}
+          height={18}
+          color={isDark ? "#94A3B8" : "#FFFFFF"}
+        />
         <TextInput
           value={searchQuery}
           onChangeText={onSearchChange}
