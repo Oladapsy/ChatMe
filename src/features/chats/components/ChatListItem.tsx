@@ -98,7 +98,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    borderRadius: 12,
   },
   avatarWrapper: {
     position: "relative",

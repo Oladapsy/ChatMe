@@ -1,12 +1,12 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
-    StyleSheet,
-    TouchableOpacity,
-    useColorScheme,
-    View,
+  StyleSheet,
+  TouchableOpacity,
+  useColorScheme,
+  View,
 } from "react-native";
 import Swipeable, {
-    SwipeableMethods,
+  SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { SharedValue } from "react-native-reanimated";
 
@@ -46,12 +46,22 @@ export function SwipeableChatRow({
   onMore,
 }: SwipeableChatRowProps) {
   const swipeableRef = useRef<SwipeableMethods>(null);
+  const [isSwiped, setIsSwiped] = useState(false);
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
   const closeSwipe = () => {
     swipeableRef.current?.close();
+  };
+
+  const handleAction = (actionFn?: (chat: Chat) => void) => {
+    closeSwipe();
+    if (actionFn) {
+      requestAnimationFrame(() => {
+        actionFn(chat);
+      });
+    }
   };
 
   // Render Left Swipe Actions (Mute, Pin)
@@ -63,10 +73,7 @@ export function SwipeableChatRow({
       <View style={styles.leftActionsContainer}>
         <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: "#E8A13A" }]}
-          onPress={() => {
-            closeSwipe();
-            onMute(chat);
-          }}
+          onPress={() => handleAction(onMute)}
         >
           <MuteIcon width={20} height={20} color="white" />
           <Typography
@@ -84,10 +91,7 @@ export function SwipeableChatRow({
             styles.actionButton,
             { backgroundColor: isDark ? "#2D4B63" : "#9CA3AF" },
           ]}
-          onPress={() => {
-            closeSwipe();
-            onPin(chat);
-          }}
+          onPress={() => handleAction(onPin)}
         >
           <PinIcon width={20} height={20} color="white" />
           <Typography
@@ -112,10 +116,7 @@ export function SwipeableChatRow({
       <View style={styles.rightActionsContainer}>
         <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: "#DD524C" }]}
-          onPress={() => {
-            closeSwipe();
-            onDelete(chat);
-          }}
+          onPress={() => handleAction(onDelete)}
         >
           <TrashIcon width={20} height={20} color="white" />
           <Typography
@@ -133,10 +134,7 @@ export function SwipeableChatRow({
             styles.actionButton,
             { backgroundColor: isDark ? "#3A566A" : "#9CA3AF" },
           ]}
-          onPress={() => {
-            closeSwipe();
-            onArchive(chat);
-          }}
+          onPress={() => handleAction(onArchive)}
         >
           <ArchiveIcon width={20} height={20} color="white" />
           <Typography
@@ -154,10 +152,7 @@ export function SwipeableChatRow({
             styles.actionButton,
             { backgroundColor: isDark ? "#163043" : "#DDE2E8" },
           ]}
-          onPress={() => {
-            closeSwipe();
-            onMore?.(chat);
-          }}
+          onPress={() => handleAction(onMore)}
         >
           <MoreIcon width={20} height={20} color={themeColors.text} />
           <Typography
@@ -179,12 +174,14 @@ export function SwipeableChatRow({
       friction={2}
       leftThreshold={30}
       rightThreshold={40}
+      onSwipeableWillOpen={() => setIsSwiped(true)}
+      onSwipeableWillClose={() => setIsSwiped(false)}
       renderLeftActions={renderLeftActions}
       renderRightActions={renderRightActions}
     >
       <ChatListItem
         chat={chat}
-        isSelected={isSelected}
+        isSelected={isSelected || isSwiped}
         onPress={onPress}
         onLongPress={onLongPress}
       />
@@ -198,12 +195,14 @@ const styles = StyleSheet.create({
     width: 152,
     gap: 4,
     paddingLeft: 12,
+    marginRight: 8,
   },
   rightActionsContainer: {
     flexDirection: "row",
     width: 232,
     gap: 4,
     paddingRight: 12,
+    marginLeft: 8,
   },
   actionButton: {
     flex: 1,
