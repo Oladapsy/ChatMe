@@ -2,7 +2,6 @@ import React, { useState, useMemo } from "react";
 import {
   StyleSheet,
   View,
-  Image,
   FlatList,
   TouchableOpacity,
   useColorScheme,
@@ -10,15 +9,15 @@ import {
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Typography } from "@/shared/components/Typography";
-import PinPromptModal from "@/features/security/components/PinPromptModal";
 import { HeaderSection } from "@/features/chats/components/HeaderSection";
 import { SwipeableChatRow } from "@/features/chats/components/SwipeableChatRow";
+import { ArchivedHeaderRow } from "@/features/chats/components/ArchivedHeaderRow";
+import { EmptyChatState } from "@/features/chats/components/EmptyChatState";
+import PinPromptModal from "@/features/security/components/PinPromptModal";
 import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 import { Chat } from "@/features/chats/types/chat";
 import { Colors } from "@/shared/constants/colors";
 import PlusIcon from "@/assets/icons/shared/plus.svg";
-import { EmptyChatState } from "@/features/chats/components/EmptyChatState";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -34,27 +33,34 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Filter chats by search query
-const filteredChats = useMemo(() => {
+  // Split chats into active vs. archived
+  const archivedChats = useMemo(() => {
+    return chats.filter((c) => c.isArchived);
+  }, [chats]);
+
+  const activeChats = useMemo(() => {
+    return chats.filter((c) => !c.isArchived);
+  }, [chats]);
+
+  // Filter & sort active chats (Pinned on top)
+  const filteredChats = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    // 1. Filter chats by name or last message
     const filtered = query
-      ? chats.filter((chat) => {
+      ? activeChats.filter((chat) => {
           const matchesName = chat.name.toLowerCase().includes(query);
           const matchesLastMessage = chat.lastMessage
             ? chat.lastMessage.toLowerCase().includes(query)
             : false;
           return matchesName || matchesLastMessage;
         })
-      : chats;
+      : activeChats;
 
-    // 2. Sort so pinned items stay at the top
     return [...filtered].sort((a, b) => {
       if (a.isPinned === b.isPinned) return 0;
       return a.isPinned ? -1 : 1;
     });
-  }, [chats, searchQuery]);
+  }, [activeChats, searchQuery]);
 
   // Selection toggle logic
   const handleToggleSelect = (id: string) => {
@@ -90,7 +96,13 @@ const filteredChats = useMemo(() => {
 
   const handleArchive = (chatToArchive?: Chat) => {
     const targetIds = chatToArchive ? [chatToArchive.id] : selectedIds;
-    setChats((prev) => prev.filter((item) => !targetIds.includes(item.id)));
+    setChats((prev) =>
+      prev.map((item) =>
+        targetIds.includes(item.id)
+          ? { ...item, isArchived: !item.isArchived }
+          : item,
+      ),
+    );
     setSelectedIds([]);
   };
 
@@ -104,7 +116,6 @@ const filteredChats = useMemo(() => {
     <View
       style={[styles.container, { backgroundColor: themeColors.background }]}
     >
-      {/* Dynamic Header Section scoped to top inset */}
       <SafeAreaView edges={["top"]} style={{ backgroundColor: topHeaderBg }}>
         <HeaderSection
           selectedCount={selectedIds.length}
@@ -118,12 +129,17 @@ const filteredChats = useMemo(() => {
         />
       </SafeAreaView>
 
-      {/* Main Content Area */}
       <View style={styles.content}>
         <FlatList
           data={filteredChats}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
+          ListHeaderComponent={
+            <ArchivedHeaderRow
+              archivedChats={archivedChats}
+              onPress={() => router.push("/archived-chats")}
+            />
+          }
           ListEmptyComponent={EmptyChatState}
           renderItem={({ item }) => {
             const isSelected = selectedIds.includes(item.id);
@@ -149,7 +165,6 @@ const filteredChats = useMemo(() => {
         />
       </View>
 
-      {/* Floating Action Button */}
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: themeColors.primary }]}
         activeOpacity={0.8}
@@ -157,7 +172,6 @@ const filteredChats = useMemo(() => {
         <PlusIcon width={24} height={24} color="white" />
       </TouchableOpacity>
 
-      {/* PIN Security Modal Prompt */}
       <PinPromptModal
         visible={showPinModal}
         onAccept={() => {

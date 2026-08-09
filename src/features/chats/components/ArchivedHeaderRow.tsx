@@ -25,7 +25,8 @@ export function ArchivedHeaderRow({
 
   if (archivedChats.length === 0) return null;
 
-  // Format list of archived names: "Annie Miles, Arlene McCoy"
+  // Format list of archived names: and cocat the names separating it
+  // with a comm.
   const namesSummary = archivedChats.map((c) => c.name).join(", ");
   const latestTime = archivedChats[0]?.time ?? "";
 
@@ -74,10 +75,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   iconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "#4ADE80",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#57B77D",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 14,

@@ -26,6 +26,7 @@ export const MOCK_CHATS: Chat[] = [
     time: "11:17 PM",
     unreadCount: 4,
     isOnline: true,
+    isArchived: true,
   },
   {
     id: "4",
@@ -43,6 +44,7 @@ export const MOCK_CHATS: Chat[] = [
     avatar: "https://i.pravatar.cc/100?img=55",
     lastMessage: "You: Okay Rin, sounds good. Let's...",
     time: "06:13 PM",
+    isArchived: true,
   },
   {
     id: "6",

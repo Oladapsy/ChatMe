@@ -3,7 +3,12 @@ import { StyleSheet, View, Image, useColorScheme } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 
-export function EmptyChatState() {
+interface EmptyChatStateProps {
+  title?: string;
+  description?: React.ReactNode;
+}
+
+export function EmptyChatState({ title, description }: EmptyChatStateProps) {
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
@@ -44,6 +49,20 @@ export function EmptyChatState() {
         </View>
       </View>
 
+      {/* If a custom title is passed */}
+      {title && (
+        <Typography
+          size={16}
+          weight="bold"
+          align="center"
+          color={themeColors.text}
+          style={styles.title}
+        >
+          {title}
+        </Typography>
+      )}
+
+      {/* Render custom description or fallback to the original default message */}
       <Typography
         variant="body"
         size={13}
@@ -51,11 +70,15 @@ export function EmptyChatState() {
         color={themeColors.textSecondary}
         style={styles.description}
       >
-        <Typography size={14} weight="bold" color={themeColors.text}>
-          Mom, Sir Silbert, Cody Fisher{" "}
-        </Typography>
-        and {ContactLeft2}+ contacts found on Chatme, try sending a message to
-        them or just saying hello.
+        {description ?? (
+          <>
+            <Typography size={14} weight="bold" color={themeColors.text}>
+              Mom, Sir Silbert, Cody Fisher{" "}
+            </Typography>
+            and {ContactLeft2}+ contacts found on Chatme, try sending a message
+            to them or just saying hello.
+          </>
+        )}
       </Typography>
     </View>
   );
@@ -102,6 +125,9 @@ const styles = StyleSheet.create({
     marginLeft: -12,
     justifyContent: "center",
     alignItems: "center",
+  },
+  title: {
+    marginBottom: 6,
   },
   description: {
     lineHeight: 20,
