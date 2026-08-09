@@ -9,4 +9,5 @@ export interface Chat {
   isMuted?: boolean;
   isArchived?: boolean;
   isOnline?: boolean;
+  isGroup?: boolean;
 }
