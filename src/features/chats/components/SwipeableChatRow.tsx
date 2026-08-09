@@ -1,6 +1,15 @@
 import React, { useRef } from "react";
-import { StyleSheet, View, TouchableOpacity, Animated, useColorScheme } from "react-native";
-import Swipeable from "react-native-gesture-handler/Swipeable";
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
+import Swipeable, {
+  SwipeableMethods,
+} from "react-native-gesture-handler/ReanimatedSwipeable";
+import { SharedValue } from "react-native-reanimated";
+
 import { ChatListItem } from "@/features/chats/components/ChatListItem";
 import { Chat } from "@/features/chats/types/chat";
 import { Colors } from "@/shared/constants/colors";
@@ -36,7 +45,7 @@ export function SwipeableChatRow({
   onDelete,
   onMore,
 }: SwipeableChatRowProps) {
-  const swipeableRef = useRef<Swipeable>(null);
+  const swipeableRef = useRef<SwipeableMethods>(null);
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
@@ -47,15 +56,9 @@ export function SwipeableChatRow({
 
   // Render Left Swipe Actions (Mute, Pin)
   const renderLeftActions = (
-    _progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>
+    _progress: SharedValue<number>,
+    _dragX: SharedValue<number>,
   ) => {
-    const trans = dragX.interpolate({
-      inputRange: [0, 100],
-      outputRange: [0, 1],
-      extrapolate: "clamp",
-    });
-
     return (
       <View style={styles.leftActionsContainer}>
         <TouchableOpacity
@@ -66,7 +69,12 @@ export function SwipeableChatRow({
           }}
         >
           <MuteIcon width={20} height={20} color="#FFFFFF" />
-          <Typography size={11} color="#FFFFFF" weight="bold" style={styles.actionText}>
+          <Typography
+            size={11}
+            color="#FFFFFF"
+            weight="bold"
+            style={styles.actionText}
+          >
             {chat.isMuted ? "Unmute" : "Mute"}
           </Typography>
         </TouchableOpacity>
@@ -82,8 +90,13 @@ export function SwipeableChatRow({
           }}
         >
           <PinIcon width={20} height={20} color="#FFFFFF" />
-          <Typography size={11} color="#FFFFFF" weight="bold" style={styles.actionText}>
-            {chat.isPinned ? "Unpinned" : "Pinned"}
+          <Typography
+            size={11}
+            color="#FFFFFF"
+            weight="bold"
+            style={styles.actionText}
+          >
+            {chat.isPinned ? "Unpin" : "Pin"}
           </Typography>
         </TouchableOpacity>
       </View>
@@ -92,8 +105,8 @@ export function SwipeableChatRow({
 
   // Render Right Swipe Actions (Delete, Archive, More)
   const renderRightActions = (
-    _progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>
+    _progress: SharedValue<number>,
+    _dragX: SharedValue<number>,
   ) => {
     return (
       <View style={styles.rightActionsContainer}>
@@ -105,7 +118,12 @@ export function SwipeableChatRow({
           }}
         >
           <TrashIcon width={20} height={20} color="#FFFFFF" />
-          <Typography size={11} color="#FFFFFF" weight="bold" style={styles.actionText}>
+          <Typography
+            size={11}
+            color="#FFFFFF"
+            weight="bold"
+            style={styles.actionText}
+          >
             Delete
           </Typography>
         </TouchableOpacity>
@@ -121,8 +139,13 @@ export function SwipeableChatRow({
           }}
         >
           <ArchiveIcon width={20} height={20} color="#FFFFFF" />
-          <Typography size={11} color="#FFFFFF" weight="bold" style={styles.actionText}>
-            Archived
+          <Typography
+            size={11}
+            color="#FFFFFF"
+            weight="bold"
+            style={styles.actionText}
+          >
+            Archive
           </Typography>
         </TouchableOpacity>
 
