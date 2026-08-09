@@ -25,8 +25,8 @@ export default function HomeScreen() {
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
-  // Header background color: #163043 in dark mode, Primary Green in light mode
-  const topHeaderBg = isDark ? "#163043" : themeColors.primary;
+  // the top head color -> safe area side
+  const topHeaderBg = isDark ? themeColors.onboardingTop : themeColors.primary;
 
   const [showPinModal, setShowPinModal] = useState(true);
   const [chats, setChats] = useState<Chat[]>(MOCK_CHATS);
@@ -35,11 +35,21 @@ export default function HomeScreen() {
 
   // Filter chats by search query
   const filteredChats = useMemo(() => {
-    if (!searchQuery.trim()) return chats;
-    return chats.filter((chat) =>
-      chat.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [chats, searchQuery]);
+  const query = searchQuery.trim().toLowerCase();
+  if (!query) return chats;
+
+  return chats.filter((chat) => {
+    const matchesName = chat.name.toLowerCase().includes(query);
+    
+    // Check if the search query matches the last message text
+    const matchesLastMessage = chat.lastMessage
+      ? chat.lastMessage.toLowerCase().includes(query)
+      : false;
+
+    // Return true if EITHER the name OR the message contains the search query
+    return matchesName || matchesLastMessage;
+  });
+}, [chats, searchQuery]);
 
   // Selection toggle logic
   const handleToggleSelect = (id: string) => {
