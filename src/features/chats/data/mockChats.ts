@@ -35,6 +35,7 @@ export const MOCK_CHATS: Chat[] = [
     time: "08:26 PM",
     isPinned: true,
     unreadCount: 0,
+    isGroup: true,
   },
   {
     id: "5",

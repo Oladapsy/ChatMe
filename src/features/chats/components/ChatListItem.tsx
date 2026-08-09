@@ -10,6 +10,7 @@ import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { Chat } from "@/features/chats/types/chat";
 import PinIcon from "@/assets/icons/shared/pin.svg";
+import GroupIcon from "@/assets/icons/chat/user-group.svg";
 
 interface ChatListItemProps {
   chat: Chat;
@@ -41,20 +42,25 @@ export function ChatListItem({
       {/* Avatar Container with Online Badge */}
       <View style={styles.avatarWrapper}>
         <Image source={{ uri: chat.avatar }} style={styles.avatar} />
-        {chat.isOnline && <View style={styles.onlineBadge} />}
+        {chat.isOnline && !chat.isGroup && <View style={styles.onlineBadge} />}
       </View>
 
       {/* Main Info */}
       <View style={styles.infoContainer}>
         <View style={styles.topRow}>
-          <Typography
-            variant="body"
-            size={16}
-            weight="bold"
-            color={themeColors.text}
-          >
-            {chat.name}
-          </Typography>
+          <View style={styles.nameWrapper}>
+            {chat.isGroup && (
+              <GroupIcon width={18} height={18} color={themeColors.primary} />
+            )}
+            <Typography
+              variant="body"
+              size={16}
+              weight="bold"
+              color={themeColors.text}
+            >
+              {chat.name}
+            </Typography>
+          </View>
           <Typography
             size={14}
             color={
@@ -130,6 +136,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 4,
+  },
+  nameWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+    marginRight: 8,
   },
   bottomRow: {
     flexDirection: "row",
