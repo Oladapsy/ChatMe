@@ -47,7 +47,7 @@ export function ChatHeader({ searchQuery, onSearchChange }: ChatHeaderProps) {
         <SearchIcon
           width={18}
           height={18}
-          color={isDark ? "#94A3B8" : "#FFFFFF"}
+          color={isDark ? "#94A3B8" : "white"}
         />
         <TextInput
           value={searchQuery}
@@ -56,7 +56,7 @@ export function ChatHeader({ searchQuery, onSearchChange }: ChatHeaderProps) {
           placeholderTextColor={isDark ? "#64748B" : "rgba(255, 255, 255, 0.7)"}
           style={[
             styles.input,
-            { color: isDark ? themeColors.text : "#FFFFFF" },
+            { color: isDark ? themeColors.text : "white" },
           ]}
         />
       </View>
