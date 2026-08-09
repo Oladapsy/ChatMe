@@ -1,5 +1,11 @@
 import React from "react";
-import { StyleSheet, View, Image, TouchableOpacity, useColorScheme } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { Chat } from "@/features/chats/types/chat";
@@ -46,7 +52,9 @@ export function ChatListItem({
           </Typography>
           <Typography
             size={12}
-            color={chat.unreadCount ? themeColors.primary : themeColors.textSecondary}
+            color={
+              chat.unreadCount ? themeColors.primary : themeColors.textSecondary
+            }
           >
             {chat.time}
           </Typography>
@@ -64,7 +72,9 @@ export function ChatListItem({
 
           {/* Badges: Unread Counter or Pin Icon */}
           {chat.unreadCount ? (
-            <View style={[styles.badge, { backgroundColor: themeColors.primary }]}>
+            <View
+              style={[styles.badge, { backgroundColor: themeColors.primary }]}
+            >
               <Typography size={11} weight="bold" color="#FFFFFF">
                 {chat.unreadCount}
               </Typography>
