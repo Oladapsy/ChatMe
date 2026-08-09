@@ -34,6 +34,7 @@ export const MOCK_CHATS: Chat[] = [
     lastMessage: "Wait, I am on my way!",
     time: "08:26 PM",
     isPinned: true,
+    unreadCount: 0,
   },
   {
     id: "5",

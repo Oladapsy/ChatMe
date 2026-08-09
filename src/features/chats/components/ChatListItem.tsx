@@ -32,7 +32,7 @@ export function ChatListItem({
     <TouchableOpacity
       style={[
         styles.container,
-        isSelected && { backgroundColor: isDark ? "#1F3C51" : "#E5E7EB" },
+        isSelected && { backgroundColor: themeColors.longPress },
       ]}
       onPress={onPress}
       onLongPress={onLongPress}
@@ -47,11 +47,16 @@ export function ChatListItem({
       {/* Main Info */}
       <View style={styles.infoContainer}>
         <View style={styles.topRow}>
-          <Typography variant="body" weight="bold" color={themeColors.text}>
+          <Typography
+            variant="body"
+            size={16}
+            weight="bold"
+            color={themeColors.text}
+          >
             {chat.name}
           </Typography>
           <Typography
-            size={12}
+            size={14}
             color={
               chat.unreadCount ? themeColors.primary : themeColors.textSecondary
             }
@@ -62,7 +67,7 @@ export function ChatListItem({
 
         <View style={styles.bottomRow}>
           <Typography
-            size={13}
+            size={15}
             color={themeColors.textSecondary}
             numberOfLines={1}
             style={styles.lastMessage}
@@ -75,7 +80,7 @@ export function ChatListItem({
             <View
               style={[styles.badge, { backgroundColor: themeColors.primary }]}
             >
-              <Typography size={11} weight="bold" color="#FFFFFF">
+              <Typography size={13} weight="bold" color="white">
                 {chat.unreadCount}
               </Typography>
             </View>
@@ -100,23 +105,24 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
   onlineBadge: {
     position: "absolute",
     right: 0,
-    top: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#22C55E",
+    bottom: 0,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: Colors.dark.primary,
     borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: "white",
   },
   infoContainer: {
     flex: 1,
+    gap: 4,
   },
   topRow: {
     flexDirection: "row",
@@ -135,8 +141,8 @@ const styles = StyleSheet.create({
   },
   badge: {
     minWidth: 20,
-    height: 20,
-    borderRadius: 10,
+    height: 21,
+    borderRadius: 10.25,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 6,

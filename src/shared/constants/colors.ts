@@ -14,6 +14,8 @@ export const Colors = {
     error: "#EF4444",
     tabBg: "#FFFFFF",
     smallCircle: "#EAEEF2",
+    longPress: "#F5FBF7",
+    oldLongPress: "#E5E7EB",
   },
   dark: {
     primary: "#57B77D",
@@ -29,6 +31,9 @@ export const Colors = {
     onboardingTop: "#163043",
     error: "#EF4444",
     tabBg: "#163043",
-    smallCircle: "#FFFFFF"
+    smallCircle: "#FFFFFF",
+    longPress: "#163043",
+    oldLongPress: "#1F3C51",
+
   },
 };
