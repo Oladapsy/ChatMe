@@ -53,12 +53,6 @@ export function SwipeableChatRow({
   const closeSwipe = () => {
     swipeableRef.current?.close();
   };
-  const handleAction = (actionFn: (chat: Chat) => void) => {
-    closeSwipe();
-    requestAnimationFrame(() => {
-      actionFn(chat);
-    });
-  };
 
   // Render Left Swipe Actions (Mute, Pin)
   const renderLeftActions = (
