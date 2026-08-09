@@ -1,6 +1,6 @@
 import React from "react";
-import { ChatHeader } from "./ChatHeader";
-import { SelectionHeader } from "./SelectionHeader";
+import { ChatHeader } from "@/features/chats/components/ChatHeader";
+import { SelectionHeader } from "@/features/chats/components/SelectionHeader";
 
 interface HeaderSectionProps {
   selectedCount: number;
