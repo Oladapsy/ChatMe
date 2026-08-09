@@ -8,6 +8,10 @@ export function EmptyChatState() {
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
+  const ContactTotal = 27;
+  const ContactLeft = ContactTotal - 5;
+  const ContactLeft2 = ContactTotal - 3;
+
   return (
     <View style={styles.emptyContainer}>
       <View style={styles.avatarCluster}>
@@ -31,11 +35,11 @@ export function EmptyChatState() {
           style={[
             styles.avatar,
             styles.avatarCount,
-            { backgroundColor: isDark ? "#1F3C51" : "#E5E7EB" },
+            { backgroundColor: themeColors.smallCircle },
           ]}
         >
           <Typography size={12} weight="bold" color={themeColors.textSecondary}>
-            26+
+            {ContactLeft}+
           </Typography>
         </View>
       </View>
@@ -47,11 +51,11 @@ export function EmptyChatState() {
         color={themeColors.textSecondary}
         style={styles.description}
       >
-        <Typography size={13} weight="bold" color={themeColors.text}>
-          Mom, Sir Silbert, Cody Fisher
-        </Typography>{" "}
-        and 26+ contacts found on Chatme, try sending a message to them or just
-        saying hello.
+        <Typography size={14} weight="bold" color={themeColors.text}>
+          Mom, Sir Silbert, Cody Fisher{" "}
+        </Typography>
+        and {ContactLeft2}+ contacts found on Chatme, try sending a message to
+        them or just saying hello.
       </Typography>
     </View>
   );
@@ -62,8 +66,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingTop: 80, // Gives proper vertical alignment inside FlatList
+    paddingLeft: 24,
+    paddingRight: 11,
   },
   avatarCluster: {
     flexDirection: "row",
@@ -77,12 +81,23 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#FFFFFF",
   },
-  avatar1: { zIndex: 5 },
-  avatar2: { zIndex: 4, marginLeft: -12 },
-  avatar3: { zIndex: 3, marginLeft: -12 },
-  avatar4: { zIndex: 2, marginLeft: -12 },
-  avatarCount: {
+  avatar1: {
     zIndex: 1,
+  },
+  avatar2: {
+    zIndex: 2,
+    marginLeft: -12,
+  },
+  avatar3: {
+    zIndex: 3,
+    marginLeft: -12,
+  },
+  avatar4: {
+    zIndex: 4,
+    marginLeft: -12,
+  },
+  avatarCount: {
+    zIndex: 5,
     marginLeft: -12,
     justifyContent: "center",
     alignItems: "center",

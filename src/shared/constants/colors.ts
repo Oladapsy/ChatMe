@@ -13,6 +13,7 @@ export const Colors = {
     onboardingTop: "#F5FEF8",
     error: "#EF4444",
     tabBg: "#FFFFFF",
+    smallCircle: "#EAEEF2",
   },
   dark: {
     primary: "#57B77D",
@@ -28,5 +29,6 @@ export const Colors = {
     onboardingTop: "#163043",
     error: "#EF4444",
     tabBg: "#163043",
+    smallCircle: "#FFFFFF"
   },
 };
