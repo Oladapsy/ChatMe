@@ -77,7 +77,7 @@ export function SwipeableChatRow({
         >
           <MuteIcon width={20} height={20} color="white" />
           <Typography
-            size={13}
+            size={chat.isArchived ? 11 : 13}
             color="white"
             weight="bold"
             style={styles.actionText}
@@ -95,7 +95,7 @@ export function SwipeableChatRow({
         >
           <PinIcon width={20} height={20} color="white" />
           <Typography
-            size={13}
+            size={chat.isArchived ? 11 : 13}
             color="white"
             weight="bold"
             style={styles.actionText}
@@ -120,7 +120,7 @@ export function SwipeableChatRow({
         >
           <TrashIcon width={20} height={20} color="white" />
           <Typography
-            size={13}
+            size={chat.isArchived ? 11 : 13}
             color="white"
             weight="bold"
             style={styles.actionText}
@@ -138,12 +138,12 @@ export function SwipeableChatRow({
         >
           <ArchiveIcon width={20} height={20} color="white" />
           <Typography
-            size={13}
+            size={chat.isArchived ? 11 : 13}
             color="white"
             weight="bold"
             style={styles.actionText}
           >
-            Archive
+            {chat.isArchived ? "Unarchive" : "Archive"}
           </Typography>
         </TouchableOpacity>
 
@@ -156,7 +156,7 @@ export function SwipeableChatRow({
         >
           <MoreIcon width={20} height={20} color={themeColors.text} />
           <Typography
-            size={13}
+            size={chat.isArchived ? 11 : 13}
             color={themeColors.text}
             weight="bold"
             style={styles.actionText}

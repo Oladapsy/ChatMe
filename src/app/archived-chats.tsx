@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingVertical: 12,
     flexGrow: 1,
     gap: 4,
   },
