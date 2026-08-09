@@ -35,20 +35,24 @@ export default function HomeScreen() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Filter chats by search query
-  const filteredChats = useMemo(() => {
+const filteredChats = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return chats;
 
-    return chats.filter((chat) => {
-      const matchesName = chat.name.toLowerCase().includes(query);
+    // 1. Filter chats by name or last message
+    const filtered = query
+      ? chats.filter((chat) => {
+          const matchesName = chat.name.toLowerCase().includes(query);
+          const matchesLastMessage = chat.lastMessage
+            ? chat.lastMessage.toLowerCase().includes(query)
+            : false;
+          return matchesName || matchesLastMessage;
+        })
+      : chats;
 
-      // Check if the search query matches the last message text
-      const matchesLastMessage = chat.lastMessage
-        ? chat.lastMessage.toLowerCase().includes(query)
-        : false;
-
-      // Return true if EITHER the name OR the message contains the search query
-      return matchesName || matchesLastMessage;
+    // 2. Sort so pinned items stay at the top
+    return [...filtered].sort((a, b) => {
+      if (a.isPinned === b.isPinned) return 0;
+      return a.isPinned ? -1 : 1;
     });
   }, [chats, searchQuery]);
 
