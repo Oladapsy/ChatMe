@@ -31,7 +31,7 @@ export const MOCK_CHATS: Chat[] = [
     id: "4",
     name: "Work Team",
     avatar: "https://i.pravatar.cc/100?img=44",
-    lastMessage: "Wait, I am on my way!",
+    lastMessage: "Femi: Wait, I am on my way!",
     time: "08:26 PM",
     isPinned: true,
     unreadCount: 0,
