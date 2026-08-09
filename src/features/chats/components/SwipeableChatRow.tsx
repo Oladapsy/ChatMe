@@ -1,8 +1,8 @@
 import React, { useRef } from "react";
 import { StyleSheet, View, TouchableOpacity, Animated, useColorScheme } from "react-native";
 import Swipeable from "react-native-gesture-handler/Swipeable";
-import { ChatListItem } from "./ChatListItem";
-import { Chat } from "../types/chat";
+import { ChatListItem } from "@/features/chats/components/ChatListItem";
+import { Chat } from "@/features/chats/types/chat";
 import { Colors } from "@/shared/constants/colors";
 import { Typography } from "@/shared/components/Typography";
 

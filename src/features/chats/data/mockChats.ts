@@ -1,6 +1,6 @@
 import { Chat } from "@/features/chats/types/chat";
 
-export const MOCK_CHATS11: Chat[] = [
+export const MOCK_CHATS: Chat[] = [
   {
     id: "1",
     name: "Darrell Steward",
@@ -114,6 +114,6 @@ export const MOCK_CHATS11: Chat[] = [
   },
 ];
 
-export const MOCK_CHATS: Chat[] = [
+export const MOCK_CHATS1: Chat[] = [
 
 ]
