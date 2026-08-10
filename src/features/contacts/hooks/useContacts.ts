@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import * as Contacts from "expo-contacts";
-import { MOCK_CONTACTS } from "../data/mockContacts";
+import { MOCK_CONTACTS } from "@/features/contacts/data/mockContacts";
 
 export interface ContactItem {
   id: string;
@@ -33,12 +33,15 @@ export function useContacts() {
         if (data.length > 0) {
           // Normalize and map native device contacts
           const formatted: ContactItem[] = data
-            .filter((c) => c.name && c.phoneNumbers && c.phoneNumbers.length > 0)
+            .filter(
+              (c) => c.name && c.phoneNumbers && c.phoneNumbers.length > 0,
+            )
             .map((c) => {
               const rawPhone = c.phoneNumbers![0].number || "";
               // Mock check against registered users database:
               const isRegistered = MOCK_CONTACTS.some(
-                (mock) => mock.phone.replace(/\D/g, "") === rawPhone.replace(/\D/g, "")
+                (mock) =>
+                  mock.phone.replace(/\D/g, "") === rawPhone.replace(/\D/g, ""),
               );
 
               return {
@@ -61,7 +64,7 @@ export function useContacts() {
         MOCK_CONTACTS.map((c) => ({
           ...c,
           isOnApp: true,
-        }))
+        })),
       );
     } catch (error) {
       console.warn("Failed to load native contacts:", error);
@@ -70,7 +73,7 @@ export function useContacts() {
         MOCK_CONTACTS.map((c) => ({
           ...c,
           isOnApp: true,
-        }))
+        })),
       );
     } finally {
       setLoading(false);

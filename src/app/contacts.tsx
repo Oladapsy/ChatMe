@@ -3,9 +3,7 @@ import {
   StyleSheet,
   View,
   SectionList,
-  TextInput,
-  TouchableOpacity,
-  Image,
+  ActivityIndicator,
   useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -13,12 +11,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
-import { MOCK_CONTACTS, Contact, ContactSection } from "@/features/contacts/data/mockContacts";
-
-// Icons
-import BackIcon from "@/assets/icons/shared/chevron-left.svg";
-import SearchIcon from "@/assets/icons/shared/search.svg";
-import ChevronRightIcon from "@/assets/icons/shared/chevron-right.svg";
+import { useContacts, ContactItem } from "@/features/contacts/hooks/useContacts";
+import { ContactSearchBar } from "@/features/contacts/components/ContactSearchBar";
+import { ContactItemRow } from "@/features/contacts/components/ContactItemRow";
 
 export default function ContactsScreen() {
   const router = useRouter();
@@ -27,123 +22,110 @@ export default function ContactsScreen() {
   const themeColors = Colors[isDark ? "dark" : "light"];
 
   const [searchQuery, setSearchQuery] = useState("");
+  const { contacts, loading } = useContacts();
 
-  // 1. Filter and group contacts by first letter
-  const sections = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    const filtered = MOCK_CONTACTS.filter(
-      (c) =>
-        c.name.toLowerCase().includes(query) ||
-        c.phone.toLowerCase().includes(query)
-    );
+ // 1. Filter and group contacts by first letter
+const sections = useMemo(() => {
+  const query = searchQuery.trim().toLowerCase();
 
-    // Sort alphabetically
-    filtered.sort((a, b) => a.name.localeCompare(b.name));
+  // Filter against your active contacts state (not static MOCK_CONTACTS)
+  const filtered = contacts.filter((c) => {
+    const nameMatch = c.name?.toLowerCase().includes(query) ?? false;
+    const phoneMatch = c.phone?.toLowerCase().includes(query) ?? false;
+    return nameMatch || phoneMatch;
+  });
 
-    // Group by first letter
-    const grouped: { [key: string]: Contact[] } = {};
-    filtered.forEach((contact) => {
-      const letter = contact.name.charAt(0).toUpperCase();
-      if (!grouped[letter]) {
-        grouped[letter] = [];
-      }
-      grouped[letter].push(contact);
-    });
+  // Sort alphabetically
+  filtered.sort((a, b) => a.name.localeCompare(b.name));
 
-    return Object.keys(grouped).map((letter) => ({
-      title: letter,
-      data: grouped[letter],
-    }));
-  }, [searchQuery]);
+  // If user is searching, hide the section header letters (A, B, C...)
+  if (query.length > 0) {
+    return [{ title: "", data: filtered }];
+  }
 
-  const handleSelectContact = (contact: Contact) => {
-    // Navigate directly into a chat with selected contact
+  // Group by first letter for regular view
+  const grouped: { [key: string]: typeof contacts } = {};
+  filtered.forEach((contact) => {
+    const letter = contact.name.charAt(0).toUpperCase() || "#";
+    if (!grouped[letter]) {
+      grouped[letter] = [];
+    }
+    grouped[letter].push(contact);
+  });
+
+  return Object.keys(grouped).map((letter) => ({
+    title: letter,
+    data: grouped[letter],
+  }));
+}, [contacts, searchQuery]); // Make sure `contacts` and `searchQuery` are both in dependencies
+
+  const handleSelectContact = (contact: ContactItem) => {
     // router.push({
     //   pathname: "/chat-room",
     //   params: { id: contact.id, name: contact.name, avatar: contact.avatar },
     // });
-    console.log("chat room")
+    console.log("/chat-room")
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-      {/* Header */}
-      <SafeAreaView edges={["top"]} style={{ backgroundColor: themeColors.background }}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <BackIcon width={24} height={24} color={themeColors.text} />
-          </TouchableOpacity>
-
-          <Typography size={18} weight="bold" color={themeColors.text}>
-            Contact
-          </Typography>
-
-          <View style={{ width: 24 }} />
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <View
-            style={[
-              styles.searchBar,
-              {
-                backgroundColor: isDark ? "#1E293B" : "#F8FAFC",
-                borderColor: isDark ? "#334155" : "#E2E8F0",
-              },
-            ]}
-          >
-            <SearchIcon width={18} height={18} color="#94A3B8" />
-            <TextInput
-              style={[styles.searchInput, { color: themeColors.text }]}
-              placeholder="Search people..."
-              placeholderTextColor="#94A3B8"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-        </View>
-      </SafeAreaView>
-
-      {/* Alphabetical Contact List */}
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        renderSectionHeader={({ section: { title } }) => (
-          <View
-            style={[
-              styles.sectionHeader,
-              { backgroundColor: isDark ? "#0F172A" : "#F8FAFC" },
-            ]}
-          >
-            <Typography size={13} weight="bold" color="#64748B">
-              {title}
-            </Typography>
-          </View>
-        )}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.contactRow}
-            activeOpacity={0.7}
-            onPress={() => handleSelectContact(item)}
-          >
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
-            <View style={styles.contactInfo}>
-              <Typography size={15} weight="bold" color={themeColors.text}>
-                {item.name}
-              </Typography>
-              <Typography size={13} color="#94A3B8" style={styles.phone}>
-                {item.phone}
-              </Typography>
-            </View>
-            <ChevronRightIcon width={16} height={16} color="#CBD5E1" />
-          </TouchableOpacity>
-        )}
+   <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+  <SafeAreaView edges={["top"]} style={styles.headerSafeArea}>
+    {/* Handle Bar */}
+    <View style={styles.handleContainer}>
+      <View
+        style={[
+          styles.handleBar,
+          { backgroundColor: isDark ? "#334155" : "#E2E8F0" },
+        ]}
       />
+    </View>
+
+    <View style={styles.titleContainer}>
+      <Typography size={18} weight="bold" color={themeColors.text}>
+        Contact
+      </Typography>
+    </View>
+
+    {/* Search Component */}
+    <ContactSearchBar
+      value={searchQuery}
+      onChangeText={(text) => setSearchQuery(text)}
+    />
+  </SafeAreaView>
+
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={themeColors.primary} />
+        </View>
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          renderSectionHeader={({ section: { title } }) => {
+            if (!title) return null;
+            return (
+              <View
+                style={[
+                  styles.sectionHeader,
+                  { backgroundColor: isDark ? "#0F172A" : "#F8FAFC" },
+                ]}
+              >
+                <Typography size={13} weight="bold" color="#64748B">
+                  {title}
+                </Typography>
+              </View>
+            );
+          }}
+          renderItem={({ item }) => (
+            <ContactItemRow
+              item={item}
+              textColor={themeColors.text}
+              onSelect={handleSelectContact}
+            />
+          )}
+        />
+      )}
     </View>
   );
 }
@@ -152,32 +134,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    height: 52,
-    flexDirection: "row",
+  headerSafeArea: {
+    width: "100%",
+  },
+  handleContainer: {
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
-  backButton: {
-    padding: 4,
+  handleBar: {
+    width: 36,
+    height: 5,
+    borderRadius: 3,
   },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  searchBar: {
-    flexDirection: "row",
+  titleContainer: {
     alignItems: "center",
-    height: 44,
-    borderRadius: 22,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
+    paddingVertical: 12,
   },
   listContent: {
     paddingBottom: 24,
@@ -186,22 +157,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 6,
   },
-  contactRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
-  contactInfo: {
+  center: {
     flex: 1,
-    marginLeft: 12,
-  },
-  phone: {
-    marginTop: 2,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
