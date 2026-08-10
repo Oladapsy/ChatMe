@@ -49,8 +49,7 @@ export function FabMenuOverlay({
     );
   }
 
-  const cardBg = isDark ? "#1E293B" : "#FFFFFF";
-  const textColor = isDark ? "#FFFFFF" : "#0F1828";
+  const textColor = isDark ? "#FFFFFF" : "#1F3C51";
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
@@ -69,16 +68,16 @@ export function FabMenuOverlay({
       <View style={styles.menuContainer} pointerEvents="box-none">
         {/* Item 1: New Chat */}
         <TouchableOpacity
-          style={[styles.menuItem, { backgroundColor: cardBg }]}
+          style={[styles.menuItem, { backgroundColor: themeColors.fabBg }]}
           activeOpacity={0.85}
           onPress={() => {
             onToggle();
             onNewChat();
           }}
         >
-          <ChatIcon width={22} height={22} color={themeColors.primary} />
+          <ChatIcon width={24} height={24} color={themeColors.primary} />
           <Typography
-            size={15}
+            size={17}
             weight="bold"
             color={textColor}
             style={styles.menuText}
@@ -89,16 +88,16 @@ export function FabMenuOverlay({
 
         {/* Item 2: New Contact */}
         <TouchableOpacity
-          style={[styles.menuItem, { backgroundColor: cardBg }]}
+          style={[styles.menuItem, { backgroundColor: themeColors.fabBg }]}
           activeOpacity={0.85}
           onPress={() => {
             onToggle();
             onNewContact();
           }}
         >
-          <ContactIcon width={22} height={22} color={themeColors.primary} />
+          <ContactIcon width={24} height={24} color={themeColors.primary} />
           <Typography
-            size={15}
+            size={17}
             weight="bold"
             color={textColor}
             style={styles.menuText}
@@ -109,16 +108,16 @@ export function FabMenuOverlay({
 
         {/* Item 3: New Group */}
         <TouchableOpacity
-          style={[styles.menuItem, { backgroundColor: cardBg }]}
+          style={[styles.menuItem, { backgroundColor: themeColors.fabBg }]}
           activeOpacity={0.85}
           onPress={() => {
             onToggle();
             onNewGroup();
           }}
         >
-          <GroupIcon width={22} height={22} color={themeColors.primary} />
+          <GroupIcon width={24} height={24} color={themeColors.primary} />
           <Typography
-            size={15}
+            size={17}
             weight="bold"
             color={textColor}
             style={styles.menuText}
@@ -127,7 +126,7 @@ export function FabMenuOverlay({
           </Typography>
         </TouchableOpacity>
 
-        {/* FAB stays in the same place and retains the + icon */}
+        {/* FAB stays in the same place and chnages to close icon */}
         <TouchableOpacity
           style={[styles.fabInMenu, { backgroundColor: themeColors.primary }]}
           activeOpacity={0.85}
@@ -183,14 +182,17 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 30, // Fully pill-shaped matching Figma design
+    // height: 52,
+    // width: 170,
+    borderRadius: 100, 
     elevation: 6,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
-    shadowRadius: 10,
+    shadowRadius: 50,
   },
   menuText: {
     marginLeft: 12,
