@@ -13,7 +13,7 @@ import { Colors } from "@/shared/constants/colors";
 // Icons
 import PlusIcon from "@/assets/icons/shared/plus.svg";
 import ChatIcon from "@/assets/icons/chat/chat.svg";
-import ContactIcon from "@/assets/icons/chat/contact.svg";
+import ContactIcon from "@/assets/icons/chat/contact2.svg";
 import GroupIcon from "@/assets/icons/chat/group.svg";
 import CloseIcon from "@/assets/icons/shared/close.svg";
 
@@ -36,7 +36,7 @@ export function FabMenuOverlay({
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
-  // Default closed FAB button positioned over bottom tab bar area
+  // Default static + button 
   if (!isOpen) {
     return (
       <TouchableOpacity
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     // height: 52,
     // width: 170,
-    borderRadius: 100, 
+    borderRadius: 100,
     elevation: 6,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
