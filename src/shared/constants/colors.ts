@@ -15,6 +15,7 @@ export const Colors = {
     tabBg: "#FFFFFF",
     smallCircle: "#EAEEF2",
     longPress: "#F5FBF7",
+    fabBg: "#FFFFFF",
     oldLongPress: "#E5E7EB",
   },
   dark: {
@@ -33,6 +34,7 @@ export const Colors = {
     tabBg: "#163043",
     smallCircle: "#FFFFFF",
     longPress: "#163043",
+    fabBg: "#163043",
     oldLongPress: "#1F3C51",
 
   },

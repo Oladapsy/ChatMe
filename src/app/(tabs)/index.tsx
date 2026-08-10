@@ -19,6 +19,9 @@ import { Chat } from "@/features/chats/types/chat";
 import { Colors } from "@/shared/constants/colors";
 import PlusIcon from "@/assets/icons/shared/plus.svg";
 
+// for the plus fab Menu
+import { FabMenuOverlay } from "@/features/chats/components/FabMenuOverlay";
+
 export default function HomeScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -32,6 +35,9 @@ export default function HomeScreen() {
   const [chats, setChats] = useState<Chat[]>(MOCK_CHATS);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // the fab icon state to handle the open and close
+  const [isFabOpen, setIsFabOpen] = useState(false);
 
   // Split chats into active vs. archived
   const archivedChats = useMemo(() => {
@@ -165,12 +171,13 @@ export default function HomeScreen() {
         />
       </View>
 
-      <TouchableOpacity
-        style={[styles.fab, { backgroundColor: themeColors.primary }]}
-        activeOpacity={0.8}
-      >
-        <PlusIcon width={24} height={24} color="white" />
-      </TouchableOpacity>
+      <FabMenuOverlay
+        isOpen={isFabOpen}
+        onToggle={() => setIsFabOpen((prev) => !prev)}
+        onNewChat={() => router.push("/contacts")} 
+        onNewContact={() => console.log("New Contact")}
+        onNewGroup={() => console.log("New Group")}
+      />
 
       <PinPromptModal
         visible={showPinModal}
@@ -195,20 +202,5 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     flexGrow: 1,
     gap: 4,
-  },
-  fab: {
-    position: "absolute",
-    right: 20,
-    bottom: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
   },
 });
