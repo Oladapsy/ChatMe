@@ -3,7 +3,6 @@ import {
   StyleSheet,
   View,
   FlatList,
-  TouchableOpacity,
   useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
