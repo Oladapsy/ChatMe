@@ -29,6 +29,7 @@ export function useContacts() {
             Contacts.Fields.Image,
           ],
         });
+        
 
         if (data.length > 0) {
           // Normalize and map native device contacts

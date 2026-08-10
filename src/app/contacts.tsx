@@ -7,13 +7,13 @@ import {
   useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { useContacts, ContactItem } from "@/features/contacts/hooks/useContacts";
 import { ContactSearchBar } from "@/features/contacts/components/ContactSearchBar";
 import { ContactItemRow } from "@/features/contacts/components/ContactItemRow";
+import MySafeAreaView from "@/shared/components/MySafeAreaView";
 
 export default function ContactsScreen() {
   const router = useRouter();
@@ -69,7 +69,7 @@ const sections = useMemo(() => {
 
   return (
    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-  <SafeAreaView edges={["top"]} style={styles.headerSafeArea}>
+  <MySafeAreaView edges={["top",]}  style={styles.headerSafeArea}>
     {/* Handle Bar */}
     <View style={styles.handleContainer}>
       <View
@@ -91,7 +91,7 @@ const sections = useMemo(() => {
       value={searchQuery}
       onChangeText={(text) => setSearchQuery(text)}
     />
-  </SafeAreaView>
+  </MySafeAreaView>
 
       {loading ? (
         <View style={styles.center}>
