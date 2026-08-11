@@ -67,8 +67,14 @@ export const MOCK_CONTACTS: Contact[] = [
   },
   {
     id: "10",
-    name: "Kemal Pahlevi",
+    name: "Yemal Pahlevi",
     phone: "+1-555-522-8243",
-    avatar: "https://i.pravatar.cc/100?img=9",
+    avatar: "https://i.pravatar.cc/100?img=10",
+  },
+  {
+    id: "11",
+    name: "Zemal Pahlevi",
+    phone: "+1-555-522-8243",
+    avatar: "https://i.pravatar.cc/100?img=11",
   },
 ];
