@@ -7,14 +7,16 @@ import {
   useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
-import { useContacts, ContactItem } from "@/features/contacts/hooks/useContacts";
+import {
+  useContacts,
+  ContactItem,
+} from "@/features/contacts/hooks/useContacts";
 import { ContactSearchBar } from "@/features/contacts/components/ContactSearchBar";
 import { ContactItemRow } from "@/features/contacts/components/ContactItemRow";
-import MySafeAreaView from "@/shared/components/MySafeAreaView";
 
 export default function ContactsScreen() {
   const router = useRouter();
@@ -25,127 +27,130 @@ export default function ContactsScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const { contacts, loading } = useContacts();
 
- // 1. Filter and group contacts by first letter
-const sections = useMemo(() => {
-  const query = searchQuery.trim().toLowerCase();
+  // Dynamic top background color
+  // green for light and dark for dark
+  const topSafeAreaColor = isDark
+    ? themeColors.background
+    : themeColors.primary;
 
-  // Filter against your active contacts state (not static MOCK_CONTACTS)
-  const filtered = contacts.filter((c) => {
-    const nameMatch = c.name?.toLowerCase().includes(query) ?? false;
-    const phoneMatch = c.phone?.toLowerCase().includes(query) ?? false;
-    return nameMatch || phoneMatch;
-  });
+  // Filter and group contacts by first letter
+  const sections = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
 
-  // Sort alphabetically
-  filtered.sort((a, b) => a.name.localeCompare(b.name));
+    const filtered = contacts.filter((c) => {
+      const nameMatch = c.name?.toLowerCase().includes(query) ?? false;
+      const phoneMatch = c.phone?.toLowerCase().includes(query) ?? false;
+      return nameMatch || phoneMatch;
+    });
 
-  // If user is searching, hide the section header letters (A, B, C...)
-  if (query.length > 0) {
-    return [{ title: "", data: filtered }];
-  }
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
 
-  // Group by first letter for regular view
-  const grouped: { [key: string]: typeof contacts } = {};
-  filtered.forEach((contact) => {
-    const letter = contact.name.charAt(0).toUpperCase() || "#";
-    if (!grouped[letter]) {
-      grouped[letter] = [];
+    if (query.length > 0) {
+      return [{ title: "", data: filtered }];
     }
-    grouped[letter].push(contact);
-  });
 
-  return Object.keys(grouped).map((letter) => ({
-    title: letter,
-    data: grouped[letter],
-  }));
-}, [contacts, searchQuery]); // Make sure `contacts` and `searchQuery` are both in dependencies
+    const grouped: { [key: string]: typeof contacts } = {};
+    filtered.forEach((contact) => {
+      const letter = contact.name.charAt(0).toUpperCase() || "#";
+      if (!grouped[letter]) {
+        grouped[letter] = [];
+      }
+      grouped[letter].push(contact);
+    });
+
+    return Object.keys(grouped).map((letter) => ({
+      title: letter,
+      data: grouped[letter],
+    }));
+  }, [contacts, searchQuery]);
 
   const handleSelectContact = (contact: ContactItem) => {
-    // router.push({
-    //   pathname: "/chat-room",
-    //   params: { id: contact.id, name: contact.name, avatar: contact.avatar },
-    // });
-    console.log("/chat-room")
+    console.log("Navigate to chat room with contact:", contact.id);
   };
 
   return (
-   <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-  <SafeAreaView edges={["top",]}  style={styles.headerSafeArea}>
-    {/* Handle Bar */}
-    <View style={styles.handleContainer}>
-      <View
-        style={[
-          styles.handleBar,
-          { backgroundColor: isDark ? "#334155" : "#E2E8F0" },
-        ]}
-      />
-    </View>
-
-    <View style={styles.titleContainer}>
-      <Typography size={18} weight="bold" color={themeColors.text}>
-        Contact
-      </Typography>
-    </View>
-
-    {/* Search Component */}
-    <ContactSearchBar
-      value={searchQuery}
-      onChangeText={(text) => setSearchQuery(text)}
-    />
-  </SafeAreaView>
-
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={themeColors.primary} />
+    <MySafeAreaView color={topSafeAreaColor} edges={["top"]}>
+      {/* the main body */}
+      <View style={[styles.card, { backgroundColor: themeColors.background }]}>
+        {/* Sheet Handle Bar */}
+        <View style={styles.handleContainer}>
+          <View
+            style={[
+              styles.handleBar,
+              { backgroundColor: isDark ? "#3A566A" : "#EAEEF2" },
+            ]}
+          />
         </View>
-      ) : (
-        <SectionList
-          sections={sections}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          renderSectionHeader={({ section: { title } }) => {
-            if (!title) return null;
-            return (
-              <View
-                style={[
-                  styles.sectionHeader,
-                  { backgroundColor: isDark ? "#0F172A" : "#F8FAFC" },
-                ]}
-              >
-                <Typography size={13} weight="bold" color="#64748B">
-                  {title}
-                </Typography>
-              </View>
-            );
-          }}
-          renderItem={({ item }) => (
-            <ContactItemRow
-              item={item}
-              textColor={themeColors.text}
-              onSelect={handleSelectContact}
-            />
-          )}
-        />
-      )}
-    </View>
+
+        {/* Title */}
+        <View style={styles.titleContainer}>
+          <Typography size={19} weight="bold" color={themeColors.text}>
+            Contact
+          </Typography>
+        </View>
+
+        {/* Search Input */}
+        <ContactSearchBar value={searchQuery} onChangeText={setSearchQuery} />
+
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color={themeColors.primary} />
+          </View>
+        ) : (
+          <SectionList
+            sections={sections}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            keyboardShouldPersistTaps="handled"
+            renderSectionHeader={({ section: { title } }) => {
+              if (!title) return null;
+              return (
+                <View
+                  style={[
+                    styles.sectionHeader,
+                    { backgroundColor: isDark ? "#163043" : "#F9FAFB" },
+                  ]}
+                >
+                  <Typography
+                    size={13}
+                    weight="bold"
+                    color={themeColors.textSecondary}
+                  >
+                    {title}
+                  </Typography>
+                </View>
+              );
+            }}
+            renderItem={({ item }) => (
+              <ContactItemRow
+                item={item}
+                textColor={themeColors.text}
+                onSelect={handleSelectContact}
+              />
+            )}
+          />
+        )}
+      </View>
+    </MySafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     flex: 1,
-  },
-  headerSafeArea: {
-    width: "100%",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: "hidden",
   },
   handleContainer: {
     alignItems: "center",
-    paddingVertical: 8,
+    paddingTop: 10,
+    paddingBottom: 4,
   },
   handleBar: {
-    width: 36,
-    height: 5,
-    borderRadius: 3,
+    width: 48,
+    height: 6,
+    borderRadius: 100,
   },
   titleContainer: {
     alignItems: "center",
