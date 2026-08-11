@@ -51,7 +51,12 @@ export function AttachmentModal({
   if (!visible) return null;
 
   return (
-    <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
+    <Modal
+      animationType="fade"
+      transparent
+      visible={visible}
+      onRequestClose={onClose}
+    >
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
@@ -78,7 +83,11 @@ export function AttachmentModal({
                     onOpenCamera();
                   }}
                 >
-                  <CameraIcon width={24} height={24} color={themeColors.textSecondary} />
+                  <CameraIcon
+                    width={24}
+                    height={24}
+                    color={themeColors.textSecondary}
+                  />
                 </TouchableOpacity>
 
                 {/* Quick Gallery Thumbnails */}
@@ -105,7 +114,12 @@ export function AttachmentModal({
                   }}
                 >
                   <GalleryIcon width={22} height={22} color="#10B981" />
-                  <Typography size={15} weight="bold" color={themeColors.text} style={styles.label}>
+                  <Typography
+                    size={15}
+                    weight="bold"
+                    color={themeColors.text}
+                    style={styles.label}
+                  >
                     Photo or Gallery
                   </Typography>
                 </TouchableOpacity>
@@ -118,7 +132,12 @@ export function AttachmentModal({
                   }}
                 >
                   <DocumentIcon width={22} height={22} color="#10B981" />
-                  <Typography size={15} weight="bold" color={themeColors.text} style={styles.label}>
+                  <Typography
+                    size={15}
+                    weight="bold"
+                    color={themeColors.text}
+                    style={styles.label}
+                  >
                     Document
                   </Typography>
                 </TouchableOpacity>
@@ -131,7 +150,12 @@ export function AttachmentModal({
                   }}
                 >
                   <LocationIcon width={22} height={22} color="#10B981" />
-                  <Typography size={15} weight="bold" color={themeColors.text} style={styles.label}>
+                  <Typography
+                    size={15}
+                    weight="bold"
+                    color={themeColors.text}
+                    style={styles.label}
+                  >
                     Location
                   </Typography>
                 </TouchableOpacity>
@@ -144,7 +168,12 @@ export function AttachmentModal({
                   }}
                 >
                   <ContactIcon width={22} height={22} color="#10B981" />
-                  <Typography size={15} weight="bold" color={themeColors.text} style={styles.label}>
+                  <Typography
+                    size={15}
+                    weight="bold"
+                    color={themeColors.text}
+                    style={styles.label}
+                  >
                     Contact
                   </Typography>
                 </TouchableOpacity>

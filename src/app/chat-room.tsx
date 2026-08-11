@@ -94,7 +94,7 @@ export default function ChatRoomScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={0}
       >
-        {/* Messages Feed Area */}
+        {/* Messages Feed Area populated later */}
         <View
           style={[
             styles.chatBody,

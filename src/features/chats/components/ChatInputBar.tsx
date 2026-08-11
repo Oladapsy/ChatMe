@@ -11,7 +11,6 @@ import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 
-// Updated SVG Icon Imports
 import PaperclipIcon from "@/assets/icons/chat/paperClip.svg";
 import SendIcon from "@/assets/icons/chat/send.svg";
 import MicIcon from "@/assets/icons/chat/mic.svg";
@@ -38,7 +37,9 @@ export function ChatInputBar({
 
   const [isRecordingState, setIsRecordingState] = useState(false);
   const [recordDuration, setRecordDuration] = useState(0);
-  const [timerInterval, setTimerInterval] = useState<ReturnType<typeof setInterval> | null>(null);
+  const [timerInterval, setTimerInterval] = useState<ReturnType<
+    typeof setInterval
+  > | null>(null);
 
   // Initialize expo-audio recorder
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -116,12 +117,22 @@ export function ChatInputBar({
     <View style={styles.container}>
       {isRecordingState ? (
         /* Recording Audio Active UI */
-        <View style={[styles.inputPill, { backgroundColor: isDark ? "#163043" : "#FFFFFF" }]}>
+        <View
+          style={[
+            styles.inputPill,
+            { backgroundColor: themeColors.cardBackground },
+          ]}
+        >
           <TouchableOpacity onPress={cancelRecording} style={styles.iconBtn}>
-            <TrashIcon width={22} height={22} color="#EF4444" />
+            <TrashIcon width={22} height={22} color={themeColors.error} />
           </TouchableOpacity>
 
-          <Typography size={15} weight="bold" color="#EF4444" style={styles.timer}>
+          <Typography
+            size={15}
+            weight="bold"
+            color={themeColors.error}
+            style={styles.timer}
+          >
             ● {formatTime(recordDuration)} Recording...
           </Typography>
 
@@ -129,14 +140,23 @@ export function ChatInputBar({
             style={[styles.actionBtn, { backgroundColor: themeColors.primary }]}
             onPress={stopAndSendRecording}
           >
-            <SendIcon width={18} height={18} color="#FFFFFF" />
+            <SendIcon width={18} height={18} color="white" />
           </TouchableOpacity>
         </View>
       ) : (
         /* Input Pill: [ Paperclip | Input Field | Mic Icon | Send Button ] */
-        <View style={[styles.inputPill, { backgroundColor: isDark ? "#163043" : "#FFFFFF" }]}>
+        <View
+          style={[
+            styles.inputPill,
+            { backgroundColor: themeColors.cardBackground },
+          ]}
+        >
           <TouchableOpacity onPress={onOpenAttachment} style={styles.iconBtn}>
-            <PaperclipIcon width={22} height={22} color={themeColors.textSecondary} />
+            <PaperclipIcon
+              width={22}
+              height={22}
+              color={themeColors.textSecondary}
+            />
           </TouchableOpacity>
 
           <TextInput
@@ -148,7 +168,7 @@ export function ChatInputBar({
             multiline
           />
 
-          {/* Voice Note Mic Icon placed directly before Send Button */}
+          {/* Mic button-> i downloaded it using the iphone imsg from iconify */}
           <TouchableOpacity onPress={startRecording} style={styles.iconBtn}>
             <MicIcon width={22} height={22} color={themeColors.textSecondary} />
           </TouchableOpacity>
@@ -158,13 +178,15 @@ export function ChatInputBar({
               styles.actionBtn,
               {
                 backgroundColor:
-                  text.trim().length > 0 ? themeColors.primary : "rgba(16, 185, 129, 0.4)",
+                  text.trim().length > 0
+                    ? themeColors.primary
+                    : "rgba(16, 185, 129, 0.4)",
               },
             ]}
             onPress={onSendText}
             disabled={text.trim().length === 0}
           >
-            <SendIcon width={18} height={18} color="#FFFFFF" />
+            <SendIcon width={18} height={18} color="white" />
           </TouchableOpacity>
         </View>
       )}
@@ -183,7 +205,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    minHeight: 52,
+    minHeight: 56,
   },
   iconBtn: {
     padding: 6,
