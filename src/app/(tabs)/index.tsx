@@ -11,7 +11,6 @@ import PinPromptModal from "@/features/security/components/PinPromptModal";
 import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 import { Chat } from "@/features/chats/types/chat";
 import { Colors } from "@/shared/constants/colors";
-import PlusIcon from "@/assets/icons/shared/plus.svg";
 
 // for the plus fab Menu
 import { FabMenuOverlay } from "@/features/chats/components/FabMenuOverlay";
@@ -143,6 +142,12 @@ export default function HomeScreen() {
           ListEmptyComponent={EmptyChatState}
           renderItem={({ item }) => {
             const isSelected = selectedIds.includes(item.id);
+
+            // Safe formatting for members text if item is a group
+            const groupMembersText = Array.isArray((item as any).members)
+              ? (item as any).members.join(", ")
+              : (item as any).membersText ?? "";
+
             return (
               <SwipeableChatRow
                 chat={item}
@@ -157,6 +162,8 @@ export default function HomeScreen() {
                         id: item.id,
                         name: item.name,
                         avatar: item.avatar ?? "",
+                        isGroup: (item as any).isGroup ? "true" : "false",
+                        membersText: groupMembersText,
                       },
                     });
                   }

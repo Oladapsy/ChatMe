@@ -10,4 +10,5 @@ export interface Chat {
   isArchived?: boolean;
   isOnline?: boolean;
   isGroup?: boolean;
+  members?: String[];
 }

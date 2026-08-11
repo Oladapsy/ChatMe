@@ -1,40 +1,56 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Image, TouchableOpacity, useColorScheme, FlatList } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+  useColorScheme,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { useLocalSearchParams } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
-import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
+import { ChatRoomHeader } from "@/features/chats/components/ChatRoomHeader";
 import { AttachmentModal } from "@/features/chats/components/AttachmentModal";
 import { useCameraHandler } from "@/features/chats/hooks/useCameraHandler";
 import { ChatInputBar } from "@/features/chats/components/ChatInputBar";
 
-// Header Icons
-import BackChevronIcon from "@/assets/icons/shared/chevron-left.svg";
-import VideoCallIcon from "@/assets/icons/chat/video-camera.svg";
-import PhoneCallIcon from "@/assets/icons/chat/phone.svg";
+// Icons
+import CloseIcon from "@/assets/icons/shared/close.svg";
 
 export default function ChatRoomScreen() {
-  const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
-  const { id, name, avatar } = useLocalSearchParams<{
+  const { name, avatar, isGroup, membersText } = useLocalSearchParams<{
     id: string;
     name: string;
     avatar?: string;
+    isGroup?: string; // Expo router passes params as strings
+    membersText?: string;
   }>();
 
+  const isGroupChat = isGroup === "true";
+
   const [messageText, setMessageText] = useState("");
+  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [attachmentVisible, setAttachmentVisible] = useState(false);
   const { takePhoto, pickImage } = useCameraHandler();
 
-  const contactName = name || "Keanu Murphy";
-
   const handleSendText = () => {
-    if (!messageText.trim()) return;
-    console.log("Send Text:", messageText);
+    if (!messageText.trim() && !selectedImageUri) return;
+
+    if (selectedImageUri) {
+      console.log("Sending Image:", selectedImageUri, "Caption:", messageText);
+      setSelectedImageUri(null);
+    } else {
+      console.log("Send Text:", messageText);
+    }
+
     setMessageText("");
   };
 
@@ -45,57 +61,82 @@ export default function ChatRoomScreen() {
   const handleCameraCapture = async () => {
     const photoUri = await takePhoto();
     if (photoUri) {
-      console.log("Captured image URI from Camera:", photoUri);
+      setSelectedImageUri(photoUri);
     }
   };
 
   const handleGalleryPick = async () => {
     const imageUri = await pickImage();
     if (imageUri) {
-      console.log("Selected image URI from Gallery:", imageUri);
+      setSelectedImageUri(imageUri);
     }
   };
 
   return (
-    <MySafeAreaView color={isDark ? themeColors.background : themeColors.primary}>
-      {/* Dynamic Header */}
-      <View style={[styles.header, { backgroundColor: isDark ? themeColors.background : themeColors.primary }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <BackChevronIcon width={24} height={24} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        <Image source={{ uri: avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150" }} style={styles.avatar} />
-
-        <View style={styles.headerTitle}>
-          <Typography size={16} weight="bold" color="#FFFFFF">
-            {contactName}
-          </Typography>
-          <Typography size={12} color="rgba(255, 255, 255, 0.8)">
-            Active 5 minutes ago
-          </Typography>
-        </View>
-
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.actionIcon}><VideoCallIcon width={22} height={22} color="#FFFFFF" /></TouchableOpacity>
-          <TouchableOpacity style={styles.actionIcon}><PhoneCallIcon width={22} height={22} color="#FFFFFF" /></TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Message Feed Container */}
-      <View style={[styles.chatBody, { backgroundColor: isDark ? "#0A1926" : "#F4F6F8" }]}>
-        <FlatList data={[]} renderItem={null} keyExtractor={(_, i) => i.toString()} />
-      </View>
-
-      {/* Input Bar */}
-      <ChatInputBar
-        text={messageText}
-        onChangeText={setMessageText}
-        onSendText={handleSendText}
-        onSendAudio={handleSendAudio}
-        onOpenAttachment={() => setAttachmentVisible(true)}
+    <MySafeAreaView
+      color={isDark ? themeColors.background : themeColors.primary}
+    >
+      {/* Header Configured for Group or Direct Chat */}
+      <ChatRoomHeader
+        name={name}
+        avatar={avatar}
+        isGroup={isGroupChat}
+        membersText={membersText}
+        backgroundColor={isDark ? themeColors.background : themeColors.primary}
+        onHeaderPress={() => console.log("Header pressed — navigate to details")}
+        onVideoCall={() => console.log("Video call clicked")}
+        onVoiceCall={() => console.log("Voice call clicked")}
       />
 
-      {/* Attachment Sheet */}
+      {/* Keyboard Avoiding Body */}
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={0}
+      >
+        {/* Messages Feed Area */}
+        <View
+          style={[
+            styles.chatBody,
+            { backgroundColor: isDark ? "#0A1926" : "#F4F6F8" },
+          ]}
+        >
+          <FlatList
+            data={[]}
+            renderItem={null}
+            keyExtractor={(_, i) => i.toString()}
+          />
+        </View>
+
+        {/* Selected Image Preview Box */}
+        {selectedImageUri && (
+          <View
+            style={[
+              styles.previewContainer,
+              { backgroundColor: isDark ? "#163043" : "#FFFFFF" },
+            ]}
+          >
+            <Image source={{ uri: selectedImageUri }} style={styles.previewImage} />
+            <TouchableOpacity
+              style={styles.removePreviewBtn}
+              onPress={() => setSelectedImageUri(null)}
+            >
+              <CloseIcon width={14} height={14} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Input Bar */}
+        <ChatInputBar
+          text={messageText}
+          onChangeText={setMessageText}
+          onSendText={handleSendText}
+          onSendAudio={handleSendAudio}
+          onOpenAttachment={() => setAttachmentVisible(true)}
+        />
+      </KeyboardAvoidingView>
+
+      {/* Attachment Modal Sheet */}
       <AttachmentModal
         visible={attachmentVisible}
         onClose={() => setAttachmentVisible(false)}
@@ -110,33 +151,32 @@ export default function ChatRoomScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  backBtn: {
-    paddingRight: 8,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginLeft: 4,
-  },
-  headerTitle: {
+  keyboardView: {
     flex: 1,
-    marginLeft: 12,
-  },
-  headerActions: {
-    flexDirection: "row",
-  },
-  actionIcon: {
-    padding: 6,
-    marginLeft: 4,
   },
   chatBody: {
     flex: 1,
+  },
+  previewContainer: {
+    padding: 8,
+    marginHorizontal: 16,
+    marginBottom: 6,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    position: "relative",
+  },
+  previewImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+  },
+  removePreviewBtn: {
+    position: "absolute",
+    top: 4,
+    left: 60,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    borderRadius: 12,
+    padding: 4,
   },
 });
