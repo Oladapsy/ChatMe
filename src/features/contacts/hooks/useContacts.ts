@@ -102,7 +102,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import * as Contacts from "expo-contacts";
-import { MOCK_CONTACTS } from "../data/mockContacts";
+import { MOCK_CONTACTS } from "@/features/contacts/data/mockContacts";
 
 export interface ContactItem {
   id: string;
