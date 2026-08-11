@@ -37,6 +37,8 @@ export function ContactItemRow({ item, textColor, onSelect }: Props) {
           [item.phone],
           "Hey! Join me on ChatApp: https://chatapp.link/download",
         );
+      } else {
+        alert("There is no sms available on this device")
       }
     }
   };
