@@ -43,11 +43,17 @@
         }
       ],
       [
-        "expo-av",
+        "expo-audio",
         {
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
         }
       ],
+      // [
+      //   "expo-av",
+      //   {
+      //     "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+      //   }
+      // ],
       [
         "expo-camera",
         {
@@ -56,7 +62,9 @@
           "recordAudioAndroid": true,
           "barcodeScannerEnabled": true
         }
-      ]
+      ],
+
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,
