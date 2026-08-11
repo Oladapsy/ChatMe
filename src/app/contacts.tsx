@@ -65,7 +65,14 @@ export default function ContactsScreen() {
   }, [contacts, searchQuery]);
 
   const handleSelectContact = (contact: ContactItem) => {
-    console.log("Navigate to chat room with contact:", contact.id);
+    router.push({
+      pathname: "/chat-room",
+      params: {
+        id: contact.id,
+        name: contact.name,
+        avatar: contact.avatar ?? "",
+      },
+    });
   };
 
   return (

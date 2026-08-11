@@ -1,10 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  StyleSheet,
-  View,
-  FlatList,
-  useColorScheme,
-} from "react-native";
+import { StyleSheet, View, FlatList, useColorScheme } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -156,7 +151,14 @@ export default function HomeScreen() {
                   if (selectedIds.length > 0) {
                     handleToggleSelect(item.id);
                   } else {
-                    console.log("Open chat:", item.name);
+                    router.push({
+                      pathname: "/chat-room",
+                      params: {
+                        id: item.id,
+                        name: item.name,
+                        avatar: item.avatar ?? "",
+                      },
+                    });
                   }
                 }}
                 onLongPress={() => handleToggleSelect(item.id)}
@@ -173,7 +175,7 @@ export default function HomeScreen() {
       <FabMenuOverlay
         isOpen={isFabOpen}
         onToggle={() => setIsFabOpen((prev) => !prev)}
-        onNewChat={() => router.push("/contacts")} 
+        onNewChat={() => router.push("/contacts")}
         onNewContact={() => console.log("New Contact")}
         onNewGroup={() => console.log("New Group")}
       />
