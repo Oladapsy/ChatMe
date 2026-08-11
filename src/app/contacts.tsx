@@ -108,11 +108,11 @@ export default function ContactsScreen() {
                 <View
                   style={[
                     styles.sectionHeader,
-                    { backgroundColor: isDark ? "#163043" : "#F9FAFB" },
+                    { backgroundColor: isDark ? "#3A566A" : "#EAEEF2" },
                   ]}
                 >
                   <Typography
-                    size={13}
+                    size={15}
                     weight="bold"
                     color={themeColors.textSecondary}
                   >
