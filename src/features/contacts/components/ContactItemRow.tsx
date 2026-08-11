@@ -22,7 +22,7 @@ export function ContactItemRow({ item, textColor, onSelect }: Props) {
       if (isAvailable) {
         await SMS.sendSMSAsync(
           [item.phone],
-          "Hey! Join me on ChatApp: https://chatapp.link/download"
+          "Hey! Join me on ChatApp: https://chatapp.link/download",
         );
       }
     }

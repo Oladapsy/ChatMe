@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, View, TextInput, useColorScheme } from "react-native";
 import SearchIcon from "@/assets/icons/shared/search.svg";
+import { Colors } from "@/shared/constants/colors";
 
 interface Props {
   value: string;
@@ -8,7 +9,24 @@ interface Props {
 }
 
 export function ContactSearchBar({ value, onChangeText }: Props) {
-  const isDark = useColorScheme() === "dark";
+  const scheme = useColorScheme();
+  const isDark = scheme === "dark";
+  const themeColors = Colors[isDark ? "dark" : "light"];
+
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Border & Icon active color switching
+  const activeBorderColor = isFocused
+    ? themeColors.primary
+    : isDark
+    ? themeColors.border
+    : "#EAEEF2";
+
+  const activeIconColor = isFocused
+    ? themeColors.primary
+    : isDark
+    ? "#8EA3B3"
+    : "#6E8597";
 
   return (
     <View style={styles.container}>
@@ -17,17 +35,23 @@ export function ContactSearchBar({ value, onChangeText }: Props) {
           styles.searchBar,
           {
             backgroundColor: isDark ? "transparent" : "#FFFFFF",
-            borderColor: isDark ? "#2D3748" : "#E2E8F0",
+            borderColor: activeBorderColor,
           },
         ]}
       >
-        <SearchIcon width={18} height={18} color={isDark ? "#8E9BAE" : "#94A3B8"} />
+        <SearchIcon
+          width={18}
+          height={18}
+          color={activeIconColor}
+        />
         <TextInput
-          style={[styles.input, { color: isDark ? "#FFFFFF" : "#0F1828" }]}
+          style={[styles.input, { color: themeColors.text }]}
           placeholder="Search people..."
-          placeholderTextColor={isDark ? "#526070" : "#94A3B8"}
+          placeholderTextColor={themeColors.textSecondary}
           value={value}
           onChangeText={onChangeText}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           autoCorrect={false}
           autoCapitalize="none"
           editable={true}
@@ -56,6 +80,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     fontSize: 15,
-    height: "100%", // Ensures full tap target area for typing
+    height: "100%",
   },
 });

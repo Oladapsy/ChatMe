@@ -7,6 +7,7 @@ import {
   useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
@@ -69,7 +70,7 @@ const sections = useMemo(() => {
 
   return (
    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-  <MySafeAreaView edges={["top",]}  style={styles.headerSafeArea}>
+  <SafeAreaView edges={["top",]}  style={styles.headerSafeArea}>
     {/* Handle Bar */}
     <View style={styles.handleContainer}>
       <View
@@ -91,7 +92,7 @@ const sections = useMemo(() => {
       value={searchQuery}
       onChangeText={(text) => setSearchQuery(text)}
     />
-  </MySafeAreaView>
+  </SafeAreaView>
 
       {loading ? (
         <View style={styles.center}>
