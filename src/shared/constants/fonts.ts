@@ -1,21 +1,23 @@
 export const Fonts = {
   family: {
-    regular: 'SFProDisplay-Regular',
-    medium: 'SFProDisplay-Medium',
-    bold: 'SFProDisplay-Bold',
-    blackItalic: 'SFProDisplay-BlackItalic',
-    heavyItalic: 'SFProDisplay-HeavyItalic',
-    lightItalic: 'SFProDisplay-LightItalic',
-    semiboldItalic: 'SFProDisplay-SemiboldItalic',
-    thinItalic: 'SFProDisplay-ThinItalic',
-    ultralightItalic: 'SFProDisplay-UltralightItalic',
+    regular: "SFProDisplay-Regular",
+    medium: "SFProDisplay-Medium",
+    bold: "SFProDisplay-Bold",
+    blackItalic: "SFProDisplay-BlackItalic",
+    heavyItalic: "SFProDisplay-HeavyItalic",
+    lightItalic: "SFProDisplay-LightItalic",
+    semiboldItalic: "SFProDisplay-SemiboldItalic",
+    thinItalic: "SFProDisplay-ThinItalic",
+    ultralightItalic: "SFProDisplay-UltralightItalic",
   },
   // Default font weights mapped to font family keys
   weights: {
-    regular: 'SFProDisplay-Regular',
-    medium: 'SFProDisplay-Medium',
-    semibold: 'SFProDisplay-SemiboldItalic', // Mapped to loaded Semibold variant
-    bold: 'SFProDisplay-Bold',
+    regular: "SFProDisplay-Regular",
+    medium: "SFProDisplay-Medium",
+        // No pure semi bold in the file so use italics or bold for it
+    // semibold: 'SFProDisplay-SemiboldItalic',
+    semibold: "SFProDisplay-Bold",
+    bold: "SFProDisplay-Bold",
   },
 } as const;
 
