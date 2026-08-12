@@ -17,7 +17,7 @@ import CameraIcon from "@/assets/icons/shared/camera.svg";
 import GalleryIcon from "@/assets/icons/shared/gallery.svg";
 import DocumentIcon from "@/assets/icons/chat/document.svg";
 import LocationIcon from "@/assets/icons/chat/location.svg";
-import ContactIcon from "@/assets/icons/chat/contact.svg";
+import ContactIcon from "@/assets/icons/chat/contact2.svg";
 
 interface Props {
   visible: boolean;
@@ -63,7 +63,7 @@ export function AttachmentModal({
             <View
               style={[
                 styles.sheetCard,
-                { backgroundColor: isDark ? "#163043" : "#FFFFFF" },
+                { backgroundColor: themeColors.cardBackground },
               ]}
             >
               {/* Horizontal Media Previews */}
@@ -84,8 +84,8 @@ export function AttachmentModal({
                   }}
                 >
                   <CameraIcon
-                    width={24}
-                    height={24}
+                    width={25}
+                    height={23}
                     color={themeColors.textSecondary}
                   />
                 </TouchableOpacity>
@@ -113,10 +113,10 @@ export function AttachmentModal({
                     onOpenGallery();
                   }}
                 >
-                  <GalleryIcon width={22} height={22} color="#10B981" />
+                  <GalleryIcon width={20} height={20} color={themeColors.primary} />
                   <Typography
-                    size={15}
-                    weight="bold"
+                   size={16}
+                    weight="medium"
                     color={themeColors.text}
                     style={styles.label}
                   >
@@ -131,10 +131,10 @@ export function AttachmentModal({
                     onSelectDocument();
                   }}
                 >
-                  <DocumentIcon width={22} height={22} color="#10B981" />
+                  <DocumentIcon width={20} height={20} color={themeColors.primary} />
                   <Typography
-                    size={15}
-                    weight="bold"
+                   size={16}
+                    weight="medium"
                     color={themeColors.text}
                     style={styles.label}
                   >
@@ -149,10 +149,10 @@ export function AttachmentModal({
                     onSelectLocation();
                   }}
                 >
-                  <LocationIcon width={22} height={22} color="#10B981" />
+                  <LocationIcon width={20} height={20} color={themeColors.primary} />
                   <Typography
-                    size={15}
-                    weight="bold"
+                    size={16}
+                    weight="medium"
                     color={themeColors.text}
                     style={styles.label}
                   >
@@ -167,10 +167,10 @@ export function AttachmentModal({
                     onSelectContact();
                   }}
                 >
-                  <ContactIcon width={22} height={22} color="#10B981" />
+                  <ContactIcon width={20} height={20} color={themeColors.primary} />
                   <Typography
-                    size={15}
-                    weight="bold"
+                    size={16}
+                    weight="medium"
                     color={themeColors.text}
                     style={styles.label}
                   >
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "flex-end",
     paddingHorizontal: 16,
-    paddingBottom: 80,
+    paddingBottom: 115,
   },
   sheetCard: {
     borderRadius: 24,
@@ -211,14 +211,14 @@ const styles = StyleSheet.create({
   cameraTile: {
     width: 68,
     height: 68,
-    borderRadius: 14,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
   },
   photoTile: {
     width: 68,
     height: 68,
-    borderRadius: 14,
+    borderRadius: 8,
   },
   optionsContainer: {
     paddingHorizontal: 16,
