@@ -1,13 +1,12 @@
-import React from "react";
-import {
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  useColorScheme,
-} from "react-native";
+import BackspaceIcon from "@/assets/icons/shared/backspace.svg";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
-import BackspaceIcon from "@/assets/icons/shared/backspace.svg";
+import {
+    StyleSheet,
+    TouchableOpacity,
+    useColorScheme,
+    View,
+} from "react-native";
 
 interface KeypadProps {
   onPressDigit: (digit: string) => void;
@@ -26,7 +25,8 @@ export default function Keypad({ onPressDigit, onDelete }: KeypadProps) {
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
-  const keyBgColor = themeColors.cardBackground || (isDark ? "#1F3C51" : "#F9FAFB");
+  const keyBgColor =
+    themeColors.cardBackground || (isDark ? "#1F3C51" : "#F9FAFB");
 
   return (
     <View style={styles.container}>
@@ -41,6 +41,8 @@ export default function Keypad({ onPressDigit, onDelete }: KeypadProps) {
               return (
                 <TouchableOpacity
                   key={keyIndex}
+                  accessibilityRole="button"
+                  accessibilityLabel="Delete last digit"
                   style={[styles.key, { backgroundColor: keyBgColor }]}
                   onPress={onDelete}
                   activeOpacity={0.7}

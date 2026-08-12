@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.family.medium,
   },
   semibold: {
-    fontFamily: Fonts.family.semiboldItalic, // Mapped to SF Pro Semibold
+    fontFamily: Fonts.family.bold, // Mapped to SF Pro Semibold
   },
   bold: {
     fontFamily: Fonts.family.bold,

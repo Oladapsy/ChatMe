@@ -69,17 +69,53 @@ export default function HomeScreen() {
   };
 
   // Actions
-  const handlePin = (chatToPin?: Chat) => {
-    const targetIds = chatToPin ? [chatToPin.id] : selectedIds;
-    setChats((prev) =>
-      prev.map((item) =>
-        targetIds.includes(item.id)
-          ? { ...item, isPinned: !item.isPinned }
-          : item,
-      ),
-    );
-    setSelectedIds([]);
-  };
+ const handlePin = (chatToPin?: Chat) => {
+  const targetIds = chatToPin ? [chatToPin.id] : selectedIds;
+  if (targetIds.length === 0) return;
+
+  setChats((prev) => {
+    let updatedChats = [...prev];
+
+    targetIds.forEach((id) => {
+      const targetIndex = updatedChats.findIndex((c) => c.id === id);
+      if (targetIndex === -1) return;
+
+      const isCurrentlyPinned = updatedChats[targetIndex].isPinned;
+
+      if (isCurrentlyPinned) {
+        // If already pinned, toggle it off (unpin)
+        updatedChats[targetIndex] = {
+          ...updatedChats[targetIndex],
+          isPinned: false,
+        };
+      } else {
+        // Find indices of all currently pinned chats
+        const pinnedIndices = updatedChats
+          .map((c, index) => (c.isPinned ? index : -1))
+          .filter((index) => index !== -1);
+
+        // If 3 chats are already pinned, unpin the top-most (first in list)
+        if (pinnedIndices.length >= 3) {
+          const topmostPinnedIndex = pinnedIndices[0];
+          updatedChats[topmostPinnedIndex] = {
+            ...updatedChats[topmostPinnedIndex],
+            isPinned: false,
+          };
+        }
+
+        // Pin the selected chat
+        updatedChats[targetIndex] = {
+          ...updatedChats[targetIndex],
+          isPinned: true,
+        };
+      }
+    });
+
+    return updatedChats;
+  });
+
+  setSelectedIds([]);
+};
 
   const handleMute = (chatToMute?: Chat) => {
     const targetIds = chatToMute ? [chatToMute.id] : selectedIds;

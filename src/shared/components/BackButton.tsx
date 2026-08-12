@@ -1,9 +1,8 @@
-import React from "react";
-import { StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
-import { useRouter } from "expo-router";
 import ChevronLeft from "@/assets/icons/auth/chevron-left.svg";
-import { Colors } from "@/shared/constants/colors";
 import { Typography } from "@/shared/components/Typography";
+import { Colors } from "@/shared/constants/colors";
+import { useRouter } from "expo-router";
+import { StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
 
 interface BackButtonProps {
   onPress?: () => void;
@@ -25,6 +24,8 @@ export function BackButton({ onPress }: BackButtonProps) {
 
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel="Go back"
       style={[
         styles.container,
         {
