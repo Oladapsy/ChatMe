@@ -17,6 +17,7 @@ export const Colors = {
     longPress: "#F5FBF7",
     fabBg: "#FFFFFF",
     oldLongPress: "#E5E7EB",
+    mute: "#6E8597",
   },
   dark: {
     primary: "#57B77D",
@@ -36,6 +37,6 @@ export const Colors = {
     longPress: "#163043",
     fabBg: "#163043",
     oldLongPress: "#1F3C51",
-
+    mute: "#8EA3B3",
   },
 };

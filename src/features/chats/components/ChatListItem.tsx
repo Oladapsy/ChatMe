@@ -11,6 +11,8 @@ import { Colors } from "@/shared/constants/colors";
 import { Chat } from "@/features/chats/types/chat";
 import PinIcon from "@/assets/icons/shared/pin.svg";
 import GroupIcon from "@/assets/icons/chat/user-group.svg";
+import MutedIcon from "@/assets/icons/chat/mute.svg";
+
 
 interface ChatListItemProps {
   chat: Chat;
@@ -60,6 +62,9 @@ export function ChatListItem({
             >
               {chat.name}
             </Typography>
+            {chat.isMuted && (
+              <MutedIcon width={18} height={18} color={"red"}/>
+            )}
           </View>
           <Typography
             size={14}
