@@ -1,22 +1,24 @@
-import React, { useState, useMemo } from "react";
-import {
-  StyleSheet,
-  View,
-  SectionList,
-  ActivityIndicator,
-  useColorScheme,
-} from "react-native";
+// This is for the new chat i gave it contact because its navigates to
+// contact first...
 import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  SectionList,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from "react-native";
 
+import { ContactItemRow } from "@/features/contacts/components/ContactItemRow";
+import { ContactSearchBar } from "@/features/contacts/components/ContactSearchBar";
+import {
+  ContactItem,
+  useContacts,
+} from "@/features/contacts/hooks/useContacts";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
-import {
-  useContacts,
-  ContactItem,
-} from "@/features/contacts/hooks/useContacts";
-import { ContactSearchBar } from "@/features/contacts/components/ContactSearchBar";
-import { ContactItemRow } from "@/features/contacts/components/ContactItemRow";
 
 export default function ContactsScreen() {
   const router = useRouter();
