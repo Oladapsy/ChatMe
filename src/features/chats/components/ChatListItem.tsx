@@ -63,7 +63,7 @@ export function ChatListItem({
               {chat.name}
             </Typography>
             {chat.isMuted && (
-              <MutedIcon width={18} height={18} color={"red"}/>
+              <MutedIcon width={18} height={18} color={themeColors.mute}/>
             )}
           </View>
           <Typography
