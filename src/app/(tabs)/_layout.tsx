@@ -7,7 +7,6 @@ import Chat from "@/assets/icons/tabs/chat.svg";
 import Settings from "@/assets/icons/tabs/settings.svg";
 
 import { Colors } from "@/shared/constants/colors";
-import {Fonts} from "@/shared/constants/fonts";
 
 export default function TabLayout() {
   const scheme = useColorScheme();

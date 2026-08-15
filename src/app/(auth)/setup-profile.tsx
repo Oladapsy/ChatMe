@@ -1,22 +1,21 @@
-import React, { useState } from "react";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
-  StyleSheet,
-  View,
-  TextInput,
   Keyboard,
-  TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
+  TextInput,
+  TouchableWithoutFeedback,
   useColorScheme,
+  View,
 } from "react-native";
-import { useRouter } from "expo-router";
 
+import { BackButton } from "@/shared/components/BackButton";
+import { Button } from "@/shared/components/Button";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
-import { Button } from "@/shared/components/Button";
-import { BackButton } from "@/shared/components/BackButton";
 import { Colors } from "@/shared/constants/colors";
-
 
 import UserIcon from "@/assets/icons/profile/user.svg";
 
@@ -58,7 +57,7 @@ export default function SetupProfileScreen() {
               color={themeColors.text}
               style={styles.title}
             >
-              Whats your name?
+              What&apos;s your name?
             </Typography>
 
             <Typography
@@ -93,19 +92,13 @@ export default function SetupProfileScreen() {
               ]}
             >
               <View style={styles.iconWrapper}>
-                {UserIcon ? (
-                  <UserIcon
-                    width={20}
-                    height={20}
-                    color={
-                      isFocused
-                        ? themeColors.primary
-                        : themeColors.textSecondary
-                    }
-                  />
-                ) : (
-                  <Typography color={themeColors.textSecondary}>👤</Typography>
-                )}
+                <UserIcon
+                  width={20}
+                  height={20}
+                  color={
+                    isFocused ? themeColors.primary : themeColors.textSecondary
+                  }
+                />
               </View>
 
               <TextInput

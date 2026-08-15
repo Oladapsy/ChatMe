@@ -14,7 +14,7 @@ export const MOCK_CHATS: Chat[] = [
     id: "2",
     name: "Jane Cooper",
     avatar: "https://i.pravatar.cc/100?img=22",
-    lastMessage: "You: Can you sent the photo?",
+    lastMessage: "You: Can you send the photo?",
     time: "11:23 PM",
     isOnline: true,
   },
@@ -37,7 +37,7 @@ export const MOCK_CHATS: Chat[] = [
     isPinned: true,
     unreadCount: 0,
     isGroup: true,
-    members: ["Sam","Me", "You"]
+    members: ["Sam", "Me", "You"],
   },
   {
     id: "5",
@@ -54,7 +54,7 @@ export const MOCK_CHATS: Chat[] = [
     lastMessage: "You: Can you sent the photo?",
     time: "Yesterday",
   },
-    {
+  {
     id: "7",
     name: "Darlene Robertson",
     avatar: "https://i.pravatar.cc/100?img=14",
@@ -88,8 +88,8 @@ export const MOCK_CHATS: Chat[] = [
     avatar: "https://i.pravatar.cc/100?img=11",
     lastMessage: "You: Can you sent the photo?",
     time: "Yesterday",
-  }   ,
-    {
+  },
+  {
     id: "12",
     name: "Cody Fisher",
     avatar: "https://i.pravatar.cc/100?img=12",
@@ -119,6 +119,4 @@ export const MOCK_CHATS: Chat[] = [
   },
 ];
 
-export const MOCK_CHATS1: Chat[] = [
-
-]
+export const MOCK_CHATS1: Chat[] = [];

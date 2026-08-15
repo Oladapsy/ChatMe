@@ -10,7 +10,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
     id: "1",
     title: "Stay connected with your friends and family",
     description:
-      "ChatMe is messaging app that will help you to connect with everyone.",
+      "ChatMe is a messaging app that will help you connect with everyone.",
     illustration: "chat",
   },
   {
