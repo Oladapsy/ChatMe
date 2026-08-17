@@ -18,6 +18,7 @@ export const Colors = {
     fabBg: "#FFFFFF",
     oldLongPress: "#E5E7EB",
     mute: "#6E8597",
+    modalText: "#1F3C51",
   },
   dark: {
     primary: "#57B77D",
@@ -38,5 +39,6 @@ export const Colors = {
     fabBg: "#163043",
     oldLongPress: "#1F3C51",
     mute: "#8EA3B3",
+    modalText: "#FFFFFF",
   },
 };

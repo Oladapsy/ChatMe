@@ -75,7 +75,7 @@ export function ContactItemRow({ item, textColor, onSelect }: Props) {
         <ChevronRightIcon width={16} height={16} color="#6E8597" />
       ) : (
         <View style={styles.inviteBadge}>
-          <Typography size={13} weight="bold" color="#10B981">
+          <Typography size={13} weight="bold" color={themeColors.primary}>
             Invite
           </Typography>
         </View>

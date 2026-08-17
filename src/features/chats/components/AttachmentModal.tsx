@@ -117,7 +117,7 @@ export function AttachmentModal({
                   <Typography
                    size={16}
                     weight="medium"
-                    color={themeColors.text}
+                    color={themeColors.modalText}
                     style={styles.label}
                   >
                     Photo or Gallery
@@ -135,7 +135,7 @@ export function AttachmentModal({
                   <Typography
                    size={16}
                     weight="medium"
-                    color={themeColors.text}
+                    color={themeColors.modalText}
                     style={styles.label}
                   >
                     Document
@@ -153,7 +153,7 @@ export function AttachmentModal({
                   <Typography
                     size={16}
                     weight="medium"
-                    color={themeColors.text}
+                    color={themeColors.modalText}
                     style={styles.label}
                   >
                     Location
@@ -171,7 +171,7 @@ export function AttachmentModal({
                   <Typography
                     size={16}
                     weight="medium"
-                    color={themeColors.text}
+                    color={themeColors.modalText}
                     style={styles.label}
                   >
                     Contact
@@ -195,13 +195,13 @@ const styles = StyleSheet.create({
     paddingBottom: 115,
   },
   sheetCard: {
-    borderRadius: 24,
+    borderRadius: 16,
     paddingVertical: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 6,
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 4 },
+    // shadowOpacity: 0.15,
+    // shadowRadius: 10,
+    // elevation: 6,
   },
   mediaRow: {
     paddingHorizontal: 16,

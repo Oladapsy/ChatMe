@@ -10,10 +10,15 @@ export interface ContactItem {
   isOnApp: boolean;
 }
 
-// Fields helps to uptimize the fetch
-// it's an optimized bulk-fetch path and avoids building full Contact instances.
 // console.log(ContactField)
-const FIELDS = [ContactField.FULL_NAME, ContactField.PHONES, ContactField.IMAGE] as const;
+// Fields helps to uptimize the fetch
+// it's an optimized bulk-fetch path and it avoids building full Contact instances.
+
+const FIELDS = [
+  ContactField.FULL_NAME,
+  ContactField.PHONES,
+  ContactField.IMAGE,
+] as const;
 // console.log(FIELDS)
 
 function normalizePhone(phone: string) {
@@ -45,7 +50,8 @@ export function useContacts() {
             .map((c) => {
               const rawPhone = c.phones[0]?.number ?? "";
               const isRegistered = MOCK_CONTACTS.some(
-                (mock) => normalizePhone(mock.phone) === normalizePhone(rawPhone)
+                (mock) =>
+                  normalizePhone(mock.phone) === normalizePhone(rawPhone),
               );
 
               return {
