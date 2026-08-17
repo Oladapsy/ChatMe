@@ -1,0 +1,208 @@
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  ScrollView,
+  useColorScheme,
+} from "react-native";
+import { useRouter } from "expo-router";
+
+import MySafeAreaView from "@/shared/components/MySafeAreaView";
+import { Typography } from "@/shared/components/Typography";
+import { AvatarPicker } from "@/features/contacts/components/AvatarPicker";
+import { FormInput } from "@/features/contacts/components/FormInput";
+import { CountryPhoneInput } from "@/features/contacts/components/CountryPhoneInput";
+import { Colors } from "@/shared/constants/colors";
+import { BackButton } from "@/shared/components/BackButton";
+
+import UserIcon from "@/assets/icons/shared/user.svg";
+import QrCodeIcon from "@/assets/icons/chat/qrcode.svg";
+
+export default function NewContactScreen() {
+  const router = useRouter();
+  const scheme = useColorScheme();
+  const isDark = scheme === "dark";
+  const themeColors = Colors[isDark ? "dark" : "light"];
+
+  const [avatarUri, setAvatarUri] = useState<string>();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+
+  const isValid = firstName.trim().length > 0 && phone.trim().length > 0;
+
+  const handleSave = () => {
+    if (!isValid) return;
+    router.back();
+  };
+
+  return (
+    <MySafeAreaView color={themeColors.headBg} edges={["top"]}>
+      <View style={{ flex: 1, backgroundColor: themeColors.background }}>
+        {/* 1. TOP HEADER REGION */}
+        <View
+          style={[styles.topSection, { backgroundColor: themeColors.headBg }]}
+        >
+          <View style={styles.header}>
+            <BackButton showBorder={false} Iconcolor="white" />
+            <Typography size={18} weight="bold" color="white">
+              New Contact
+            </Typography>
+            <View style={{ width: 44 }} />
+          </View>
+        </View>
+
+        {/* 2. OVERLAPPING AVATAR (Absolute Positioning on Split Line) */}
+        <View style={styles.avatarAbsoluteWrapper}>
+          <AvatarPicker
+            uri={avatarUri}
+            onSelectImage={(uri) => setAvatarUri(uri)}
+          />
+        </View>
+
+        {/* 3. MAIN FORM REGION */}
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            contentContainerStyle={styles.formContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <FormInput
+              label="First Name"
+              placeholder="First Name"
+              value={firstName}
+              onChangeText={setFirstName}
+              onFocus={() => setFocusedInput("firstName")}
+              onBlur={() => setFocusedInput(null)}
+              focused={focusedInput === "firstName"}
+              icon={
+                <UserIcon
+                  width={18}
+                  height={18}
+                  color={isDark ? "#536878" : "#94A3B8"}
+                />
+              }
+            />
+
+            <FormInput
+              label="Last Name"
+              placeholder="Last Name"
+              value={lastName}
+              onChangeText={setLastName}
+              onFocus={() => setFocusedInput("lastName")}
+              onBlur={() => setFocusedInput(null)}
+              focused={focusedInput === "lastName"}
+              icon={
+                <UserIcon
+                  width={18}
+                  height={18}
+                  color={isDark ? "#536878" : "#94A3B8"}
+                />
+              }
+            />
+
+            <CountryPhoneInput
+              value={phone}
+              onChangeText={setPhone}
+              onFocus={() => setFocusedInput("phone")}
+              onBlur={() => setFocusedInput(null)}
+              focused={focusedInput === "phone"}
+            />
+
+            {/* QR Trigger */}
+            <TouchableOpacity
+              style={styles.qrContainer}
+              onPress={() => router.push("/qr-scanner")}
+            >
+              <QrCodeIcon width={32} height={32} color={themeColors.primary} />
+              <Typography
+                size={16}
+                color={isDark ? "#8EA3B3" : "#6E8597"}
+                style={styles.qrText}
+              >
+                Or add via QR code
+              </Typography>
+            </TouchableOpacity>
+          </ScrollView>
+
+          {/* Save Button */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[
+                styles.saveBtn,
+                isValid
+                  ? styles.saveBtnActive
+                  : isDark
+                    ? styles.saveBtnDisabledDark
+                    : styles.saveBtnDisabledLight,
+              ]}
+              onPress={handleSave}
+              disabled={!isValid}
+            >
+              <Typography size={16} weight="bold" color="white">
+                Save
+              </Typography>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </MySafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  topSection: {
+    height: 160,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    height: 48,
+  },
+  avatarAbsoluteWrapper: {
+    position: "absolute",
+    top: 75,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 10,
+    elevation: 10,
+  },
+  formContent: {
+    paddingTop: 88,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  qrContainer: {
+    alignItems: "center",
+    marginTop: 24,
+    marginBottom: 16,
+    gap: 8,
+  },
+  qrText: {
+    marginTop: 4,
+  },
+  footer: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    marginBottom: 40,
+  },
+  saveBtn: {
+    height: 52,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  saveBtnDisabledDark: {
+    backgroundColor: "#ABDBBE",
+  },
+  saveBtnDisabledLight: {
+    backgroundColor: "#ABDBBE",
+  },
+  saveBtnActive: {
+    backgroundColor: Colors.light.primary,
+  },
+});

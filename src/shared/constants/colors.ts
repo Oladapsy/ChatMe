@@ -1,6 +1,7 @@
 export const Colors = {
   light: {
     primary: "#57B77D",
+    headBg: "#57B77D",
     background: "#FFFFFF",
     cardBackground: "#FFFFFF",
     border: "#EAEEF2",
@@ -22,6 +23,7 @@ export const Colors = {
   },
   dark: {
     primary: "#57B77D",
+    headBg: "#163043",
     background: "#081C2C",
     cardBackground: "#163043",
     border: "#EAEEF2",

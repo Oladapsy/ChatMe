@@ -219,7 +219,7 @@ export default function HomeScreen() {
         isOpen={isFabOpen}
         onToggle={() => setIsFabOpen((prev) => !prev)}
         onNewChat={() => router.push("/contacts")}
-        onNewContact={() => console.log("New Contact")}
+        onNewContact={() => router.push("/new-contact")}
         onNewGroup={() => console.log("New Group")}
       />
 

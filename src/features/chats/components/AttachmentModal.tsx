@@ -19,6 +19,9 @@ import DocumentIcon from "@/assets/icons/chat/document.svg";
 import LocationIcon from "@/assets/icons/chat/location.svg";
 import ContactIcon from "@/assets/icons/chat/contact2.svg";
 
+// expo media library
+import { AssetField, MediaType, Query, requestPermissionsAsync } from 'expo-media-library';
+
 interface Props {
   visible: boolean;
   onClose: () => void;

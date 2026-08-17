@@ -37,9 +37,30 @@
         }
       ],
       [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "saveToLibraryPermission": "Allow $(PRODUCT_NAME) to save photos to your library."
+        }
+      ],
+      [
         "expo-contacts",
         {
           "contactsPermission": "Allow $(PRODUCT_NAME) to access your contacts."
+        }
+      ],
+       [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends.",
+          "colors": {
+            "cropToolbarColor": "#000000"
+          },
+          "dark": {
+            "colors": {
+              "cropToolbarColor": "#000000"
+            }
+          }
         }
       ],
       [
@@ -57,8 +78,9 @@
           "barcodeScannerEnabled": true
         }
       ],
-
-      "expo-audio"
+      
+      "expo-audio",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,

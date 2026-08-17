@@ -6,13 +6,21 @@ import { StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
 
 interface BackButtonProps {
   onPress?: () => void;
+  showBorder?: boolean;
+  Iconcolor?: string;
 }
 
-export function BackButton({ onPress }: BackButtonProps) {
+export function BackButton({
+  onPress,
+  showBorder = true,
+  Iconcolor,
+}: BackButtonProps) {
   const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
+
+  const activeIconColor = Iconcolor || themeColors.text;
 
   const handlePress = () => {
     if (onPress) {
@@ -28,18 +36,24 @@ export function BackButton({ onPress }: BackButtonProps) {
       accessibilityLabel="Go back"
       style={[
         styles.container,
-        {
-          borderColor: themeColors.border,
-          backgroundColor: themeColors.cardBackground,
-        },
+        showBorder
+          ? {
+              borderColor: themeColors.border,
+              backgroundColor: themeColors.cardBackground,
+              borderWidth: 1,
+            }
+          : {
+              borderWidth: 0,
+              backgroundColor: "transparent",
+            },
       ]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
       {ChevronLeft ? (
-        <ChevronLeft width={20} height={20} color={themeColors.text} />
+        <ChevronLeft width={20} height={20} color={activeIconColor} />
       ) : (
-        <Typography color={themeColors.text}>←</Typography>
+        <Typography color={activeIconColor}>←</Typography>
       )}
     </TouchableOpacity>
   );
@@ -50,7 +64,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
   },
