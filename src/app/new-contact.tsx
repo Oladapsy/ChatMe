@@ -5,8 +5,10 @@ import {
   TouchableOpacity,
   ScrollView,
   useColorScheme,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Contact, requestPermissionsAsync } from "expo-contacts";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
@@ -30,12 +32,46 @@ export default function NewContactScreen() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const isValid = firstName.trim().length > 0 && phone.trim().length > 0;
 
-  const handleSave = () => {
-    if (!isValid) return;
-    router.back();
+  const handleSave = async () => {
+    if (!isValid || saving) return;
+
+    setSaving(true);
+    try {
+      // requestPermissionsAsync covers both read and write access on this new API —
+      // there's no separate "write" permission call
+      const { status } = await requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission needed",
+          "Allow contacts access in Settings to save this contact to your phone."
+        );
+        return;
+      }
+
+      // Contact.create() writes the contact to the device immediately and
+      // returns a live Contact instance you can keep mutating
+      const contact = await Contact.create({
+        givenName: firstName.trim(),
+        familyName: lastName.trim() || undefined,
+      });
+
+      await contact.addPhone({ label: "mobile", number: phone.trim() });
+
+      // avatarUri isn't attached here — expo-contacts' image write API expects
+      // a local file URI plus explicit dimensions; wire that up once
+      // AvatarPicker gives you a persisted file (not a temp camera-roll URI)
+
+      router.back();
+    } catch (error) {
+      console.warn("Failed to save contact:", error);
+      Alert.alert("Couldn't save contact", "Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -138,10 +174,10 @@ export default function NewContactScreen() {
                     : styles.saveBtnDisabledLight,
               ]}
               onPress={handleSave}
-              disabled={!isValid}
+              disabled={!isValid || saving}
             >
               <Typography size={16} weight="bold" color="white">
-                Save
+                {saving ? "Saving..." : "Save"}
               </Typography>
             </TouchableOpacity>
           </View>

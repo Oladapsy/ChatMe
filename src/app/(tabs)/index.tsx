@@ -14,6 +14,7 @@ import { Colors } from "@/shared/constants/colors";
 
 // for the plus fab Menu
 import { FabMenuOverlay } from "@/features/chats/components/FabMenuOverlay";
+import { NewGroupModal } from "@/features/chats/components/NewGroupModal";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -28,6 +29,8 @@ export default function HomeScreen() {
   const [chats, setChats] = useState<Chat[]>(MOCK_CHATS);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // group state
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
 
   // the fab icon state to handle the open and close
   const [isFabOpen, setIsFabOpen] = useState(false);
@@ -69,53 +72,53 @@ export default function HomeScreen() {
   };
 
   // Actions
- const handlePin = (chatToPin?: Chat) => {
-  const targetIds = chatToPin ? [chatToPin.id] : selectedIds;
-  if (targetIds.length === 0) return;
+  const handlePin = (chatToPin?: Chat) => {
+    const targetIds = chatToPin ? [chatToPin.id] : selectedIds;
+    if (targetIds.length === 0) return;
 
-  setChats((prev) => {
-    let updatedChats = [...prev];
+    setChats((prev) => {
+      let updatedChats = [...prev];
 
-    targetIds.forEach((id) => {
-      const targetIndex = updatedChats.findIndex((c) => c.id === id);
-      if (targetIndex === -1) return;
+      targetIds.forEach((id) => {
+        const targetIndex = updatedChats.findIndex((c) => c.id === id);
+        if (targetIndex === -1) return;
 
-      const isCurrentlyPinned = updatedChats[targetIndex].isPinned;
+        const isCurrentlyPinned = updatedChats[targetIndex].isPinned;
 
-      if (isCurrentlyPinned) {
-        // If already pinned, toggle it off (unpin)
-        updatedChats[targetIndex] = {
-          ...updatedChats[targetIndex],
-          isPinned: false,
-        };
-      } else {
-        // Find indices of all currently pinned chats
-        const pinnedIndices = updatedChats
-          .map((c, index) => (c.isPinned ? index : -1))
-          .filter((index) => index !== -1);
-
-        // If 3 chats are already pinned, unpin the top-most (first in list)
-        if (pinnedIndices.length >= 3) {
-          const topmostPinnedIndex = pinnedIndices[0];
-          updatedChats[topmostPinnedIndex] = {
-            ...updatedChats[topmostPinnedIndex],
+        if (isCurrentlyPinned) {
+          // If already pinned, toggle it off (unpin)
+          updatedChats[targetIndex] = {
+            ...updatedChats[targetIndex],
             isPinned: false,
           };
-        }
+        } else {
+          // Find indices of all currently pinned chats
+          const pinnedIndices = updatedChats
+            .map((c, index) => (c.isPinned ? index : -1))
+            .filter((index) => index !== -1);
 
-        // Pin the selected chat
-        updatedChats[targetIndex] = {
-          ...updatedChats[targetIndex],
-          isPinned: true,
-        };
-      }
+          // If 3 chats are already pinned, unpin the top-most (first in list)
+          if (pinnedIndices.length >= 3) {
+            const topmostPinnedIndex = pinnedIndices[0];
+            updatedChats[topmostPinnedIndex] = {
+              ...updatedChats[topmostPinnedIndex],
+              isPinned: false,
+            };
+          }
+
+          // Pin the selected chat
+          updatedChats[targetIndex] = {
+            ...updatedChats[targetIndex],
+            isPinned: true,
+          };
+        }
+      });
+
+      return updatedChats;
     });
 
-    return updatedChats;
-  });
-
-  setSelectedIds([]);
-};
+    setSelectedIds([]);
+  };
 
   const handleMute = (chatToMute?: Chat) => {
     const targetIds = chatToMute ? [chatToMute.id] : selectedIds;
@@ -182,7 +185,7 @@ export default function HomeScreen() {
             // Safe formatting for members text if item is a group
             const groupMembersText = Array.isArray((item as any).members)
               ? (item as any).members.join(", ")
-              : (item as any).membersText ?? "";
+              : ((item as any).membersText ?? "");
 
             return (
               <SwipeableChatRow
@@ -220,7 +223,18 @@ export default function HomeScreen() {
         onToggle={() => setIsFabOpen((prev) => !prev)}
         onNewChat={() => router.push("/contacts")}
         onNewContact={() => router.push("/new-contact")}
-        onNewGroup={() => console.log("New Group")}
+        onNewGroup={() => {
+          setIsFabOpen(false);
+          setIsGroupModalOpen(true);
+        }}
+      />
+
+      <NewGroupModal
+        visible={isGroupModalOpen}
+        onClose={() => setIsGroupModalOpen(false)}
+        onGroupCreated={(newGroup) => {
+          console.log("Group Created Data:", newGroup);
+        }}
       />
 
       <PinPromptModal
