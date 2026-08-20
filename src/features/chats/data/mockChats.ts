@@ -4,7 +4,7 @@ export const MOCK_CHATS: Chat[] = [
   {
     id: "1",
     name: "Darrell Steward",
-    avatar: "https://i.pravatar.cc/100?img=12",
+    avatar: "",
     lastMessage: "Hello, Good morning 👋",
     time: "11:47 PM",
     unreadCount: 4,
@@ -64,7 +64,7 @@ export const MOCK_CHATS: Chat[] = [
   {
     id: "8",
     name: "Marvin McKinney",
-    avatar: "https://i.pravatar.cc/100?img=10",
+    avatar: "",
     lastMessage: "You: Can you sent the photo?",
     time: "Yesterday",
   },
@@ -78,7 +78,7 @@ export const MOCK_CHATS: Chat[] = [
   {
     id: "10",
     name: "Leslie Alexander",
-    avatar: "https://i.pravatar.cc/100?img=10",
+    avatar: "",
     lastMessage: "You: Can you sent the photo?",
     time: "Yesterday",
   },

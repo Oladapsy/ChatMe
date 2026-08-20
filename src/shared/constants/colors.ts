@@ -20,6 +20,7 @@ export const Colors = {
     oldLongPress: "#E5E7EB",
     mute: "#6E8597",
     modalText: "#1F3C51",
+    avatarBg: "#E2E8F0",
   },
   dark: {
     primary: "#57B77D",
@@ -42,5 +43,6 @@ export const Colors = {
     oldLongPress: "#1F3C51",
     mute: "#8EA3B3",
     modalText: "#FFFFFF",
+    avatarBg: "#1E293B",
   },
 };

@@ -12,7 +12,7 @@ import { Chat } from "@/features/chats/types/chat";
 import PinIcon from "@/assets/icons/shared/pin.svg";
 import GroupIcon from "@/assets/icons/chat/user-group.svg";
 import MutedIcon from "@/assets/icons/chat/mute.svg";
-
+import UserIcon from "@/assets/icons/shared/user.svg";
 
 interface ChatListItemProps {
   chat: Chat;
@@ -43,7 +43,20 @@ export function ChatListItem({
     >
       {/* Avatar Container with Online Badge */}
       <View style={styles.avatarWrapper}>
-        <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+        {chat.avatar ? (
+          <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+        ) : (
+          <View
+            style={[
+              styles.avatar,
+              styles.fallbackAvatar,
+              { backgroundColor: themeColors.avatarBg },
+            ]}
+          >
+            <UserIcon width={24} height={24} color="white" />
+          </View>
+        )}
+
         {chat.isOnline && !chat.isGroup && <View style={styles.onlineBadge} />}
       </View>
 
@@ -63,7 +76,7 @@ export function ChatListItem({
               {chat.name}
             </Typography>
             {chat.isMuted && (
-              <MutedIcon width={18} height={18} color={themeColors.mute}/>
+              <MutedIcon width={18} height={18} color={themeColors.mute} />
             )}
           </View>
           <Typography
@@ -165,5 +178,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 6,
+  },
+  fallbackAvatar: {
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
