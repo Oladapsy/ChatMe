@@ -175,7 +175,7 @@ export function SwipeableChatRow({
       leftThreshold={30}
       rightThreshold={40}
       onSwipeableWillOpen={() => setIsSwiped(true)}
-      onSwipeableWillClose={() => setIsSwiped(false)}
+      onSwipeableClose={() => setIsSwiped(false)}
       renderLeftActions={renderLeftActions}
       renderRightActions={renderRightActions}
     >
