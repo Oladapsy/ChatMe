@@ -1,18 +1,13 @@
 import { useRef, useState } from "react";
-import {
-  StyleSheet,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from "react-native";
+import { StyleSheet, useColorScheme, View } from "react-native";
 import Swipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { SharedValue } from "react-native-reanimated";
 
 import { ChatListItem } from "@/features/chats/components/ChatListItem";
+import { SwipeActionButton } from "@/features/chats/components/SwipeActionButton";
 import { Chat } from "@/features/chats/types/chat";
-import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 
 // SVG Icons
@@ -68,105 +63,55 @@ export function SwipeableChatRow({
   const renderLeftActions = (
     _progress: SharedValue<number>,
     _dragX: SharedValue<number>,
-  ) => {
-    return (
-      <View style={styles.leftActionsContainer}>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: "#E8A13A" }]}
-          onPress={() => handleAction(onMute)}
-        >
-          <MuteIcon width={20} height={20} color="white" />
-          <Typography
-            size={chat.isArchived ? 11 : 13}
-            color="white"
-            weight="bold"
-            style={styles.actionText}
-          >
-            {chat.isMuted ? "Unmute" : "Mute"}
-          </Typography>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            { backgroundColor: isDark ? "#2D4B63" : "#9CA3AF" },
-          ]}
-          onPress={() => handleAction(onPin)}
-        >
-          <PinIcon width={20} height={20} color="white" />
-          <Typography
-            size={chat.isArchived ? 11 : 13}
-            color="white"
-            weight="bold"
-            style={styles.actionText}
-          >
-            {chat.isPinned ? "Unpin" : "Pin"}
-          </Typography>
-        </TouchableOpacity>
-      </View>
-    );
-  };
+  ) => (
+    <View style={styles.leftActionsContainer}>
+      <SwipeActionButton
+        label={chat.isMuted ? "Unmute" : "Mute"}
+        icon={MuteIcon}
+        backgroundColor="#E8A13A"
+        isCompact={chat.isArchived}
+        onPress={() => handleAction(onMute)}
+      />
+      <SwipeActionButton
+        label={chat.isPinned ? "Unpin" : "Pin"}
+        icon={PinIcon}
+        backgroundColor={isDark ? "#2D4B63" : "#9CA3AF"}
+        isCompact={chat.isArchived}
+        onPress={() => handleAction(onPin)}
+      />
+    </View>
+  );
 
   // Render Right Swipe Actions (Delete, Archive, More)
   const renderRightActions = (
     _progress: SharedValue<number>,
     _dragX: SharedValue<number>,
-  ) => {
-    return (
-      <View style={styles.rightActionsContainer}>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: "#DD524C" }]}
-          onPress={() => handleAction(onDelete)}
-        >
-          <TrashIcon width={20} height={20} color="white" />
-          <Typography
-            size={chat.isArchived ? 11 : 13}
-            color="white"
-            weight="bold"
-            style={styles.actionText}
-          >
-            Delete
-          </Typography>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            { backgroundColor: isDark ? "#3A566A" : "#9CA3AF" },
-          ]}
-          onPress={() => handleAction(onArchive)}
-        >
-          <ArchiveIcon width={20} height={20} color="white" />
-          <Typography
-            size={chat.isArchived ? 11 : 13}
-            color="white"
-            weight="bold"
-            style={styles.actionText}
-          >
-            {chat.isArchived ? "Unarchive" : "Archive"}
-          </Typography>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            { backgroundColor: isDark ? "#163043" : "#DDE2E8" },
-          ]}
-          onPress={() => handleAction(onMore)}
-        >
-          <MoreIcon width={20} height={20} color={themeColors.text} />
-          <Typography
-            size={chat.isArchived ? 11 : 13}
-            color={themeColors.text}
-            weight="bold"
-            style={styles.actionText}
-          >
-            More
-          </Typography>
-        </TouchableOpacity>
-      </View>
-    );
-  };
+  ) => (
+    <View style={styles.rightActionsContainer}>
+      <SwipeActionButton
+        label="Delete"
+        icon={TrashIcon}
+        backgroundColor="#DD524C"
+        isCompact={chat.isArchived}
+        onPress={() => handleAction(onDelete)}
+      />
+      <SwipeActionButton
+        label={chat.isArchived ? "Unarchive" : "Archive"}
+        icon={ArchiveIcon}
+        backgroundColor={isDark ? "#3A566A" : "#9CA3AF"}
+        isCompact={chat.isArchived}
+        onPress={() => handleAction(onArchive)}
+      />
+      <SwipeActionButton
+        label="More"
+        icon={MoreIcon}
+        backgroundColor={isDark ? "#163043" : "#DDE2E8"}
+        textColor={themeColors.text}
+        isCompact={chat.isArchived}
+        onPress={() => handleAction(onMore)}
+      />
+    </View>
+  );
 
   return (
     <Swipeable
@@ -203,15 +148,5 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingRight: 12,
     marginLeft: 8,
-  },
-  actionButton: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    borderRadius: 8,
-  },
-  actionText: {
-    marginTop: 4,
   },
 });
