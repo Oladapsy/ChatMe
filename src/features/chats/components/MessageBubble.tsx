@@ -1,5 +1,11 @@
 import React from "react";
-import { StyleSheet, View, Image, TouchableOpacity, useColorScheme } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { Message } from "@/features/chats/types/message";
@@ -9,6 +15,8 @@ import DocumentIcon from "@/assets/icons/chat/document.svg";
 import LocationIcon from "@/assets/icons/chat/location.svg";
 import ContactIcon from "@/assets/icons/chat/contact2.svg";
 import PlayIcon from "@/assets/icons/chat/play.svg";
+import PauseIcon from "@/assets/icons/chat/pause.svg";
+
 
 interface Props {
   message: Message;
@@ -59,7 +67,7 @@ export function MessageBubble({ message, isGroup = false }: Props) {
       >
         {/* Timestamp on LEFT for Sent Messages */}
         {isMe && (
-          <Typography size={12} color={timeColor} style={styles.timeTextLeft}>
+          <Typography size={14} color={timeColor} style={styles.timeTextLeft}>
             {message.createdAt}
           </Typography>
         )}
@@ -75,7 +83,7 @@ export function MessageBubble({ message, isGroup = false }: Props) {
           {/* Group Sender Name */}
           {!isMe && isGroup && message.senderName && message.showAvatar && (
             <Typography
-              size={12}
+              size={13}
               weight="bold"
               color={themeColors.primary}
               style={styles.senderName}
@@ -98,16 +106,22 @@ export function MessageBubble({ message, isGroup = false }: Props) {
           )}
 
           {/* 2. Audio / Voice Note Attachment */}
+          {/* i will check later how to play the audio and also add the pause feature and see what */}
+          {/* i can do about the wave form */}
           {message.type === "audio" && (
             <View style={styles.audioContainer}>
               <TouchableOpacity
                 style={[
                   styles.playButton,
-                  { backgroundColor: isMe ? "rgba(255,255,255,0.25)" : themeColors.primary },
+                  {
+                    backgroundColor: isMe
+                      ? "rgba(255,255,255,0.25)"
+                      : themeColors.primary,
+                  },
                 ]}
                 onPress={() => console.log("Play audio:", message.audioUri)}
               >
-                <PlayIcon width={16} height={16} color="#FFFFFF" />
+                <PlayIcon width={16} height={16} color="white" />
               </TouchableOpacity>
 
               <View style={styles.audioWaveformContainer}>
@@ -116,13 +130,22 @@ export function MessageBubble({ message, isGroup = false }: Props) {
                 <View style={[styles.waveformBar, { height: 18 }]} />
                 <View style={[styles.waveformBar, { height: 12 }]} />
                 <View style={[styles.waveformBar, { height: 22 }]} />
+                <View style={[styles.waveformBar, { height: 20 }]} />
+                <View style={[styles.waveformBar, { height: 16 }]} />
+                <View style={[styles.waveformBar, { height: 12 }]} />
+                <View style={[styles.waveformBar, { height: 22 }]} />
                 <View style={[styles.waveformBar, { height: 10 }]} />
                 <View style={[styles.waveformBar, { height: 16 }]} />
+                <View style={[styles.waveformBar, { height: 10 }]} />
+                <View style={[styles.waveformBar, { height: 22 }]} />
+                <View style={[styles.waveformBar, { height: 10 }]} />
+                <View style={[styles.waveformBar, { height: 13 }]} />
+                <View style={[styles.waveformBar, { height: 12 }]} />  
               </View>
 
               <Typography
-                size={12}
-                color={isMe ? "#FFFFFF" : receivedTextColor}
+                size={14}
+                color={isMe ? "white" : receivedTextColor}
                 style={styles.audioDuration}
               >
                 {formatAudioDuration(message.audioDuration)}
@@ -131,25 +154,26 @@ export function MessageBubble({ message, isGroup = false }: Props) {
           )}
 
           {/* 3. Document Attachment */}
+          {/* remains downloading on click */}
           {message.document && (
             <View style={styles.attachmentCard}>
               <DocumentIcon
                 width={22}
                 height={22}
-                color={isMe ? "#FFFFFF" : receivedTextColor}
+                color={isMe ? "white" : receivedTextColor}
               />
               <View style={styles.attachmentDetails}>
                 <Typography
                   size={14}
                   weight="bold"
-                  color={isMe ? "#FFFFFF" : receivedTextColor}
+                  color={isMe ? "white" : receivedTextColor}
                   numberOfLines={1}
                 >
                   {message.document.name}
                 </Typography>
                 <Typography
                   size={12}
-                  color={isMe ? "#FFFFFF" : receivedTextColor}
+                  color={isMe ? "white" : receivedTextColor}
                   style={{ opacity: 0.8 }}
                 >
                   {message.document.size}
@@ -159,17 +183,18 @@ export function MessageBubble({ message, isGroup = false }: Props) {
           )}
 
           {/* 4. Location Attachment */}
+          {/* i will see how sharing location can be handled as well */}
           {message.location && (
-            <View style={styles.attachmentCard}>
+            <View style={[styles.attachmentCard,  {paddingRight: 12}]}>
               <LocationIcon
                 width={22}
                 height={22}
-                color={isMe ? "#FFFFFF" : receivedTextColor}
+                color={isMe ? "white" : receivedTextColor}
               />
               <Typography
                 size={14}
                 weight="medium"
-                color={isMe ? "#FFFFFF" : receivedTextColor}
+                color={isMe ? "white" : receivedTextColor}
                 style={{ marginLeft: 8 }}
               >
                 {message.location.address || "Shared Location"}
@@ -178,6 +203,10 @@ export function MessageBubble({ message, isGroup = false }: Props) {
           )}
 
           {/* 5. Contact Attachment */}
+          {/*  i dont know if i should make this onclick!!! */}
+          {/* or a button underneath message | add to contact*/}
+          {/* but i have to check if the contact is on the app */}
+          {/* maybe i will create a function that does that */}
           {message.contact && (
             <View style={styles.attachmentCard}>
               {message.contact.avatar ? (
@@ -187,22 +216,22 @@ export function MessageBubble({ message, isGroup = false }: Props) {
                 />
               ) : (
                 <ContactIcon
-                  width={22}
-                  height={22}
-                  color={isMe ? "#FFFFFF" : receivedTextColor}
+                  width={40}
+                  height={40}
+                  color={isMe ? "white" : receivedTextColor}
                 />
               )}
               <View style={styles.attachmentDetails}>
                 <Typography
-                  size={14}
+                  size={16}
                   weight="bold"
-                  color={isMe ? "#FFFFFF" : receivedTextColor}
+                  color={isMe ? "white" : receivedTextColor}
                 >
                   {message.contact.name}
                 </Typography>
                 <Typography
-                  size={12}
-                  color={isMe ? "#FFFFFF" : receivedTextColor}
+                  size={14}
+                  color={isMe ? "white" : receivedTextColor}
                   style={{ opacity: 0.8 }}
                 >
                   {message.contact.phoneNumber}
@@ -214,8 +243,8 @@ export function MessageBubble({ message, isGroup = false }: Props) {
           {/* 6. Text Message */}
           {Boolean(message.text) && (
             <Typography
-              size={15}
-              color={isMe ? "#FFFFFF" : receivedTextColor}
+              size={16}
+              color={isMe ? "white" : receivedTextColor}
               style={styles.messageText}
             >
               {message.text}
@@ -225,7 +254,7 @@ export function MessageBubble({ message, isGroup = false }: Props) {
 
         {/* Timestamp on RIGHT for Received Messages */}
         {!isMe && (
-          <Typography size={12} color={timeColor} style={styles.timeTextRight}>
+          <Typography size={14} color={timeColor} style={styles.timeTextRight}>
             {message.createdAt}
           </Typography>
         )}
@@ -248,23 +277,23 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   avatarContainer: {
-    width: 32,
-    height: 32,
-    marginRight: 8,
+    width: 40,
+    height: 40,
+    marginRight: 12,
     justifyContent: "flex-end",
   },
   avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   avatarPlaceholder: {
-    width: 32,
-    height: 32,
+    width: 40,
+    height: 40,
   },
   bubbleWrapper: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     maxWidth: "80%",
   },
   wrapperMe: {
@@ -280,10 +309,10 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   bubbleMe: {
-    borderBottomRightRadius: 4,
+    borderBottomRightRadius: 0,
   },
   bubbleOther: {
-    borderBottomLeftRadius: 4,
+    borderBottomLeftRadius: 0,
   },
   senderName: {
     marginBottom: 4,
