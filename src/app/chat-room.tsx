@@ -83,7 +83,9 @@ export default function ChatRoomScreen() {
         isGroup={isGroupChat}
         membersText={membersText}
         backgroundColor={isDark ? themeColors.background : themeColors.primary}
-        onHeaderPress={() => console.log("Header pressed — navigate to details")}
+        onHeaderPress={() =>
+          console.log("Header pressed — navigate to details")
+        }
         onVideoCall={() => console.log("Video call clicked")}
         onVoiceCall={() => console.log("Voice call clicked")}
       />
@@ -116,7 +118,10 @@ export default function ChatRoomScreen() {
               { backgroundColor: isDark ? "#163043" : "#FFFFFF" },
             ]}
           >
-            <Image source={{ uri: selectedImageUri }} style={styles.previewImage} />
+            <Image
+              source={{ uri: selectedImageUri }}
+              style={styles.previewImage}
+            />
             <TouchableOpacity
               style={styles.removePreviewBtn}
               onPress={() => setSelectedImageUri(null)}
