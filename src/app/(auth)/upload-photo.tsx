@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: "white",
   },
   uploadingContainer: {
     alignItems: "center",
