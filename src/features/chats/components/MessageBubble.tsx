@@ -8,7 +8,7 @@ import { Message } from "@/features/chats/types/message";
 import DocumentIcon from "@/assets/icons/chat/document.svg";
 import LocationIcon from "@/assets/icons/chat/location.svg";
 import ContactIcon from "@/assets/icons/chat/contact2.svg";
-import PlayIcon from "@/assets/icons/chat/send.svg"; // Make sure you have a play icon SVG or replace with your icon
+import PlayIcon from "@/assets/icons/chat/play.svg";
 
 interface Props {
   message: Message;
