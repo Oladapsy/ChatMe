@@ -30,23 +30,26 @@ export default function ChatRoomScreen() {
     id: string;
     name: string;
     avatar?: string;
-    isGroup?: string; // Expo router passes params as strings
+    isGroup?: string;
     membersText?: string;
   }>();
 
   const isGroupChat = isGroup === "true";
 
   const [messageText, setMessageText] = useState("");
-  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  // 1. Changed state from single string to string array for multiple photos
+  const [selectedImageUris, setSelectedImageUris] = useState<string[]>([]);
   const [attachmentVisible, setAttachmentVisible] = useState(false);
-  const { takePhoto, pickImage } = useCameraHandler();
+
+  // 2. Destructure pickImages instead of pickImage
+  const { takePhoto, pickImages } = useCameraHandler();
 
   const handleSendText = () => {
-    if (!messageText.trim() && !selectedImageUri) return;
+    if (!messageText.trim() && selectedImageUris.length === 0) return;
 
-    if (selectedImageUri) {
-      console.log("Sending Image:", selectedImageUri, "Caption:", messageText);
-      setSelectedImageUri(null);
+    if (selectedImageUris.length > 0) {
+      console.log("Sending Images:", selectedImageUris, "Caption:", messageText);
+      setSelectedImageUris([]);
     } else {
       console.log("Send Text:", messageText);
     }
@@ -61,22 +64,26 @@ export default function ChatRoomScreen() {
   const handleCameraCapture = async () => {
     const photoUri = await takePhoto();
     if (photoUri) {
-      setSelectedImageUri(photoUri);
+      setSelectedImageUris((prev) => [...prev, photoUri]);
     }
   };
 
+  // 3. Updated gallery pick handler to process string array
   const handleGalleryPick = async () => {
-    const imageUri = await pickImage();
-    if (imageUri) {
-      setSelectedImageUri(imageUri);
+    const imageUris = await pickImages();
+    if (imageUris.length > 0) {
+      setSelectedImageUris((prev) => [...prev, ...imageUris]);
     }
+  };
+
+  const removeSelectedImage = (uriToRemove: string) => {
+    setSelectedImageUris((prev) => prev.filter((uri) => uri !== uriToRemove));
   };
 
   return (
     <MySafeAreaView
       color={isDark ? themeColors.background : themeColors.primary}
     >
-      {/* Header Configured for Group or Direct Chat */}
       <ChatRoomHeader
         name={name}
         avatar={avatar}
@@ -90,13 +97,11 @@ export default function ChatRoomScreen() {
         onVoiceCall={() => console.log("Voice call clicked")}
       />
 
-      {/* Keyboard Avoiding Body */}
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={0}
       >
-        {/* Messages Feed Area populated later */}
         <View
           style={[
             styles.chatBody,
@@ -110,38 +115,45 @@ export default function ChatRoomScreen() {
           />
         </View>
 
-        {/* Selected Image Preview Box */}
-        {selectedImageUri && (
-          <View
-            style={[
-              styles.previewContainer,
-              { backgroundColor: isDark ? "#163043" : "#FFFFFF" },
-            ]}
-          >
-            <Image
-              source={{ uri: selectedImageUri }}
-              style={styles.previewImage}
+        {/* 4. Multi-Image Preview Horizontal Carousel */}
+        {selectedImageUris.length > 0 && (
+          <View style={styles.previewWrapper}>
+            <FlatList
+              data={selectedImageUris}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(uri, idx) => `${uri}-${idx}`}
+              contentContainerStyle={styles.previewStrip}
+              renderItem={({ item }) => (
+                <View
+                  style={[
+                    styles.previewContainer,
+                    { backgroundColor: isDark ? "#163043" : "#FFFFFF" },
+                  ]}
+                >
+                  <Image source={{ uri: item }} style={styles.previewImage} />
+                  <TouchableOpacity
+                    style={styles.removePreviewBtn}
+                    onPress={() => removeSelectedImage(item)}
+                  >
+                    <CloseIcon width={12} height={12} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              )}
             />
-            <TouchableOpacity
-              style={styles.removePreviewBtn}
-              onPress={() => setSelectedImageUri(null)}
-            >
-              <CloseIcon width={14} height={14} color="#FFFFFF" />
-            </TouchableOpacity>
           </View>
         )}
 
-        {/* Input Bar */}
         <ChatInputBar
           text={messageText}
           onChangeText={setMessageText}
           onSendText={handleSendText}
           onSendAudio={handleSendAudio}
           onOpenAttachment={() => setAttachmentVisible(true)}
+          hasAttachments={selectedImageUris.length > 0}
         />
       </KeyboardAvoidingView>
 
-      {/* Attachment Modal Sheet */}
       <AttachmentModal
         visible={attachmentVisible}
         onClose={() => setAttachmentVisible(false)}
@@ -162,13 +174,17 @@ const styles = StyleSheet.create({
   chatBody: {
     flex: 1,
   },
-  previewContainer: {
-    padding: 8,
-    marginHorizontal: 16,
+  previewWrapper: {
+    maxHeight: 80,
     marginBottom: 6,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
+  },
+  previewStrip: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  previewContainer: {
+    padding: 4,
+    borderRadius: 10,
     position: "relative",
   },
   previewImage: {
@@ -178,10 +194,10 @@ const styles = StyleSheet.create({
   },
   removePreviewBtn: {
     position: "absolute",
-    top: 4,
-    left: 60,
+    top: 2,
+    right: 2,
     backgroundColor: "rgba(0,0,0,0.7)",
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 4,
   },
 });

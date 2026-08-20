@@ -1,35 +1,13 @@
 import * as ImagePicker from "expo-image-picker";
-import { useCameraPermissions } from "expo-camera";
 
 export function useCameraHandler() {
-  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
-
-  // Capture photo with Expo Camera
+  // Capture a single photo with the device camera
   const takePhoto = async (): Promise<string | null> => {
-    if (!cameraPermission?.granted) {
-      const permission = await requestCameraPermission();
-      if (!permission.granted) return null;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-      allowsEditing: true,
-    });
-
-    if (!result.canceled && result.assets[0]?.uri) {
-      return result.assets[0].uri;
-    }
-    return null;
-  };
-
-  // Pick existing photo from gallery
-  const pickImage = async (): Promise<string | null> => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") return null;
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images"],
       quality: 0.8,
       allowsEditing: true,
     });
@@ -40,5 +18,23 @@ export function useCameraHandler() {
     return null;
   };
 
-  return { takePhoto, pickImage };
+  // Pick one or more photos from the gallery
+  const pickImages = async (): Promise<string[]> => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") return [];
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.8,
+      allowsMultipleSelection: true,
+      selectionLimit: 10,
+    });
+
+    if (!result.canceled) {
+      return result.assets.map((asset) => asset.uri);
+    }
+    return [];
+  };
+
+  return { takePhoto, pickImages };
 }

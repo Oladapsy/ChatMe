@@ -1,11 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
   TouchableOpacity,
   ScrollView,
   Image,
-  Modal,
   TouchableWithoutFeedback,
   useColorScheme,
 } from "react-native";
@@ -19,8 +18,8 @@ import DocumentIcon from "@/assets/icons/chat/document.svg";
 import LocationIcon from "@/assets/icons/chat/location.svg";
 import ContactIcon from "@/assets/icons/chat/contact2.svg";
 
-// expo media library
-import { AssetField, MediaType, Query, requestPermissionsAsync } from 'expo-media-library';
+// expo media library (new stable class-based API)
+import { AssetField, MediaType, Query, requestPermissionsAsync } from "expo-media-library";
 
 interface Props {
   visible: boolean;
@@ -32,11 +31,10 @@ interface Props {
   onSelectContact: () => void;
 }
 
-const RECENT_PREVIEWS = [
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
-  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150",
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150",
-];
+interface GalleryPreview {
+  id: string;
+  uri: string;
+}
 
 export function AttachmentModal({
   visible,
@@ -51,15 +49,42 @@ export function AttachmentModal({
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
+  const [previews, setPreviews] = useState<GalleryPreview[]>([]);
+
+  useEffect(() => {
+    if (!visible) return;
+
+    const loadRecentPhotos = async () => {
+      const { status } = await requestPermissionsAsync();
+      if (status !== "granted") return;
+
+      const assets = await new Query()
+        .eq(AssetField.MEDIA_TYPE, MediaType.IMAGE)
+        .orderBy({ key: AssetField.CREATION_TIME, ascending: false })
+        .limit(20)
+        .exe();
+
+      const resolved = await Promise.all(
+        assets.map(async (asset) => ({
+          id: asset.id,
+          uri: await asset.getUri(),
+        }))
+      );
+
+      setPreviews(resolved);
+    };
+
+    loadRecentPhotos();
+  }, [visible]);
+
   if (!visible) return null;
 
   return (
-    <Modal
-      animationType="fade"
-      transparent
-      visible={visible}
-      onRequestClose={onClose}
-    >
+    // Plain absolutely-positioned overlay instead of RN's <Modal> — a native
+    // Modal presents on its own UIWindow/layer and the OS dismisses the
+    // keyboard when it takes over. This stays in the same view tree, so the
+    // keyboard can remain open behind it, matching the reference design.
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
@@ -74,6 +99,7 @@ export function AttachmentModal({
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.mediaRow}
+                keyboardShouldPersistTaps="handled"
               >
                 {/* Expo Camera Tile */}
                 <TouchableOpacity
@@ -93,16 +119,16 @@ export function AttachmentModal({
                   />
                 </TouchableOpacity>
 
-                {/* Quick Gallery Thumbnails */}
-                {RECENT_PREVIEWS.map((uri, idx) => (
+                {/* Recent gallery thumbnails, tap to open full picker */}
+                {previews.map((item) => (
                   <TouchableOpacity
-                    key={idx}
+                    key={item.id}
                     onPress={() => {
                       onClose();
                       onOpenGallery();
                     }}
                   >
-                    <Image source={{ uri }} style={styles.photoTile} />
+                    <Image source={{ uri: item.uri }} style={styles.photoTile} />
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -118,7 +144,7 @@ export function AttachmentModal({
                 >
                   <GalleryIcon width={20} height={20} color={themeColors.primary} />
                   <Typography
-                   size={16}
+                    size={16}
                     weight="medium"
                     color={themeColors.modalText}
                     style={styles.label}
@@ -136,7 +162,7 @@ export function AttachmentModal({
                 >
                   <DocumentIcon width={20} height={20} color={themeColors.primary} />
                   <Typography
-                   size={16}
+                    size={16}
                     weight="medium"
                     color={themeColors.modalText}
                     style={styles.label}
@@ -185,7 +211,7 @@ export function AttachmentModal({
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
-    </Modal>
+    </View>
   );
 }
 
@@ -200,11 +226,6 @@ const styles = StyleSheet.create({
   sheetCard: {
     borderRadius: 16,
     paddingVertical: 16,
-    // shadowColor: "#000",
-    // shadowOffset: { width: 0, height: 4 },
-    // shadowOpacity: 0.15,
-    // shadowRadius: 10,
-    // elevation: 6,
   },
   mediaRow: {
     paddingHorizontal: 16,

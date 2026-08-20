@@ -22,6 +22,7 @@ interface Props {
   onSendText: () => void;
   onSendAudio: (audioUri: string, durationSec: number) => void;
   onOpenAttachment: () => void;
+  hasAttachments?: boolean; // Added optional property
 }
 
 export function ChatInputBar({
@@ -30,6 +31,7 @@ export function ChatInputBar({
   onSendText,
   onSendAudio,
   onOpenAttachment,
+  hasAttachments = false,
 }: Props) {
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
@@ -40,6 +42,9 @@ export function ChatInputBar({
   const [timerInterval, setTimerInterval] = useState<ReturnType<
     typeof setInterval
   > | null>(null);
+
+  // Active send state check: Enabled if typing text OR if photos/attachments exist
+  const canSend = text.trim().length > 0 || hasAttachments;
 
   // Initialize expo-audio recorder
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -168,7 +173,6 @@ export function ChatInputBar({
             multiline
           />
 
-          {/* Mic button-> i downloaded it using the iphone imsg from iconify */}
           <TouchableOpacity onPress={startRecording} style={styles.iconBtn}>
             <MicIcon width={22} height={22} color={themeColors.textSecondary} />
           </TouchableOpacity>
@@ -177,14 +181,13 @@ export function ChatInputBar({
             style={[
               styles.actionBtn,
               {
-                backgroundColor:
-                  text.trim().length > 0
-                    ? themeColors.primary
-                    : "rgba(16, 185, 129, 0.4)",
+                backgroundColor: canSend
+                  ? themeColors.primary
+                  : "rgba(16, 185, 129, 0.4)",
               },
             ]}
             onPress={onSendText}
-            disabled={text.trim().length === 0}
+            disabled={!canSend}
           >
             <SendIcon width={18} height={18} color="white" />
           </TouchableOpacity>
