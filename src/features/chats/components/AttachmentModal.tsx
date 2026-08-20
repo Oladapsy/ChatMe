@@ -19,13 +19,19 @@ import LocationIcon from "@/assets/icons/chat/location.svg";
 import ContactIcon from "@/assets/icons/chat/contact2.svg";
 
 // expo media library (new stable class-based API)
-import { AssetField, MediaType, Query, requestPermissionsAsync } from "expo-media-library";
+import {
+  AssetField,
+  MediaType,
+  Query,
+  requestPermissionsAsync,
+} from "expo-media-library";
 
 interface Props {
   visible: boolean;
   onClose: () => void;
   onOpenCamera: () => void;
   onOpenGallery: () => void;
+  onSelectImage: (uri: string) => void; // Added back to handle thumbnail selections
   onSelectDocument: () => void;
   onSelectLocation: () => void;
   onSelectContact: () => void;
@@ -41,6 +47,7 @@ export function AttachmentModal({
   onClose,
   onOpenCamera,
   onOpenGallery,
+  onSelectImage,
   onSelectDocument,
   onSelectLocation,
   onSelectContact,
@@ -68,7 +75,7 @@ export function AttachmentModal({
         assets.map(async (asset) => ({
           id: asset.id,
           uri: await asset.getUri(),
-        }))
+        })),
       );
 
       setPreviews(resolved);
@@ -80,10 +87,6 @@ export function AttachmentModal({
   if (!visible) return null;
 
   return (
-    // Plain absolutely-positioned overlay instead of RN's <Modal> — a native
-    // Modal presents on its own UIWindow/layer and the OS dismisses the
-    // keyboard when it takes over. This stays in the same view tree, so the
-    // keyboard can remain open behind it, matching the reference design.
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
@@ -119,16 +122,19 @@ export function AttachmentModal({
                   />
                 </TouchableOpacity>
 
-                {/* Recent gallery thumbnails, tap to open full picker */}
+                {/* Recent gallery thumbnails, tap to select and close */}
                 {previews.map((item) => (
                   <TouchableOpacity
                     key={item.id}
                     onPress={() => {
-                      onClose();
-                      onOpenGallery();
+                      onSelectImage(item.uri);
+                      onClose(); // Closes the modal sheet so the image preview is visible
                     }}
                   >
-                    <Image source={{ uri: item.uri }} style={styles.photoTile} />
+                    <Image
+                      source={{ uri: item.uri }}
+                      style={styles.photoTile}
+                    />
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -142,7 +148,11 @@ export function AttachmentModal({
                     onOpenGallery();
                   }}
                 >
-                  <GalleryIcon width={20} height={20} color={themeColors.primary} />
+                  <GalleryIcon
+                    width={20}
+                    height={20}
+                    color={themeColors.primary}
+                  />
                   <Typography
                     size={16}
                     weight="medium"
@@ -160,7 +170,11 @@ export function AttachmentModal({
                     onSelectDocument();
                   }}
                 >
-                  <DocumentIcon width={20} height={20} color={themeColors.primary} />
+                  <DocumentIcon
+                    width={20}
+                    height={20}
+                    color={themeColors.primary}
+                  />
                   <Typography
                     size={16}
                     weight="medium"
@@ -178,7 +192,11 @@ export function AttachmentModal({
                     onSelectLocation();
                   }}
                 >
-                  <LocationIcon width={20} height={20} color={themeColors.primary} />
+                  <LocationIcon
+                    width={20}
+                    height={20}
+                    color={themeColors.primary}
+                  />
                   <Typography
                     size={16}
                     weight="medium"
@@ -196,7 +214,11 @@ export function AttachmentModal({
                     onSelectContact();
                   }}
                 >
-                  <ContactIcon width={20} height={20} color={themeColors.primary} />
+                  <ContactIcon
+                    width={20}
+                    height={20}
+                    color={themeColors.primary}
+                  />
                   <Typography
                     size={16}
                     weight="medium"

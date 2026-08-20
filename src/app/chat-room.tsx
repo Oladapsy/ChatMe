@@ -48,7 +48,12 @@ export default function ChatRoomScreen() {
     if (!messageText.trim() && selectedImageUris.length === 0) return;
 
     if (selectedImageUris.length > 0) {
-      console.log("Sending Images:", selectedImageUris, "Caption:", messageText);
+      console.log(
+        "Sending Images:",
+        selectedImageUris,
+        "Caption:",
+        messageText,
+      );
       setSelectedImageUris([]);
     } else {
       console.log("Send Text:", messageText);
@@ -74,6 +79,12 @@ export default function ChatRoomScreen() {
     if (imageUris.length > 0) {
       setSelectedImageUris((prev) => [...prev, ...imageUris]);
     }
+  };
+
+  const handleSelectRecentPhoto = (uri: string) => {
+    setSelectedImageUris((prev) =>
+      prev.includes(uri) ? prev.filter((item) => item !== uri) : [...prev, uri],
+    );
   };
 
   const removeSelectedImage = (uriToRemove: string) => {
@@ -159,6 +170,7 @@ export default function ChatRoomScreen() {
         onClose={() => setAttachmentVisible(false)}
         onOpenCamera={handleCameraCapture}
         onOpenGallery={handleGalleryPick}
+        onSelectImage={handleSelectRecentPhoto} // Fixes the missing prop error
         onSelectDocument={() => console.log("Document selected")}
         onSelectLocation={() => console.log("Location selected")}
         onSelectContact={() => console.log("Contact selected")}
