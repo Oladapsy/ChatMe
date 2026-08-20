@@ -257,6 +257,7 @@ const styles = StyleSheet.create({
   },
   previewStrip: {
     paddingHorizontal: 16,
+    paddingTop: 10,
     gap: 8,
   },
   previewContainer: {
