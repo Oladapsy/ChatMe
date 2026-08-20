@@ -22,7 +22,7 @@ interface Props {
   onSendText: () => void;
   onSendAudio: (audioUri: string, durationSec: number) => void;
   onOpenAttachment: () => void;
-  hasAttachments?: boolean; // Added optional property
+  hasAttachments?: boolean;
 }
 
 export function ChatInputBar({
@@ -43,13 +43,10 @@ export function ChatInputBar({
     typeof setInterval
   > | null>(null);
 
-  // Active send state check: Enabled if typing text OR if photos/attachments exist
   const canSend = text.trim().length > 0 || hasAttachments;
 
-  // Initialize expo-audio recorder
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
-  // Clean up timer when unmounting
   useEffect(() => {
     return () => {
       if (timerInterval) clearInterval(timerInterval);
@@ -121,7 +118,6 @@ export function ChatInputBar({
   return (
     <View style={styles.container}>
       {isRecordingState ? (
-        /* Recording Audio Active UI */
         <View
           style={[
             styles.inputPill,
@@ -149,7 +145,6 @@ export function ChatInputBar({
           </TouchableOpacity>
         </View>
       ) : (
-        /* Input Pill: [ Paperclip | Input Field | Mic Icon | Send Button ] */
         <View
           style={[
             styles.inputPill,
@@ -173,6 +168,7 @@ export function ChatInputBar({
             returnKeyType="send"
             onSubmitEditing={onSendText}
           />
+
 
           <TouchableOpacity onPress={startRecording} style={styles.iconBtn}>
             <MicIcon width={22} height={22} color={themeColors.textSecondary} />

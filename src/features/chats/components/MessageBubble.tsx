@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, Image, useColorScheme } from "react-native";
+import { StyleSheet, View, Image, TouchableOpacity, useColorScheme } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { Message } from "@/features/chats/types/message";
@@ -8,6 +8,7 @@ import { Message } from "@/features/chats/types/message";
 import DocumentIcon from "@/assets/icons/chat/document.svg";
 import LocationIcon from "@/assets/icons/chat/location.svg";
 import ContactIcon from "@/assets/icons/chat/contact2.svg";
+import PlayIcon from "@/assets/icons/chat/send.svg"; // Make sure you have a play icon SVG or replace with your icon
 
 interface Props {
   message: Message;
@@ -21,11 +22,17 @@ export function MessageBubble({ message, isGroup = false }: Props) {
 
   const isMe = message.isMe;
 
-  // Colors mapped to your central theme palette
   const sentBubbleBg = themeColors.primary;
   const receivedBubbleBg = themeColors.cardBackground;
   const receivedTextColor = themeColors.text;
   const timeColor = themeColors.textSecondary;
+
+  const formatAudioDuration = (sec?: number) => {
+    if (!sec) return "0:00";
+    const mins = Math.floor(sec / 60);
+    const secs = sec % 60;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
 
   return (
     <View style={[styles.row, isMe ? styles.rowMe : styles.rowOther]}>
@@ -43,7 +50,7 @@ export function MessageBubble({ message, isGroup = false }: Props) {
         </View>
       )}
 
-      {/* Message Row Layout: [ Timestamp Left ] + [ Bubble ] + [ Timestamp Right ] */}
+      {/* Message Row Layout */}
       <View
         style={[
           styles.bubbleWrapper,
@@ -77,7 +84,7 @@ export function MessageBubble({ message, isGroup = false }: Props) {
             </Typography>
           )}
 
-          {/* 1. Image / Multi-Image Attachment */}
+          {/* 1. Image Attachment */}
           {message.imageUris && message.imageUris.length > 0 && (
             <View style={styles.imageGridContainer}>
               {message.imageUris.map((uri, idx) => (
@@ -90,7 +97,40 @@ export function MessageBubble({ message, isGroup = false }: Props) {
             </View>
           )}
 
-          {/* 2. Document Attachment */}
+          {/* 2. Audio / Voice Note Attachment */}
+          {message.type === "audio" && (
+            <View style={styles.audioContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.playButton,
+                  { backgroundColor: isMe ? "rgba(255,255,255,0.25)" : themeColors.primary },
+                ]}
+                onPress={() => console.log("Play audio:", message.audioUri)}
+              >
+                <PlayIcon width={16} height={16} color="#FFFFFF" />
+              </TouchableOpacity>
+
+              <View style={styles.audioWaveformContainer}>
+                {/* Visual waveform placeholder lines */}
+                <View style={styles.waveformBar} />
+                <View style={[styles.waveformBar, { height: 18 }]} />
+                <View style={[styles.waveformBar, { height: 12 }]} />
+                <View style={[styles.waveformBar, { height: 22 }]} />
+                <View style={[styles.waveformBar, { height: 10 }]} />
+                <View style={[styles.waveformBar, { height: 16 }]} />
+              </View>
+
+              <Typography
+                size={12}
+                color={isMe ? "#FFFFFF" : receivedTextColor}
+                style={styles.audioDuration}
+              >
+                {formatAudioDuration(message.audioDuration)}
+              </Typography>
+            </View>
+          )}
+
+          {/* 3. Document Attachment */}
           {message.document && (
             <View style={styles.attachmentCard}>
               <DocumentIcon
@@ -118,7 +158,7 @@ export function MessageBubble({ message, isGroup = false }: Props) {
             </View>
           )}
 
-          {/* 3. Location Attachment */}
+          {/* 4. Location Attachment */}
           {message.location && (
             <View style={styles.attachmentCard}>
               <LocationIcon
@@ -137,7 +177,7 @@ export function MessageBubble({ message, isGroup = false }: Props) {
             </View>
           )}
 
-          {/* 4. Contact Attachment */}
+          {/* 5. Contact Attachment */}
           {message.contact && (
             <View style={styles.attachmentCard}>
               {message.contact.avatar ? (
@@ -171,7 +211,7 @@ export function MessageBubble({ message, isGroup = false }: Props) {
             </View>
           )}
 
-          {/* 5. Text Message */}
+          {/* 6. Text Message */}
           {Boolean(message.text) && (
             <Typography
               size={15}
@@ -269,6 +309,35 @@ const styles = StyleSheet.create({
     width: 180,
     height: 130,
     borderRadius: 10,
+  },
+  audioContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 160,
+    paddingVertical: 2,
+  },
+  playButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  audioWaveformContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    marginHorizontal: 10,
+    flex: 1,
+  },
+  waveformBar: {
+    width: 3,
+    height: 14,
+    backgroundColor: "rgba(255,255,255,0.7)",
+    borderRadius: 2,
+  },
+  audioDuration: {
+    marginLeft: "auto",
   },
   attachmentCard: {
     flexDirection: "row",

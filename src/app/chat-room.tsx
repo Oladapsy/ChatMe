@@ -32,7 +32,6 @@ export default function ChatRoomScreen() {
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
-  // Extract all params in a single hook call
   const { id, name, avatar, isGroup, membersText } = useLocalSearchParams<{
     id: string;
     name: string;
@@ -44,7 +43,6 @@ export default function ChatRoomScreen() {
   const isGroupChat = isGroup === "true";
   const activeChatId = id || "1";
 
-  // Load messages matching active chat ID
   const initialMessages = MOCK_MESSAGES[activeChatId] || [];
   const [messages, setMessages] = useState<Message[]>(initialMessages);
 
@@ -55,7 +53,6 @@ export default function ChatRoomScreen() {
   const { takePhoto, pickImages } = useCameraHandler();
   const flatListRef = useRef<FlatList>(null);
 
-  // Group message processing to determine avatar visibility
   const processedMessages = messages.map((msg, index) => {
     const nextMsg = messages[index + 1];
     const isLastFromSender = !nextMsg || nextMsg.senderId !== msg.senderId;
@@ -85,13 +82,27 @@ export default function ChatRoomScreen() {
 
     setMessages((prev) => [...prev, newMessage]);
 
-    // Reset inputs
     setMessageText("");
     setSelectedImageUris([]);
   };
 
   const handleSendAudio = (uri: string, durationSec: number) => {
-    console.log("Send Voice Note:", uri, "Duration:", durationSec);
+    const audioMessage: Message = {
+      id: Date.now().toString(),
+      chatId: activeChatId,
+      senderId: "user_me",
+      type: "audio",
+      audioUri: uri,
+      audioDuration: durationSec,
+      createdAt: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }),
+      isMe: true,
+    };
+
+    setMessages((prev) => [...prev, audioMessage]);
   };
 
   const handleCameraCapture = async () => {
@@ -146,7 +157,7 @@ export default function ChatRoomScreen() {
             { backgroundColor: isDark ? "#0A1926" : "#F4F6F8" },
           ]}
         >
-          {/* 1. Background Vector Pattern */}
+          {/* Background Vector Pattern */}
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
             <ChatBgIcon
               width="100%"
@@ -160,7 +171,7 @@ export default function ChatRoomScreen() {
             />
           </View>
 
-          {/* 2. Chat Feed */}
+          {/* Chat Feed */}
           <FlatList
             ref={flatListRef}
             data={processedMessages}
@@ -179,7 +190,7 @@ export default function ChatRoomScreen() {
           />
         </View>
 
-        {/* 3. Selected Images Strip */}
+        {/* Selected Images Strip */}
         {selectedImageUris.length > 0 && (
           <View style={styles.previewWrapper}>
             <FlatList
