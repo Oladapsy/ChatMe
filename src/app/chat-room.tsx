@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -18,15 +18,22 @@ import { AttachmentModal } from "@/features/chats/components/AttachmentModal";
 import { useCameraHandler } from "@/features/chats/hooks/useCameraHandler";
 import { ChatInputBar } from "@/features/chats/components/ChatInputBar";
 
-// Icons
+// Icons & Background
 import CloseIcon from "@/assets/icons/shared/close.svg";
+import ChatBgIcon from "@/assets/icons/chat/ChatBg.svg";
+
+// Types & Components
+import { Message } from "@/features/chats/types/message";
+import { MessageBubble } from "@/features/chats/components/MessageBubble";
+import { MOCK_MESSAGES } from "@/features/chats/data/mockMessages";
 
 export default function ChatRoomScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
-  const { name, avatar, isGroup, membersText } = useLocalSearchParams<{
+  // Extract all params in a single hook call
+  const { id, name, avatar, isGroup, membersText } = useLocalSearchParams<{
     id: string;
     name: string;
     avatar?: string;
@@ -35,31 +42,52 @@ export default function ChatRoomScreen() {
   }>();
 
   const isGroupChat = isGroup === "true";
+  const activeChatId = id || "1";
+
+  // Load messages matching active chat ID
+  const initialMessages = MOCK_MESSAGES[activeChatId] || [];
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
 
   const [messageText, setMessageText] = useState("");
-  // 1. Changed state from single string to string array for multiple photos
   const [selectedImageUris, setSelectedImageUris] = useState<string[]>([]);
   const [attachmentVisible, setAttachmentVisible] = useState(false);
 
-  // 2. Destructure pickImages instead of pickImage
   const { takePhoto, pickImages } = useCameraHandler();
+  const flatListRef = useRef<FlatList>(null);
+
+  // Group message processing to determine avatar visibility
+  const processedMessages = messages.map((msg, index) => {
+    const nextMsg = messages[index + 1];
+    const isLastFromSender = !nextMsg || nextMsg.senderId !== msg.senderId;
+    return {
+      ...msg,
+      showAvatar: isLastFromSender,
+    };
+  });
 
   const handleSendText = () => {
     if (!messageText.trim() && selectedImageUris.length === 0) return;
 
-    if (selectedImageUris.length > 0) {
-      console.log(
-        "Sending Images:",
-        selectedImageUris,
-        "Caption:",
-        messageText,
-      );
-      setSelectedImageUris([]);
-    } else {
-      console.log("Send Text:", messageText);
-    }
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      chatId: activeChatId,
+      senderId: "user_me",
+      type: selectedImageUris.length > 0 ? "image" : "text",
+      text: messageText.trim() || undefined,
+      imageUris: selectedImageUris.length > 0 ? selectedImageUris : undefined,
+      createdAt: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }),
+      isMe: true,
+    };
 
+    setMessages((prev) => [...prev, newMessage]);
+
+    // Reset inputs
     setMessageText("");
+    setSelectedImageUris([]);
   };
 
   const handleSendAudio = (uri: string, durationSec: number) => {
@@ -73,7 +101,6 @@ export default function ChatRoomScreen() {
     }
   };
 
-  // 3. Updated gallery pick handler to process string array
   const handleGalleryPick = async () => {
     const imageUris = await pickImages();
     if (imageUris.length > 0) {
@@ -119,14 +146,40 @@ export default function ChatRoomScreen() {
             { backgroundColor: isDark ? "#0A1926" : "#F4F6F8" },
           ]}
         >
+          {/* 1. Background Vector Pattern */}
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            <ChatBgIcon
+              width="100%"
+              height="100%"
+              preserveAspectRatio="xMidYMid slice"
+              color={
+                isDark
+                  ? "rgba(255, 255, 255, 0.04)"
+                  : "rgba(16, 185, 129, 0.06)"
+              }
+            />
+          </View>
+
+          {/* 2. Chat Feed */}
           <FlatList
-            data={[]}
-            renderItem={null}
-            keyExtractor={(_, i) => i.toString()}
+            ref={flatListRef}
+            data={processedMessages}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <MessageBubble message={item} isGroup={isGroupChat} />
+            )}
+            contentContainerStyle={{
+              paddingVertical: 10,
+              flexGrow: 1,
+              justifyContent: "flex-end",
+            }}
+            onContentSizeChange={() =>
+              flatListRef.current?.scrollToEnd({ animated: true })
+            }
           />
         </View>
 
-        {/* 4. Multi-Image Preview Horizontal Carousel */}
+        {/* 3. Selected Images Strip */}
         {selectedImageUris.length > 0 && (
           <View style={styles.previewWrapper}>
             <FlatList
@@ -170,7 +223,7 @@ export default function ChatRoomScreen() {
         onClose={() => setAttachmentVisible(false)}
         onOpenCamera={handleCameraCapture}
         onOpenGallery={handleGalleryPick}
-        onSelectImage={handleSelectRecentPhoto} // Fixes the missing prop error
+        onSelectImage={handleSelectRecentPhoto}
         onSelectDocument={() => console.log("Document selected")}
         onSelectLocation={() => console.log("Location selected")}
         onSelectContact={() => console.log("Contact selected")}
@@ -185,6 +238,7 @@ const styles = StyleSheet.create({
   },
   chatBody: {
     flex: 1,
+    position: "relative",
   },
   previewWrapper: {
     maxHeight: 80,

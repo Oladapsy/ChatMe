@@ -170,7 +170,8 @@ export function ChatInputBar({
             placeholderTextColor={themeColors.textSecondary}
             value={text}
             onChangeText={onChangeText}
-            multiline
+            returnKeyType="send"
+            onSubmitEditing={onSendText}
           />
 
           <TouchableOpacity onPress={startRecording} style={styles.iconBtn}>
