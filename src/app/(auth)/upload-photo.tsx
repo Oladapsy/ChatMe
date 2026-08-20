@@ -37,7 +37,8 @@ export default function UploadPhotoScreen() {
 
   const handleTakePhone = async () => {
     setShowPickerModal(false);
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permissionResult.granted) {
       alert("Permission to access camera is required!");
@@ -65,9 +66,8 @@ export default function UploadPhotoScreen() {
       return;
     }
 
-    // Fixed Deprecation: Using [ImagePicker.MediaType.IMAGE] or "images"
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"], // 👈 Simple string literal array
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -102,13 +102,33 @@ export default function UploadPhotoScreen() {
     router.replace("/(tabs)");
   };
 
+  const handleSkip = () => {
+    console.log("User skipped photo upload");
+    router.replace("/(tabs)");
+  };
+
   return (
     <MySafeAreaView color={themeColors.background}>
       <View style={styles.container}>
         {/* Header Section */}
         <View style={styles.content}>
-          <View style={styles.backButtonWrapper}>
+          {/* Top Header Row with Back Button and Skip */}
+          <View style={styles.headerRow}>
             <BackButton />
+
+            {/* Render Skip button only when photo isn't uploaded yet */}
+            {status !== "success" && (
+              <TouchableOpacity onPress={handleSkip} activeOpacity={0.7}>
+                <Typography
+                  variant="body"
+                  size={16}
+                  weight="medium"
+                  color={themeColors.primary}
+                >
+                  Skip
+                </Typography>
+              </TouchableOpacity>
+            )}
           </View>
 
           <Typography
@@ -267,7 +287,10 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: 16,
   },
-  backButtonWrapper: {
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 24,
   },
   title: {
