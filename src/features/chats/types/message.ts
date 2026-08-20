@@ -35,9 +35,9 @@ export interface Message {
   imageUris?: string[];
   audioUri?: string;
   audioDuration?: number;
-  document?: MessageDocument; // Added missing property
-  location?: MessageLocation; // Added missing property
-  contact?: MessageContact;   // Added missing property
+  document?: MessageDocument;
+  location?: MessageLocation;
+  contact?: MessageContact;  
   createdAt: string;
   isMe: boolean;
   showAvatar?: boolean;
