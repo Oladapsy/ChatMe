@@ -65,8 +65,9 @@ export default function UploadPhotoScreen() {
       return;
     }
 
+    // Fixed Deprecation: Using [ImagePicker.MediaType.IMAGE] or "images"
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"], // 👈 Simple string literal array
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -75,6 +76,11 @@ export default function UploadPhotoScreen() {
     if (!result.canceled && result.assets[0].uri) {
       processImageUpload(result.assets[0].uri);
     }
+  };
+
+  const handleSelectRecentPhoto = (uri: string) => {
+    setShowPickerModal(false);
+    processImageUpload(uri);
   };
 
   const processImageUpload = (uri: string) => {
@@ -86,7 +92,6 @@ export default function UploadPhotoScreen() {
     }, 2000);
   };
 
-  // Resets the state back to default
   const handleRemovePhoto = () => {
     setImageUri(null);
     setStatus("idle");
@@ -240,12 +245,13 @@ export default function UploadPhotoScreen() {
           )}
         </View>
 
-        {/* Modular Picker Modal */}
+        {/* Photo Picker Modal */}
         <PhotoPickerModal
           visible={showPickerModal}
           onClose={() => setShowPickerModal(false)}
           onTakePhoto={handleTakePhone}
           onChooseFromLibrary={handleChooseFromLibrary}
+          onSelectImage={handleSelectRecentPhoto}
         />
       </View>
     </MySafeAreaView>

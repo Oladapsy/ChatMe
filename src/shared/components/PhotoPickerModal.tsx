@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
   TouchableOpacity,
+  ScrollView,
+  Image,
   Modal,
   TouchableWithoutFeedback,
   useColorScheme,
@@ -15,11 +17,25 @@ import { Colors } from "@/shared/constants/colors";
 import CameraIcon from "@/assets/icons/auth/camera.svg";
 import GalleryIcon from "@/assets/icons/auth/gallery.svg";
 
+// Expo Media Library
+import {
+  AssetField,
+  MediaType,
+  Query,
+  requestPermissionsAsync,
+} from "expo-media-library";
+
 interface PhotoPickerModalProps {
   visible: boolean;
   onClose: () => void;
   onTakePhoto: () => void;
   onChooseFromLibrary: () => void;
+  onSelectImage: (uri: string) => void;
+}
+
+interface GalleryPreview {
+  id: string;
+  uri: string;
 }
 
 export function PhotoPickerModal({
@@ -27,10 +43,39 @@ export function PhotoPickerModal({
   onClose,
   onTakePhoto,
   onChooseFromLibrary,
+  onSelectImage,
 }: PhotoPickerModalProps) {
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
+
+  const [previews, setPreviews] = useState<GalleryPreview[]>([]);
+
+  useEffect(() => {
+    if (!visible) return;
+
+    const loadRecentPhotos = async () => {
+      const { status } = await requestPermissionsAsync();
+      if (status !== "granted") return;
+
+      const assets = await new Query()
+        .eq(AssetField.MEDIA_TYPE, MediaType.IMAGE)
+        .orderBy({ key: AssetField.CREATION_TIME, ascending: false })
+        .limit(20)
+        .exe();
+
+      const resolved = await Promise.all(
+        assets.map(async (asset) => ({
+          id: asset.id,
+          uri: await asset.getUri(),
+        })),
+      );
+
+      setPreviews(resolved);
+    };
+
+    loadRecentPhotos();
+  }, [visible]);
 
   return (
     <Modal
@@ -48,6 +93,43 @@ export function PhotoPickerModal({
                 { backgroundColor: themeColors.cardBackground },
               ]}
             >
+              {/* Horizontal Media Previews */}
+              {previews.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.mediaRow}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  <TouchableOpacity
+                    style={[
+                      styles.cameraTile,
+                      { backgroundColor: isDark ? "#254156" : "#EAEEF2" },
+                    ]}
+                    onPress={onTakePhoto}
+                  >
+                    <CameraIcon
+                      width={25}
+                      height={25}
+                      color={themeColors.textSecondary}
+                    />
+                  </TouchableOpacity>
+
+                  {previews.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      onPress={() => onSelectImage(item.uri)}
+                    >
+                      <Image
+                        source={{ uri: item.uri }}
+                        style={styles.photoTile}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+
+              {/* Action Buttons */}
               <TouchableOpacity
                 style={styles.optionRow}
                 onPress={onTakePhoto}
@@ -107,6 +189,22 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     gap: 16,
+  },
+  mediaRow: {
+    gap: 10,
+    paddingBottom: 4,
+  },
+  cameraTile: {
+    width: 68,
+    height: 68,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  photoTile: {
+    width: 68,
+    height: 68,
+    borderRadius: 12,
   },
   optionRow: {
     flexDirection: "row",
