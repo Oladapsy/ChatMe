@@ -41,9 +41,6 @@ export default function NewContactScreen() {
 
     setSaving(true);
     try {
-      // requestPermissionsAsync covers both read and write access on this new API —
-      // there's no separate "write" permission call
-      // so i just request once
       const { status } = await requestPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
@@ -53,19 +50,20 @@ export default function NewContactScreen() {
         return;
       }
 
-      // Contact.create() writes the contact to the device immediately and
-      // returns a live Contact instance you can keep mutating
-      const contact = await Contact.create({
+      // 1. if the string path exist , i passed it directly
+      const contactData: any = {
         givenName: firstName.trim(),
         familyName: lastName.trim() || undefined,
-        // i will handle the image later!
-      });
+      };
+
+      if (avatarUri) {
+        contactData.image = avatarUri; // Types expect string
+      }
+
+      // Creating the contact with structured object
+      const contact = await Contact.create(contactData);
 
       await contact.addPhone({ label: "mobile", number: phone.trim() });
-
-      // avatarUri isn't attached here — expo-contacts' image write API expects
-      // a local file URI plus explicit dimensions; wire that up once
-      // AvatarPicker gives a persisted file (not a temp camera-roll URI)
 
       router.back();
     } catch (error) {
