@@ -4,8 +4,9 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 
 import BackIcon from "@/assets/icons/shared/chevron-left.svg";
-import FlashIcon from "@/assets/icons/chat/search.svg";
+import FlashIcon from "@/assets/icons/chat/flash.svg";
 import { Typography } from "@/shared/components/Typography";
+import { Colors } from "@/shared/constants/colors";
 
 export default function QRScannerScreen() {
   const router = useRouter();
@@ -18,11 +19,11 @@ export default function QRScannerScreen() {
   if (!permission.granted) {
     return (
       <View style={styles.centerContainer}>
-        <Typography size={16} color="#FFFFFF" style={{ marginBottom: 16 }}>
+        <Typography size={16} color="white" style={{ marginBottom: 16 }}>
           We need your permission to show the camera
         </Typography>
         <TouchableOpacity style={styles.permBtn} onPress={requestPermission}>
-          <Typography size={15} weight="bold" color="#FFFFFF">
+          <Typography size={15} weight="bold" color="white">
             Grant Permission
           </Typography>
         </TouchableOpacity>
@@ -46,6 +47,7 @@ export default function QRScannerScreen() {
         enableTorch={torch}
         barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
         onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
+        // facing="back"
       />
 
       {/* Top Controls */}
@@ -54,7 +56,7 @@ export default function QRScannerScreen() {
           onPress={() => router.back()}
           style={styles.iconCircle}
         >
-          <BackIcon width={22} height={22} color="#FFFFFF" />
+          <BackIcon width={22} height={22} color="white" />
         </TouchableOpacity>
       </View>
 
@@ -99,7 +101,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   permBtn: {
-    backgroundColor: "#52C47C",
+    backgroundColor: Colors.dark.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -124,15 +126,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   scannerBox: {
-    width: 240,
-    height: 240,
+    width: 280,
+    height: 280,
     position: "relative",
   },
   corner: {
     position: "absolute",
     width: 32,
     height: 32,
-    borderColor: "#52C47C",
+    borderColor: Colors.dark.primary,
   },
   topLeft: {
     top: 0,
