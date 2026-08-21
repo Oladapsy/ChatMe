@@ -1,13 +1,13 @@
 import { Message } from "@/features/chats/types/message";
 
 export const MOCK_MESSAGES: Record<string, Message[]> = {
-  // Direct Chat (Keanu Murphy - chatId: "1")
+  // Direct Chat (Darrell Steward - chatId: "1")
   "1": [
     {
       id: "m1",
       chatId: "1",
-      senderId: "keanu",
-      senderName: "Keanu Murphy",
+      senderId: "Darrell",
+      senderName: "Darrell Steward",
       senderAvatar: "https://i.pravatar.cc/100?img=12",
       type: "text",
       text: "Habitant elit pellentesque curabitur morbi sit fusce elit",
@@ -26,8 +26,8 @@ export const MOCK_MESSAGES: Record<string, Message[]> = {
     {
       id: "m3",
       chatId: "1",
-      senderId: "keanu",
-      senderName: "Keanu Murphy",
+      senderId: "Darrell",
+      senderName: "Darrell Steward",
       senderAvatar: "https://i.pravatar.cc/100?img=12",
       type: "image",
       text: "Here are the photos from yesterday's design sync.",
@@ -51,8 +51,8 @@ export const MOCK_MESSAGES: Record<string, Message[]> = {
     {
       id: "m5",
       chatId: "1",
-      senderId: "keanu",
-      senderName: "Keanu Murphy",
+      senderId: "Darrell",
+      senderName: "Darrell Steward",
       senderAvatar: "https://i.pravatar.cc/100?img=12",
       type: "document",
       document: {
@@ -66,8 +66,8 @@ export const MOCK_MESSAGES: Record<string, Message[]> = {
     {
       id: "m6",
       chatId: "1",
-      senderId: "keanu",
-      senderName: "Keanu Murphy",
+      senderId: "Darrell",
+      senderName: "Darrell Steward",
       senderAvatar: "https://i.pravatar.cc/100?img=12",
       type: "location",
       location: {
@@ -169,5 +169,16 @@ export const MOCK_MESSAGES: Record<string, Message[]> = {
       createdAt: "19:40",
       isMe: false,
     },
+    // {
+    //   id: "g7",
+    //   chatId: "4",
+    //   senderId: "lane",
+    //   senderName: "Lane",
+    //   senderAvatar: "https://i.pravatar.cc/100?img=66",
+    //   type: "text",
+    //   text: "Orci maecenas hendrerit mattis consectetur. Mauris.",
+    //   createdAt: "19:40",
+    //   isMe: false,
+    // },
   ],
 };

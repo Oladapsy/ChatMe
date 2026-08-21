@@ -89,7 +89,7 @@ export function AvatarPicker({ uri, onSelectImage }: Props) {
           <Image source={{ uri }} style={styles.image} />
         ) : (
           <View style={styles.placeholder}>
-            <UserIcon width={81} height={87} color="#FFFFFF" />
+            <UserIcon width={81} height={87} color="white" />
           </View>
         )}
         <View

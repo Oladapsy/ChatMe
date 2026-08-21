@@ -203,7 +203,7 @@ export default function ChatRoomScreen() {
                 <View
                   style={[
                     styles.previewContainer,
-                    { backgroundColor: isDark ? "#163043" : "#FFFFFF" },
+                    { backgroundColor: isDark ? "#163043" : "white" },
                   ]}
                 >
                   <Image source={{ uri: item }} style={styles.previewImage} />
@@ -211,7 +211,7 @@ export default function ChatRoomScreen() {
                     style={styles.removePreviewBtn}
                     onPress={() => removeSelectedImage(item)}
                   >
-                    <CloseIcon width={12} height={12} color="#FFFFFF" />
+                    <CloseIcon width={12} height={12} color="white" />
                   </TouchableOpacity>
                 </View>
               )}
