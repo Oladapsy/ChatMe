@@ -35,10 +35,34 @@ export default function QRScannerScreen() {
     if (scanned) return;
     setScanned(true);
 
-    // Process scanned contact payload (e.g. JSON or phone string)
-    // Navigates back or populates form state
-    router.back();
+    try {
+      // first: ill Attempt to parse the QR data as JSON
+      const parsedData = JSON.parse(data);
+
+      // 2. Destructure fields with fallbacks
+      const { firstName = "", lastName = "", phone = "" } = parsedData;
+
+      // 3. Sending data back to the contact route as search params
+      router.replace({
+        pathname: "/new-contact", // g to contact to populate
+        params: { 
+          scannedFirstName: firstName, 
+          scannedLastName: lastName, 
+          scannedPhone: phone 
+        },
+      });
+      
+    } catch (error) {
+      // Fallback: If it's not a JSON string, assume it's a raw phone number string
+      console.log("Not a valid JSON payload, attempting raw phone parsing");
+      
+      router.replace({
+        pathname: "/new-contact",
+        params: { scannedPhone: data.trim() },
+      });
+    }
   };
+
 
   return (
     <View style={styles.container}>

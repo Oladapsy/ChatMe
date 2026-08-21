@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -7,7 +7,7 @@ import {
   useColorScheme,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams  } from "expo-router";
 import { Contact, requestPermissionsAsync } from "expo-contacts";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
@@ -21,11 +21,21 @@ import { BackButton } from "@/shared/components/BackButton";
 import UserIcon from "@/assets/icons/shared/user.svg";
 import QrCodeIcon from "@/assets/icons/chat/qrcode.svg";
 
+// to get the qr-code data i'll use uselocalsearxhparams
+
+
 export default function NewContactScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
+
+   // get data from qr code
+   const params = useLocalSearchParams<{ 
+    scannedFirstName?: string; 
+    scannedLastName?: string; 
+    scannedPhone?: string; 
+  }>();
 
   const [avatarUri, setAvatarUri] = useState<string>();
   const [firstName, setFirstName] = useState("");
@@ -35,6 +45,13 @@ export default function NewContactScreen() {
   const [saving, setSaving] = useState(false);
 
   const isValid = firstName.trim().length > 0 && phone.trim().length > 0;
+
+  // this set based on the params received!
+   useEffect(() => {
+    if (params.scannedFirstName) setFirstName(params.scannedFirstName);
+    if (params.scannedLastName) setLastName(params.scannedLastName);
+    if (params.scannedPhone) setPhone(params.scannedPhone);
+  }, [params]);
 
   const handleSave = async () => {
     if (!isValid || saving) return;
