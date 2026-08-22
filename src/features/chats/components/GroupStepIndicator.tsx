@@ -9,7 +9,7 @@ interface Props {
 
 export function GroupStepIndicator({ currentStep, isDark }: Props) {
   const activeColor = Colors.light.primary;
-  const inactiveColor = isDark ? "#254156" : "#E5E7EB";
+  const inactiveColor = isDark ? "#3A566A" : "#E8F5ED";
 
   return (
     <View style={styles.container}>
@@ -34,12 +34,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     width: "100%",
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 30,
+    marginTop: 10,
   },
   stepBar: {
     flex: 1,
-    height: 4,
-    borderRadius: 2,
+    height: 6,
+    borderRadius: 100,
   },
 });

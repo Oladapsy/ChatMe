@@ -3,7 +3,6 @@ import {
   Modal,
   StyleSheet,
   View,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   useColorScheme,
   KeyboardAvoidingView,
@@ -11,10 +10,11 @@ import {
 } from "react-native";
 
 import { Colors } from "@/shared/constants/colors";
-import { GroupStepIndicator } from "./GroupStepIndicator";
-import { AddParticipantsStep } from "./AddParticipantsStep";
-import { NameGroupStep } from "./NameGroupStep";
+import { GroupStepIndicator } from "@/features/chats/components/GroupStepIndicator";
+import { NameGroupStep } from "@/features/chats/components/NameGroupStep";
 import { Contact } from "@/features/contacts/data/mockContacts";
+import { AddParticipantsStep } from "@/features/chats/components/AddParticipantsStep"
+import { Typography } from "@/shared/components/Typography";
 
 interface Props {
   visible: boolean;
@@ -39,7 +39,7 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
     setSelectedContacts((prev) =>
       prev.some((c) => c.id === contact.id)
         ? prev.filter((c) => c.id !== contact.id)
-        : [...prev, contact]
+        : [...prev, contact],
     );
   };
 
@@ -49,7 +49,11 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
     onClose();
   };
 
-  const handleCreate = (data: { name: string; description: string; imageUri?: string }) => {
+  const handleCreate = (data: {
+    name: string;
+    description: string;
+    imageUri?: string;
+  }) => {
     onGroupCreated({
       ...data,
       members: selectedContacts,
@@ -71,7 +75,7 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
               behavior={Platform.OS === "ios" ? "padding" : "height"}
               style={[
                 styles.sheet,
-                { backgroundColor: isDark ? "#081C2C" : "#FFFFFF" },
+                { backgroundColor: themeColors.background },
               ]}
             >
               {/* Drag Handle */}
@@ -79,10 +83,22 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
                 <View
                   style={[
                     styles.handle,
-                    { backgroundColor: isDark ? "#254156" : "#E5E7EB" },
+                    { backgroundColor: isDark ? "#3A566A" : "#DDE2E8" },
                   ]}
                 />
               </View>
+
+              {/* Text at the top */}
+              {step === 1 ? (
+                <Typography>
+                  
+
+                </Typography>) : (
+                  <Typography>
+
+                  </Typography>
+                ) 
+              )}
 
               {/* Progress Indicator */}
               <GroupStepIndicator currentStep={step} isDark={isDark} />
@@ -117,16 +133,16 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
     paddingBottom: 32,
-    maxHeight: "85%",
-    height: 600,
+    maxHeight: "100%",
+    height: 700,
   },
   handleWrapper: {
     alignItems: "center",
     paddingVertical: 12,
   },
   handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
+    width: 48,
+    height: 6,
+    borderRadius: 100,
   },
 });
