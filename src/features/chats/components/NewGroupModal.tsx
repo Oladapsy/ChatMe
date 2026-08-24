@@ -77,7 +77,9 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
               behavior={Platform.OS === "ios" ? "padding" : undefined}
               style={[
                 styles.sheet,
-                { backgroundColor: isDark ? "#0D1F2D" : themeColors.background },
+                {
+                  backgroundColor: isDark ? "#0D1F2D" : themeColors.background,
+                },
               ]}
             >
               {/* Drag Handle */}

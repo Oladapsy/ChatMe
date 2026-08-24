@@ -3,6 +3,7 @@ import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import CheckIcon from "@/assets/icons/shared/check.svg";
 import { Contact } from "@/features/contacts/data/mockContacts";
+import { Colors } from "@/shared/constants/colors";
 
 interface Props {
   contact: Contact;
@@ -11,7 +12,12 @@ interface Props {
   isDark: boolean;
 }
 
-export function ParticipantItem({ contact, selected, onToggle, isDark }: Props) {
+export function ParticipantItem({
+  contact,
+  selected,
+  onToggle,
+  isDark,
+}: Props) {
   return (
     <TouchableOpacity
       style={styles.container}
@@ -22,12 +28,14 @@ export function ParticipantItem({ contact, selected, onToggle, isDark }: Props) 
         <Image source={{ uri: contact.avatar }} style={styles.avatar} />
         {selected && (
           <View style={styles.checkmarkBadge}>
-            <CheckIcon width={12} height={12} color="#FFFFFF" />
+            <View style={styles.checkmarkBadge}>
+              <CheckIcon width={24} height={24} color="white" />
+            </View>
           </View>
         )}
       </View>
       <Typography
-        size={12}
+        size={14}
         weight="medium"
         align="center"
         numberOfLines={1}
@@ -44,17 +52,17 @@ const styles = StyleSheet.create({
   container: {
     width: "25%",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 32,
   },
   avatarWrapper: {
     position: "relative",
-    width: 60,
-    height: 60,
+    width: 56,
+    height: 56,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
   checkmarkBadge: {
     position: "absolute",
@@ -62,12 +70,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 30,
-    backgroundColor: "rgba(87, 183, 125, 0.45)",
+    borderRadius: 32,
+    borderColor: Colors.light.primary,
+    borderWidth: 2,
+    backgroundColor: "#081C2C70",
     justifyContent: "center",
     alignItems: "center",
   },
   name: {
-    marginTop: 6,
+    marginTop: 4,
   },
 });
