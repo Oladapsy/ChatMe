@@ -21,6 +21,7 @@ export const Colors = {
     mute: "#6E8597",
     modalText: "#1F3C51",
     avatarBg: "#E2E8F0",
+    avatarUploadBg: "#F2FAF5",
   },
   dark: {
     primary: "#57B77D",
@@ -44,5 +45,6 @@ export const Colors = {
     mute: "#8EA3B3",
     modalText: "#FFFFFF",
     avatarBg: "#1E293B",
+    avatarUploadBg: "#163043",
   },
 };
