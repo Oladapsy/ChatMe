@@ -29,10 +29,11 @@ export function AddParticipantsStep({
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredContacts = MOCK_CONTACTS.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase())
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const countText = selectedContacts.length > 0 ? `(${selectedContacts.length})` : "";
+  const countText =
+    selectedContacts.length > 0 ? `(${selectedContacts.length})` : "";
   const isValid = selectedContacts.length > 0;
 
   return (
@@ -47,9 +48,16 @@ export function AddParticipantsStep({
           },
         ]}
       >
-        <SearchIcon width={18} height={18} color={isDark ? "#536878" : "#94A3B8"} />
+        <SearchIcon
+          width={18}
+          height={18}
+          color={isDark ? "#536878" : "#94A3B8"}
+        />
         <TextInput
-          style={[styles.searchInput, { color: isDark ? "#FFFFFF" : "#081C2C" }]}
+          style={[
+            styles.searchInput,
+            { color: isDark ? "#FFFFFF" : "#081C2C" },
+          ]}
           placeholder="Search people..."
           placeholderTextColor={isDark ? "#536878" : "#94A3B8"}
           value={searchQuery}

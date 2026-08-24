@@ -74,7 +74,7 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
         <View style={styles.overlay}>
           <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
             <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : undefined}
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
               style={[
                 styles.sheet,
                 {
@@ -101,9 +101,9 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
                     <BackIcon
-                      width={20}
-                      height={20}
-                      color={isDark ? "#FFFFFF" : "#081C2C"}
+                      width={24}
+                      height={24}
+                      color={isDark ? "white" : "#081C2C"}
                     />
                   </TouchableOpacity>
                 ) : (
@@ -111,7 +111,7 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
                 )}
 
                 <Typography
-                  size={18}
+                  size={(step === 1 ? 18 : 20)}
                   weight="bold"
                   align="center"
                   color={isDark ? "white" : "#081C2C"}
@@ -120,7 +120,7 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
                     <>
                       Add participants{" "}
                       {selectedContacts.length > 0 && (
-                        <Typography size={18} weight="bold" color="#57B77D">
+                        <Typography size={18} weight="bold" color={Colors.light.primary}>
                           ({selectedContacts.length})
                         </Typography>
                       )}
@@ -164,11 +164,11 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sheet: {
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
     paddingBottom: Platform.OS === "ios" ? 40 : 28, // Extra bottom padding for home bar
-    height: 660,
+    height: 753,
   },
   handleWrapper: {
     alignItems: "center",
@@ -183,8 +183,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 4,
-    marginBottom: 16,
+    marginVertical: 15,
   },
   backBtn: {
     width: 32,
