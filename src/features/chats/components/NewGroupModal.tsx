@@ -75,6 +75,7 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
           <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
               style={[
                 styles.sheet,
                 {
@@ -92,7 +93,7 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
                 />
               </View>
 
-              {/* Header Row with Back Button */}
+              {/* Header Row */}
               <View style={styles.headerRow}>
                 {step === 2 ? (
                   <TouchableOpacity
@@ -111,7 +112,7 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
                 )}
 
                 <Typography
-                  size={(step === 1 ? 18 : 20)}
+                  size={step === 1 ? 18 : 20}
                   weight="bold"
                   align="center"
                   color={isDark ? "white" : "#081C2C"}
@@ -120,7 +121,11 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
                     <>
                       Add participants{" "}
                       {selectedContacts.length > 0 && (
-                        <Typography size={18} weight="bold" color={Colors.light.primary}>
+                        <Typography
+                          size={18}
+                          weight="bold"
+                          color={Colors.light.primary}
+                        >
                           ({selectedContacts.length})
                         </Typography>
                       )}

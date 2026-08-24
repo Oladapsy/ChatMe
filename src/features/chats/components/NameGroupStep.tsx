@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   useColorScheme,
+  ScrollView,
 } from "react-native";
 
 import { Typography } from "@/shared/components/Typography";
@@ -43,128 +44,139 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
   const isValid = groupName.trim().length > 0;
 
   return (
-    <View style={styles.container}>
-      {/* Circular Avatar Picker */}
-      <View style={styles.avatarPickerWrapper}>
-        <TouchableOpacity
-          style={[
-            styles.avatarCircle,
-            {
-              backgroundColor: isDark ? "#F5FBF7" : "#F2FAF5",
-            },
-          ]}
-          onPress={handlePickAvatar}
-          activeOpacity={0.8}
-        >
-          {imageUri ? (
-            <Image source={{ uri: imageUri }} style={styles.avatarImage} />
-          ) : (
-            <CameraIcon width={36} height={36} color={themeColors.primary} />
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Group Name Input */}
-      <View style={styles.fieldGroup}>
-        <Typography
-          size={14}
-          weight="bold"
-          color={themeColors.text}
-          style={styles.label}
-        >
-          Name of group
-        </Typography>
-        <View
-          style={[
-            styles.inputContainer,
-            {
-              backgroundColor: isDark ? themeColors.cardBackground : "#FFFFFF",
-              borderColor: isDark
-                ? themeColors.textSecondary
-                : themeColors.border,
-            },
-          ]}
-        >
-          <TextInput
-            style={[styles.input, { color: themeColors.text }]}
-            placeholder="Name group"
-            placeholderTextColor={themeColors.textSecondary}
-            value={groupName}
-            onChangeText={setGroupName}
-          />
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      contentContainerStyle={styles.scrollContent}
+    >
+      <View style={styles.container}>
+        {/* Circular Avatar Picker */}
+        <View style={styles.avatarPickerWrapper}>
+          <TouchableOpacity
+            style={[
+              styles.avatarCircle,
+              {
+                backgroundColor: isDark ? "#F5FBF7" : "#F2FAF5",
+              },
+            ]}
+            onPress={handlePickAvatar}
+            activeOpacity={0.8}
+          >
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={styles.avatarImage} />
+            ) : (
+              <CameraIcon width={36} height={36} color={themeColors.primary} />
+            )}
+          </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Description Input */}
-      <View style={styles.fieldGroup}>
-        <Typography
-          size={14}
-          weight="bold"
-          color={themeColors.text}
-          style={styles.label}
-        >
-          Description{" "}
-          <Typography size={14} color={themeColors.textSecondary}>
-            (Optional)
+        {/* Group Name Input */}
+        <View style={styles.fieldGroup}>
+          <Typography
+            size={14}
+            weight="bold"
+            color={themeColors.text}
+            style={styles.label}
+          >
+            Name of group
           </Typography>
-        </Typography>
-        <View
-          style={[
-            styles.textAreaContainer,
-            {
-              backgroundColor: isDark ? themeColors.cardBackground : "white",
-              borderColor: isDark
-                ? themeColors.textSecondary
-                : themeColors.border,
-            },
-          ]}
-        >
-          <TextInput
-            style={[styles.textArea, { color: themeColors.text }]}
-            placeholder="Type description..."
-            placeholderTextColor={themeColors.textSecondary}
-            multiline
-            value={description}
-            onChangeText={setDescription}
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                backgroundColor: isDark
+                  ? themeColors.cardBackground
+                  : "white",
+                borderColor: isDark
+                  ? themeColors.textSecondary
+                  : themeColors.border,
+              },
+            ]}
+          >
+            <TextInput
+              style={[styles.input, { color: themeColors.text }]}
+              placeholder="Name group"
+              placeholderTextColor={themeColors.textSecondary}
+              value={groupName}
+              onChangeText={setGroupName}
+            />
+          </View>
+        </View>
+
+        {/* Description Input */}
+        <View style={styles.fieldGroup}>
+          <Typography
+            size={14}
+            weight="bold"
+            color={themeColors.text}
+            style={styles.label}
+          >
+            Description{" "}
+            <Typography size={14} color={themeColors.textSecondary}>
+              (Optional)
+            </Typography>
+          </Typography>
+          <View
+            style={[
+              styles.textAreaContainer,
+              {
+                backgroundColor: isDark ? themeColors.cardBackground : "white",
+                borderColor: isDark
+                  ? themeColors.textSecondary
+                  : themeColors.border,
+              },
+            ]}
+          >
+            <TextInput
+              style={[styles.textArea, { color: themeColors.text }]}
+              placeholder="Type description..."
+              placeholderTextColor={themeColors.textSecondary}
+              multiline
+              value={description}
+              onChangeText={setDescription}
+            />
+          </View>
+        </View>
+
+        {/* Action Button */}
+        <View style={styles.buttonWrapper}>
+          <Button
+            title="Create"
+            onPress={() => onCreate({ name: groupName, description, imageUri })}
+            disabled={!isValid}
+            textWeight="bold"
           />
         </View>
       </View>
-
-      {/* Action Button */}
-      <View style={styles.buttonWrapper}>
-        <Button
-          title="Create"
-          onPress={() => onCreate({ name: groupName, description, imageUri })}
-          disabled={!isValid}
-          textWeight="bold"
-        />
-      </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
   },
   avatarPickerWrapper: {
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: 24,
   },
   avatarCircle: {
-    width: 132,
-    height: 132,
-    borderRadius: 66,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
   },
   avatarImage: {
-    width: 132,
-    height: 132,
+    width: 120,
+    height: 120,
   },
   fieldGroup: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
     marginBottom: 8,
@@ -192,5 +204,7 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     marginTop: "auto",
+    paddingTop: 16,
+    paddingBottom: 40,
   },
 });

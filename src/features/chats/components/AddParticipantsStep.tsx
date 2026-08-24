@@ -50,7 +50,7 @@ export function AddParticipantsStep({
         })}
       </ScrollView>
 
-      {/* Reusable Action Button */}
+      {/* Reusable Action Button with padding */}
       <View style={styles.buttonWrapper}>
         <Button
           title="Next"
@@ -68,15 +68,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchContainer: {
-    marginHorizontal: -16, // Counteract internal padding from ContactSearchBar
+    marginHorizontal: -16,
     marginBottom: 15,
   },
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingBottom: 10,
+    paddingBottom: 16,
   },
   buttonWrapper: {
-    marginTop: 0,
+    paddingTop: 12,
+    paddingBottom: 40,
   },
 });
