@@ -51,7 +51,7 @@ export function ParticipantItem({ contact, selected, onToggle }: Props) {
         {selected && (
           <View style={styles.outerRing}>
             <View style={styles.innerRing}>
-              <CheckIcon width={20} height={20} color="white" />
+              <CheckIcon width={24} height={24} color="white" />
             </View>
           </View>
         )}
@@ -75,6 +75,7 @@ const styles = StyleSheet.create({
     width: "25%",
     alignItems: "center",
     marginBottom: 32,
+    paddingTop: 4,
   },
   avatarWrapper: {
     position: "relative",
