@@ -3,6 +3,7 @@ import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PhoneAuthScreen from "@/features/auth/screens/PhoneAuthScreen";
+import { Colors } from "@/shared/constants/colors";
 
 export default function Index() {
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function Index() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00B074" />
+        <ActivityIndicator size="large" color={Colors.light.primary} />
       </View>
     );
   }

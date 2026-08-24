@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import CameraIcon from "@/assets/icons/shared/camera.svg";
+import { useCameraHandler } from "@/features/chats/hooks/useCameraHandler";
 
 interface Props {
   onCreate: (groupData: { name: string; description: string; imageUri?: string }) => void;
@@ -22,16 +22,12 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
   const [description, setDescription] = useState("");
   const [imageUri, setImageUri] = useState<string>();
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+  const { pickImages } = useCameraHandler();
 
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+  const handlePickAvatar = async () => {
+    const uris = await pickImages();
+    if (uris.length > 0) {
+      setImageUri(uris[0]);
     }
   };
 
@@ -39,24 +35,14 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
 
   return (
     <View style={styles.container}>
-      <Typography
-        size={18}
-        weight="bold"
-        align="center"
-        color={isDark ? "#FFFFFF" : "#081C2C"}
-        style={styles.title}
-      >
-        New Group
-      </Typography>
-
       {/* Circular Avatar Picker */}
       <View style={styles.avatarPickerWrapper}>
         <TouchableOpacity
           style={[
             styles.avatarCircle,
-            { backgroundColor: isDark ? "#163043" : "#F2FAF5" },
+            { backgroundColor: isDark ? "#F2FAF5" : "#F2FAF5" },
           ]}
-          onPress={pickImage}
+          onPress={handlePickAvatar}
           activeOpacity={0.8}
         >
           {imageUri ? (
@@ -72,7 +58,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
         <Typography
           size={14}
           weight="medium"
-          color={isDark ? "#DDE2E8" : "#1F3C51"}
+          color={isDark ? "#FFFFFF" : "#1F3C51"}
           style={styles.label}
         >
           Name of group
@@ -81,15 +67,15 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
           style={[
             styles.inputContainer,
             {
-              backgroundColor: isDark ? "#163043" : "#FFFFFF",
-              borderColor: isDark ? "#254156" : "#EAEEF2",
+              backgroundColor: isDark ? "#162B3A" : "#FFFFFF",
+              borderColor: isDark ? "#233F53" : "#EAEEF2",
             },
           ]}
         >
           <TextInput
             style={[styles.input, { color: isDark ? "#FFFFFF" : "#081C2C" }]}
             placeholder="Name group"
-            placeholderTextColor={isDark ? "#536878" : "#94A3B8"}
+            placeholderTextColor={isDark ? "#526E82" : "#94A3B8"}
             value={groupName}
             onChangeText={setGroupName}
           />
@@ -101,11 +87,11 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
         <Typography
           size={14}
           weight="medium"
-          color={isDark ? "#DDE2E8" : "#1F3C51"}
+          color={isDark ? "#FFFFFF" : "#1F3C51"}
           style={styles.label}
         >
           Description{" "}
-          <Typography size={14} color={isDark ? "#8EA3B3" : "#6E8597"}>
+          <Typography size={14} color={isDark ? "#718EA3" : "#6E8597"}>
             (Optional)
           </Typography>
         </Typography>
@@ -113,8 +99,8 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
           style={[
             styles.textAreaContainer,
             {
-              backgroundColor: isDark ? "#163043" : "#FFFFFF",
-              borderColor: isDark ? "#254156" : "#EAEEF2",
+              backgroundColor: isDark ? "#162B3A" : "#FFFFFF",
+              borderColor: isDark ? "#233F53" : "#EAEEF2",
             },
           ]}
         >
@@ -124,7 +110,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
               { color: isDark ? "#FFFFFF" : "#081C2C" },
             ]}
             placeholder="Type description..."
-            placeholderTextColor={isDark ? "#536878" : "#94A3B8"}
+            placeholderTextColor={isDark ? "#526E82" : "#94A3B8"}
             multiline
             value={description}
             onChangeText={setDescription}
@@ -140,8 +126,9 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
             backgroundColor: isValid
               ? Colors.light.primary
               : isDark
-                ? "#254156"
+                ? "#57B77D"
                 : "#ABDBBE",
+            opacity: isValid ? 1 : 0.8,
           },
         ]}
         onPress={() => onCreate({ name: groupName, description, imageUri })}
@@ -160,24 +147,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  title: {
-    marginBottom: 20,
-  },
   avatarPickerWrapper: {
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 28,
   },
   avatarCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
   },
   avatarImage: {
-    width: 100,
-    height: 100,
+    width: 120,
+    height: 120,
   },
   fieldGroup: {
     marginBottom: 20,
@@ -187,23 +171,23 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     height: 52,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 16,
     justifyContent: "center",
   },
   input: {
-    fontSize: 14,
+    fontSize: 15,
   },
   textAreaContainer: {
     height: 80,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   textArea: {
-    fontSize: 14,
+    fontSize: 15,
     textAlignVertical: "top",
   },
   actionBtn: {

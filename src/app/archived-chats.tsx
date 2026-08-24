@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { StyleSheet, View, FlatList, useColorScheme } from "react-native";
+import { useRouter } from "expo-router";
 
 import { SwipeableChatRow } from "@/features/chats/components/SwipeableChatRow";
 import { EmptyChatState } from "@/features/chats/components/EmptyChatState";
@@ -9,6 +10,7 @@ import { Chat } from "@/features/chats/types/chat";
 import { Colors } from "@/shared/constants/colors";
 
 export default function ArchivedChatsScreen() {
+  const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
@@ -72,17 +74,34 @@ export default function ArchivedChatsScreen() {
               description="Chats you archive will appear here."
             />
           }
-          renderItem={({ item }) => (
-            <SwipeableChatRow
-              chat={item}
-              onPress={() => console.log("Open archived chat:", item.name)}
-              onLongPress={() => {}}
-              onPin={handlePin}
-              onMute={handleMute}
-              onArchive={handleArchive}
-              onDelete={handleDelete}
-            />
-          )}
+          renderItem={({ item }) => {
+            const groupMembersText = Array.isArray((item as any).members)
+              ? (item as any).members.join(", ")
+              : ((item as any).membersText ?? "");
+
+            return (
+              <SwipeableChatRow
+                chat={item}
+                onPress={() => {
+                  router.push({
+                    pathname: "/chat-room",
+                    params: {
+                      id: item.id,
+                      name: item.name,
+                      avatar: item.avatar ?? "",
+                      isGroup: (item as any).isGroup ? "true" : "false",
+                      membersText: groupMembersText,
+                    },
+                  });
+                }}
+                onLongPress={() => {}}
+                onPin={handlePin}
+                onMute={handleMute}
+                onArchive={handleArchive}
+                onDelete={handleDelete}
+              />
+            );
+          }}
         />
       </View>
     </View>

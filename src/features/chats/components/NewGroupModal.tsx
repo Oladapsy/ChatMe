@@ -3,6 +3,7 @@ import {
   Modal,
   StyleSheet,
   View,
+  TouchableOpacity,
   TouchableWithoutFeedback,
   useColorScheme,
   KeyboardAvoidingView,
@@ -12,9 +13,10 @@ import {
 import { Colors } from "@/shared/constants/colors";
 import { GroupStepIndicator } from "@/features/chats/components/GroupStepIndicator";
 import { NameGroupStep } from "@/features/chats/components/NameGroupStep";
+import { AddParticipantsStep } from "@/features/chats/components/AddParticipantsStep";
 import { Contact } from "@/features/contacts/data/mockContacts";
-import { AddParticipantsStep } from "@/features/chats/components/AddParticipantsStep"
 import { Typography } from "@/shared/components/Typography";
+import BackIcon from "@/assets/icons/shared/chevron-left.svg"; // Adjust path if needed
 
 interface Props {
   visible: boolean;
@@ -72,10 +74,10 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
         <View style={styles.overlay}>
           <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
             <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
               style={[
                 styles.sheet,
-                { backgroundColor: themeColors.background },
+                { backgroundColor: isDark ? "#0D1F2D" : themeColors.background },
               ]}
             >
               {/* Drag Handle */}
@@ -83,37 +85,68 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
                 <View
                   style={[
                     styles.handle,
-                    { backgroundColor: isDark ? "#3A566A" : "#DDE2E8" },
+                    { backgroundColor: isDark ? "#2C485D" : "#DDE2E8" },
                   ]}
                 />
               </View>
 
-              {/* Text at the top */}
-              {step === 1 ? (
-                <Typography>
-                  
+              {/* Header Row with Back Button */}
+              <View style={styles.headerRow}>
+                {step === 2 ? (
+                  <TouchableOpacity
+                    onPress={() => setStep(1)}
+                    style={styles.backBtn}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <BackIcon
+                      width={20}
+                      height={20}
+                      color={isDark ? "#FFFFFF" : "#081C2C"}
+                    />
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.backPlaceholder} />
+                )}
 
-                </Typography>) : (
-                  <Typography>
+                <Typography
+                  size={18}
+                  weight="bold"
+                  align="center"
+                  color={isDark ? "white" : "#081C2C"}
+                >
+                  {step === 1 ? (
+                    <>
+                      Add participants{" "}
+                      {selectedContacts.length > 0 && (
+                        <Typography size={18} weight="bold" color="#57B77D">
+                          ({selectedContacts.length})
+                        </Typography>
+                      )}
+                    </>
+                  ) : (
+                    "New Group"
+                  )}
+                </Typography>
 
-                  </Typography>
-                ) 
-              )}
+                <View style={styles.backPlaceholder} />
+              </View>
 
               {/* Progress Indicator */}
               <GroupStepIndicator currentStep={step} isDark={isDark} />
 
-              {/* Step Flow */}
-              {step === 1 ? (
-                <AddParticipantsStep
-                  selectedContacts={selectedContacts}
-                  onToggleContact={handleToggleContact}
-                  onNext={() => setStep(2)}
-                  isDark={isDark}
-                />
-              ) : (
-                <NameGroupStep onCreate={handleCreate} isDark={isDark} />
-              )}
+              {/* Step Content */}
+              <View style={styles.contentContainer}>
+                {step === 1 ? (
+                  <AddParticipantsStep
+                    selectedContacts={selectedContacts}
+                    onToggleContact={handleToggleContact}
+                    onNext={() => setStep(2)}
+                    isDark={isDark}
+                  />
+                ) : (
+                  <NameGroupStep onCreate={handleCreate} isDark={isDark} />
+                )}
+              </View>
             </KeyboardAvoidingView>
           </TouchableWithoutFeedback>
         </View>
@@ -125,16 +158,15 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "flex-end",
   },
   sheet: {
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
-    paddingBottom: 32,
-    maxHeight: "100%",
-    height: 700,
+    paddingBottom: Platform.OS === "ios" ? 40 : 28, // Extra bottom padding for home bar
+    height: 660,
   },
   handleWrapper: {
     alignItems: "center",
@@ -142,7 +174,26 @@ const styles = StyleSheet.create({
   },
   handle: {
     width: 48,
-    height: 6,
+    height: 5,
     borderRadius: 100,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  backBtn: {
+    width: 32,
+    height: 32,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backPlaceholder: {
+    width: 32,
+  },
+  contentContainer: {
+    flex: 1,
   },
 });

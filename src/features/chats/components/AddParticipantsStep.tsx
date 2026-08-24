@@ -37,19 +37,6 @@ export function AddParticipantsStep({
 
   return (
     <View style={styles.container}>
-      <Typography
-        size={18}
-        weight="bold"
-        align="center"
-        color={isDark ? "#FFFFFF" : "#081C2C"}
-        style={styles.title}
-      >
-        Add participants{" "}
-        <Typography size={18} weight="bold" color="#57B77D">
-          {countText}
-        </Typography>
-      </Typography>
-
       {/* Search Bar */}
       <View
         style={[
