@@ -10,14 +10,12 @@ interface Props {
   selectedContacts: Contact[];
   onToggleContact: (contact: Contact) => void;
   onNext: () => void;
-  isDark: boolean;
 }
 
 export function AddParticipantsStep({
   selectedContacts,
   onToggleContact,
   onNext,
-  isDark,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
 

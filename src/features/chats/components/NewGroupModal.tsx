@@ -143,7 +143,6 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
                     selectedContacts={selectedContacts}
                     onToggleContact={handleToggleContact}
                     onNext={() => setStep(2)}
-                    isDark={isDark}
                   />
                 ) : (
                   <NameGroupStep onCreate={handleCreate} isDark={isDark} />

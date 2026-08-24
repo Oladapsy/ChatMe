@@ -1,8 +1,14 @@
 import React from "react";
-import { StyleSheet, View, Image, TouchableOpacity, useColorScheme } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import CheckIcon from "@/assets/icons/shared/check.svg";
-import UserIcon from "@/assets/icons/shared/user.svg"
+import UserIcon from "@/assets/icons/shared/user.svg";
 import { Contact } from "@/features/contacts/data/mockContacts";
 import { Colors } from "@/shared/constants/colors";
 
@@ -12,15 +18,10 @@ interface Props {
   onToggle: (contact: Contact) => void;
 }
 
-export function ParticipantItem({
-  contact,
-  selected,
-  onToggle,
-}: Props) {
+export function ParticipantItem({ contact, selected, onToggle }: Props) {
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
-
 
   return (
     <TouchableOpacity
@@ -31,19 +32,26 @@ export function ParticipantItem({
       <View style={styles.avatarWrapper}>
         {contact.avatar ? (
           <Image source={{ uri: contact.avatar }} style={styles.avatar} />
-        ): <View
+        ) : (
+          <View
             style={[
               styles.avatar,
               styles.fallbackAvatar,
               { backgroundColor: themeColors.avatarBg },
             ]}
           >
-            <UserIcon width={24} height={24} color={isDark? "#E2E8F0": "#1E293B"} />
-          </View>}
+            <UserIcon
+              width={24}
+              height={24}
+              color={isDark ? "#E2E8F0" : "#1E293B"}
+            />
+          </View>
+        )}
+
         {selected && (
-          <View style={styles.checkmarkBadge}>
-            <View style={styles.checkmarkBadge}>
-              <CheckIcon width={24} height={24} color="white" />
+          <View style={styles.outerRing}>
+            <View style={styles.innerRing}>
+              <CheckIcon width={20} height={20} color="white" />
             </View>
           </View>
         )}
@@ -78,14 +86,20 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
   },
-  checkmarkBadge: {
+  outerRing: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
     borderRadius: 32,
+    borderWidth: 2,
     borderColor: Colors.light.primary,
+    padding: 2,
+  },
+  innerRing: {
+    flex: 1,
+    borderRadius: 28,
     borderWidth: 2,
     backgroundColor: "#081C2C70",
     justifyContent: "center",
@@ -94,7 +108,7 @@ const styles = StyleSheet.create({
   name: {
     marginTop: 4,
   },
-   fallbackAvatar: {
+  fallbackAvatar: {
     justifyContent: "center",
     alignItems: "center",
   },
