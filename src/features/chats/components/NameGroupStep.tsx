@@ -32,6 +32,10 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
   const [description, setDescription] = useState("");
   const [imageUri, setImageUri] = useState<string>();
 
+  // the focus ring
+  const [isNameFocused, setIsNameFocused] = useState(false);
+  const [isDescFocused, setIsDescFocused] = useState(false);
+
   const { pickImages } = useCameraHandler();
 
   const handlePickAvatar = async () => {
@@ -42,6 +46,13 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
   };
 
   const isValid = groupName.trim().length > 0;
+
+  const getNameBorderColor = () =>
+    isNameFocused ? "#52C47C" : isDark ? "#6E8597" : "#EAEEF2";
+
+  const getDescBorderColor = () =>
+    isDescFocused ? "#52C47C" : isDark ? "#6E8597" : "#EAEEF2";
+
 
   return (
     <ScrollView
@@ -84,12 +95,8 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
             style={[
               styles.inputContainer,
               {
-                backgroundColor: isDark
-                  ? themeColors.cardBackground
-                  : "white",
-                borderColor: isDark
-                  ? themeColors.textSecondary
-                  : themeColors.border,
+                backgroundColor: isDark ? themeColors.cardBackground : "white",
+                borderColor: getNameBorderColor(),
               },
             ]}
           >
@@ -99,6 +106,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
               placeholderTextColor={themeColors.textSecondary}
               value={groupName}
               onChangeText={setGroupName}
+              onFocus={() => setIsNameFocused(true)}
             />
           </View>
         </View>
@@ -121,9 +129,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
               styles.textAreaContainer,
               {
                 backgroundColor: isDark ? themeColors.cardBackground : "white",
-                borderColor: isDark
-                  ? themeColors.textSecondary
-                  : themeColors.border,
+                borderColor: getDescBorderColor(),
               },
             ]}
           >
@@ -134,6 +140,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
               multiline
               value={description}
               onChangeText={setDescription}
+              onFocus={() => setIsDescFocused(true)}
             />
           </View>
         </View>

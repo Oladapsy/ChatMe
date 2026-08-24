@@ -20,9 +20,7 @@ export function FormInput({ label, icon, focused, ...props }: Props) {
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
-//   const backgroundColor = isDark ? "#162534" : "#FFFFFF";
   const borderColor = focused ? "#52C47C" : isDark ? "#6E8597" : "#EAEEF2";
-//   const textColor = isDark ? "#FFFFFF" : "#1E293B";
   const placeholderColor = isDark ? "#536878" : "#94A3B8";
 
   return (
