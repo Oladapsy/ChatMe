@@ -32,7 +32,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
   const [description, setDescription] = useState("");
   const [imageUri, setImageUri] = useState<string>();
 
-  // the focus ring
+  // Focus ring state
   const [isNameFocused, setIsNameFocused] = useState(false);
   const [isDescFocused, setIsDescFocused] = useState(false);
 
@@ -52,7 +52,6 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
 
   const getDescBorderColor = () =>
     isDescFocused ? "#52C47C" : isDark ? "#6E8597" : "#EAEEF2";
-
 
   return (
     <ScrollView
@@ -107,6 +106,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
               value={groupName}
               onChangeText={setGroupName}
               onFocus={() => setIsNameFocused(true)}
+              onBlur={() => setIsNameFocused(false)}
             />
           </View>
         </View>
@@ -141,6 +141,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
               value={description}
               onChangeText={setDescription}
               onFocus={() => setIsDescFocused(true)}
+              onBlur={() => setIsDescFocused(false)}
             />
           </View>
         </View>
