@@ -1,7 +1,8 @@
 import React from "react";
-import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
+import { StyleSheet, View, Image, TouchableOpacity, useColorScheme } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import CheckIcon from "@/assets/icons/shared/check.svg";
+import UserIcon from "@/assets/icons/shared/user.svg"
 import { Contact } from "@/features/contacts/data/mockContacts";
 import { Colors } from "@/shared/constants/colors";
 
@@ -9,15 +10,18 @@ interface Props {
   contact: Contact;
   selected: boolean;
   onToggle: (contact: Contact) => void;
-  isDark: boolean;
 }
 
 export function ParticipantItem({
   contact,
   selected,
   onToggle,
-  isDark,
 }: Props) {
+  const scheme = useColorScheme();
+  const isDark = scheme === "dark";
+  const themeColors = Colors[isDark ? "dark" : "light"];
+
+
   return (
     <TouchableOpacity
       style={styles.container}
@@ -25,7 +29,17 @@ export function ParticipantItem({
       activeOpacity={0.8}
     >
       <View style={styles.avatarWrapper}>
-        <Image source={{ uri: contact.avatar }} style={styles.avatar} />
+        {contact.avatar ? (
+          <Image source={{ uri: contact.avatar }} style={styles.avatar} />
+        ): <View
+            style={[
+              styles.avatar,
+              styles.fallbackAvatar,
+              { backgroundColor: themeColors.avatarBg },
+            ]}
+          >
+            <UserIcon width={24} height={24} color={isDark? "#E2E8F0": "#1E293B"} />
+          </View>}
         {selected && (
           <View style={styles.checkmarkBadge}>
             <View style={styles.checkmarkBadge}>
@@ -39,7 +53,7 @@ export function ParticipantItem({
         weight="medium"
         align="center"
         numberOfLines={1}
-        color={isDark ? "#FFFFFF" : "#081C2C"}
+        color={themeColors.text}
         style={styles.name}
       >
         {contact.name.split(" ")[0]}
@@ -79,5 +93,9 @@ const styles = StyleSheet.create({
   },
   name: {
     marginTop: 4,
+  },
+   fallbackAvatar: {
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

@@ -78,7 +78,6 @@ export function AddParticipantsStep({
               contact={contact}
               selected={isSelected}
               onToggle={onToggleContact}
-              isDark={isDark}
             />
           );
         })}

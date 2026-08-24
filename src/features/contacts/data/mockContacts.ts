@@ -77,4 +77,65 @@ export const MOCK_CONTACTS: Contact[] = [
     phone: "555-522-8243",
     avatar: "https://i.pravatar.cc/100?img=11",
   },
+  {
+    id: "12",
+    name: "Sam Isiah",
+    phone: "09069177291",
+    avatar: ""
+  },
+  {
+    id: "13",
+    name: "Bessie Cooper",
+    phone: "+61-827-680-673",
+    avatar: "https://i.pravatar.cc/100?img=6",
+  },
+  {
+    id: "14",
+    name: "Braif Fatari",
+    phone: "+61-827-680-673",
+    avatar: "https://i.pravatar.cc/100?img=7",
+  },
+  {
+    id: "15",
+    name: "Keanu Murphy",
+    phone: "+61-827-680-673",
+    avatar: "https://i.pravatar.cc/100?img=8",
+  },
+  {
+    id: "16",
+    name: "Kemal Pahlevi",
+    phone: "+61-827-680-673",
+    avatar: "",
+  },
+  {
+    id: "17",
+    name: "Yemal Pahlevi",
+    phone: "+1-555-522-8243",
+    avatar: "https://i.pravatar.cc/100?img=10",
+  },
+  {
+    id: "18",
+    name: "Zemal Pahlevi",
+    phone: "555-522-8243",
+    avatar: "",
+  },
+  {
+    id: "19",
+    name: "Kemal Pahlevi",
+    phone: "+61-827-680-673",
+    avatar: "",
+  },
+  {
+    id: "20",
+    name: "Yemal Pahlevi",
+    phone: "+1-555-522-8243",
+    avatar: "https://i.pravatar.cc/100?img=10",
+  },
+  {
+    id: "21",
+    name: "Zemal Pahlevi",
+    phone: "555-522-8243",
+    avatar: "",
+  },
+
 ];
