@@ -1,17 +1,10 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
+import { StyleSheet, View, ScrollView } from "react-native";
 
-import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import { ParticipantItem } from "./ParticipantItem";
-import SearchIcon from "@/assets/icons/shared/search.svg";
 import { Contact, MOCK_CONTACTS } from "@/features/contacts/data/mockContacts";
+import { ContactSearchBar } from "@/features/contacts/components/ContactSearchBar";
+import { Button } from "@/shared/components/Button";
 
 interface Props {
   selectedContacts: Contact[];
@@ -32,37 +25,13 @@ export function AddParticipantsStep({
     c.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const countText =
-    selectedContacts.length > 0 ? `(${selectedContacts.length})` : "";
   const isValid = selectedContacts.length > 0;
 
   return (
     <View style={styles.container}>
-      {/* Search Bar */}
-      <View
-        style={[
-          styles.searchBox,
-          {
-            backgroundColor: isDark ? "#163043" : "#F9FAFB",
-            borderColor: isDark ? "#254156" : "#EAEEF2",
-          },
-        ]}
-      >
-        <SearchIcon
-          width={18}
-          height={18}
-          color={isDark ? "#536878" : "#94A3B8"}
-        />
-        <TextInput
-          style={[
-            styles.searchInput,
-            { color: isDark ? "#FFFFFF" : "#081C2C" },
-          ]}
-          placeholder="Search people..."
-          placeholderTextColor={isDark ? "#536878" : "#94A3B8"}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+      {/* Reusable Search Bar with focus states */}
+      <View style={styles.searchContainer}>
+        <ContactSearchBar value={searchQuery} onChangeText={setSearchQuery} />
       </View>
 
       {/* Contacts Grid */}
@@ -83,26 +52,15 @@ export function AddParticipantsStep({
         })}
       </ScrollView>
 
-      {/* Action Button */}
-      <TouchableOpacity
-        style={[
-          styles.actionBtn,
-          {
-            backgroundColor: isValid
-              ? Colors.light.primary
-              : isDark
-                ? "#254156"
-                : "#ABDBBE",
-          },
-        ]}
-        onPress={onNext}
-        disabled={!isValid}
-        activeOpacity={0.8}
-      >
-        <Typography size={16} weight="bold" color="white">
-          Next
-        </Typography>
-      </TouchableOpacity>
+      {/* Reusable Action Button */}
+      <View style={styles.buttonWrapper}>
+        <Button
+          title="Next"
+          onPress={onNext}
+          disabled={!isValid}
+          textWeight="bold"
+        />
+      </View>
     </View>
   );
 }
@@ -111,33 +69,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  title: {
-    marginBottom: 16,
-  },
-  searchBox: {
-    height: 48,
-    borderRadius: 16,
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    marginBottom: 20,
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
+  searchContainer: {
+    marginHorizontal: -16, // Counteract internal padding from ContactSearchBar
+    marginBottom: 15,
   },
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingBottom: 16,
+    paddingBottom: 10,
   },
-  actionBtn: {
-    height: 52,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 8,
+  buttonWrapper: {
+    marginTop: 0,
   },
 });
