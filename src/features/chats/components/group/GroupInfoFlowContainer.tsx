@@ -3,10 +3,8 @@ import { View, StyleSheet } from "react-native";
 import { GroupDetails } from "@/features/chats/types/chat";
 import { GroupDetailScreen } from "@/features/chats/screen/GroupDetailScreen";
 import { GroupPhotosScreen } from "@/features/chats/screen/GroupPhotosScreen";
-import {
-  GroupStarredMessagesScreen,
-  StarredMessage,
-} from "@/features/chats/screen/GroupStarredMessagesScreen";
+import { GroupStarredMessagesScreen } from "@/features/chats/screen/GroupStarredMessagesScreen";
+import { StarredMessage } from "@/features/chats/components/StarredMsgItem";
 import {
   GroupSharedLinksScreen,
   SharedLinkSection,

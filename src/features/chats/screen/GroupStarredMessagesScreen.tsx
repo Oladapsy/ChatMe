@@ -3,7 +3,6 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  Image,
   FlatList,
   useColorScheme,
 } from "react-native";
@@ -12,16 +11,10 @@ import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 import SearchIcon from "@/assets/icons/shared/search.svg";
-import StarFilledIcon from "@/assets/icons/shared/starMsg.svg";
-
-export interface StarredMessage {
-  id: string;
-  senderName: string;
-  senderAvatar?: string;
-  message: string;
-  timestamp: string;
-  dateLabel?: string;
-}
+import {
+  StarredMessageItem,
+  StarredMessage,
+} from "@/features/chats/components/StarredMsgItem";
 
 interface Props {
   starredMessages: StarredMessage[];
@@ -51,7 +44,7 @@ export function GroupStarredMessagesScreen({
 
   return (
     <View style={styles.container}>
-      {/* 1. Top Safe Area for Status Bar + Shared Header */}
+      {/* 1. Top Safe Area for Status Bar + Header */}
       <MySafeAreaView
         edges={["top"]}
         color={themeColors.headBg}
@@ -62,13 +55,13 @@ export function GroupStarredMessagesScreen({
           onBack={onBack}
           rightAction={
             <TouchableOpacity style={styles.iconBtn} onPress={onSearchPress}>
-              <SearchIcon width={20} height={20} color={"white"} />
+              <SearchIcon width={20} height={20} color={themeColors.text} />
             </TouchableOpacity>
           }
         />
       </MySafeAreaView>
 
-      {/* 2. Main Content Safe Area (Bottom, Left, Right) */}
+      {/* 2. Main Body Safe Area */}
       <MySafeAreaView
         edges={["bottom", "left", "right"]}
         color={themeColors.background}
@@ -112,55 +105,7 @@ export function GroupStarredMessagesScreen({
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <View style={styles.messageGroupContainer}>
-              {/* Message Card */}
-              <View
-                style={[
-                  styles.card,
-                  { backgroundColor: isDark ? "#162837" : "#F8FAFC" },
-                ]}
-              >
-                <Typography
-                  size={14}
-                  color={themeColors.text}
-                  style={styles.messageText}
-                >
-                  {item.message}
-                </Typography>
-                <View style={styles.cardFooter}>
-                  <StarFilledIcon width={14} height={14} color="#FFB800" />
-                  <Typography size={12} color={themeColors.textSecondary}>
-                    {item.timestamp}
-                  </Typography>
-                </View>
-              </View>
-
-              {/* Sender Metadata Sub-row */}
-              <View style={styles.senderRow}>
-                <Image
-                  source={
-                    item.senderAvatar
-                      ? { uri: item.senderAvatar }
-                      : require("@/assets/images/default-avatar.png")
-                  }
-                  style={styles.avatar}
-                />
-                <Typography size={14} weight="bold" color={themeColors.text}>
-                  {item.senderName}
-                </Typography>
-                {item.dateLabel && (
-                  <Typography
-                    size={12}
-                    color={themeColors.textSecondary}
-                    style={styles.dateLabel}
-                  >
-                    {item.dateLabel}
-                  </Typography>
-                )}
-              </View>
-            </View>
-          )}
+          renderItem={({ item }) => <StarredMessageItem item={item} />}
         />
       </MySafeAreaView>
     </View>
@@ -197,36 +142,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 24,
     gap: 16,
-  },
-  messageGroupContainer: {
-    gap: 8,
-  },
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    gap: 8,
-  },
-  messageText: {
-    lineHeight: 20,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 4,
-  },
-  senderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 4,
-    gap: 8,
-  },
-  avatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-  },
-  dateLabel: {
-    marginLeft: "auto",
   },
 });
