@@ -5,13 +5,12 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
-  SafeAreaView,
   useColorScheme,
 } from "react-native";
-
+import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
-import BackIcon from "@/assets/icons/shared/chevron-left.svg";
+import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 import SearchIcon from "@/assets/icons/shared/search.svg";
 import StarFilledIcon from "@/assets/icons/shared/starMsg.svg";
 
@@ -41,7 +40,9 @@ export function GroupStarredMessagesScreen({
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
-  const [activeTab, setActiveTab] = useState<"Photo" | "Star" | "Links">("Star");
+  const [activeTab, setActiveTab] = useState<"Photo" | "Star" | "Links">(
+    "Star",
+  );
 
   const handleTabPress = (tab: "Photo" | "Star" | "Links") => {
     setActiveTab(tab);
@@ -49,104 +50,120 @@ export function GroupStarredMessagesScreen({
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
-      {/* Header Bar */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.iconBtn} onPress={onBack}>
-          <BackIcon width={24} height={24} color={themeColors.text} />
-        </TouchableOpacity>
-        <Typography size={18} weight="bold" color={themeColors.text}>
-          Star Message
-        </Typography>
-        <TouchableOpacity style={styles.iconBtn} onPress={onSearchPress}>
-          <SearchIcon width={20} height={20} color={themeColors.text} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Category Segment Control */}
-      <View
-        style={[
-          styles.segmentContainer,
-          { backgroundColor: isDark ? "#122332" : "#F0F4F8" },
-        ]}
+    <View style={styles.container}>
+      {/* 1. Top Safe Area for Status Bar + Shared Header */}
+      <MySafeAreaView
+        edges={["top"]}
+        color={themeColors.headBg}
+        style={styles.topSafeArea}
       >
-        {(["Photo", "Star", "Links"] as const).map((tab) => {
-          const isActive = activeTab === tab;
-          return (
-            <TouchableOpacity
-              key={tab}
-              style={[
-                styles.segmentBtn,
-                isActive && {
-                  backgroundColor: isDark ? "#1E3447" : "#FFFFFF",
-                },
-              ]}
-              onPress={() => handleTabPress(tab)}
-            >
-              <Typography
-                size={14}
-                weight={isActive ? "bold" : "medium"}
-                color={isActive ? themeColors.text : themeColors.textSecondary}
-              >
-                {tab}
-              </Typography>
+        <SubScreenHeader
+          title="Star Message"
+          onBack={onBack}
+          rightAction={
+            <TouchableOpacity style={styles.iconBtn} onPress={onSearchPress}>
+              <SearchIcon width={20} height={20} color={"white"} />
             </TouchableOpacity>
-          );
-        })}
-      </View>
+          }
+        />
+      </MySafeAreaView>
 
-      {/* Starred Messages List */}
-      <FlatList
-        data={starredMessages}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <View style={styles.messageGroupContainer}>
-            {/* Message Card */}
-            <View
-              style={[
-                styles.card,
-                { backgroundColor: isDark ? "#162837" : "#F8FAFC" },
-              ]}
-            >
-              <Typography size={14} color={themeColors.text} style={styles.messageText}>
-                {item.message}
-              </Typography>
-              <View style={styles.cardFooter}>
-                <StarFilledIcon width={14} height={14} color="#FFB800" />
-                <Typography size={12} color={themeColors.textSecondary}>
-                  {item.timestamp}
+      {/* 2. Main Content Safe Area (Bottom, Left, Right) */}
+      <MySafeAreaView
+        edges={["bottom", "left", "right"]}
+        color={themeColors.background}
+        style={styles.bodySafeArea}
+      >
+        {/* Category Segment Control */}
+        <View
+          style={[
+            styles.segmentContainer,
+            { backgroundColor: isDark ? "#0F2637" : "#F5F7F9" },
+          ]}
+        >
+          {(["Photo", "Star", "Links"] as const).map((tab) => {
+            const isActive = activeTab === tab;
+            return (
+              <TouchableOpacity
+                key={tab}
+                style={[
+                  styles.segmentBtn,
+                  isActive && {
+                    backgroundColor: themeColors.mediaTabBg,
+                  },
+                ]}
+                onPress={() => handleTabPress(tab)}
+              >
+                <Typography
+                  size={14}
+                  weight={isActive ? "bold" : "medium"}
+                  color={themeColors.mediaTab}
+                >
+                  {tab}
                 </Typography>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Starred Messages List */}
+        <FlatList
+          data={starredMessages}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <View style={styles.messageGroupContainer}>
+              {/* Message Card */}
+              <View
+                style={[
+                  styles.card,
+                  { backgroundColor: isDark ? "#162837" : "#F8FAFC" },
+                ]}
+              >
+                <Typography
+                  size={14}
+                  color={themeColors.text}
+                  style={styles.messageText}
+                >
+                  {item.message}
+                </Typography>
+                <View style={styles.cardFooter}>
+                  <StarFilledIcon width={14} height={14} color="#FFB800" />
+                  <Typography size={12} color={themeColors.textSecondary}>
+                    {item.timestamp}
+                  </Typography>
+                </View>
+              </View>
+
+              {/* Sender Metadata Sub-row */}
+              <View style={styles.senderRow}>
+                <Image
+                  source={
+                    item.senderAvatar
+                      ? { uri: item.senderAvatar }
+                      : require("@/assets/images/default-avatar.png")
+                  }
+                  style={styles.avatar}
+                />
+                <Typography size={14} weight="bold" color={themeColors.text}>
+                  {item.senderName}
+                </Typography>
+                {item.dateLabel && (
+                  <Typography
+                    size={12}
+                    color={themeColors.textSecondary}
+                    style={styles.dateLabel}
+                  >
+                    {item.dateLabel}
+                  </Typography>
+                )}
               </View>
             </View>
-
-            {/* Sender Metadata Sub-row */}
-            <View style={styles.senderRow}>
-              <Image
-                source={
-                  item.senderAvatar
-                    ? { uri: item.senderAvatar }
-                    : require("@/assets/images/default-avatar.png")
-                }
-                style={styles.avatar}
-              />
-              <Typography size={14} weight="bold" color={themeColors.text}>
-                {item.senderName}
-              </Typography>
-              {item.dateLabel && (
-                <Typography
-                  size={12}
-                  color={themeColors.textSecondary}
-                  style={styles.dateLabel}
-                >
-                  {item.dateLabel}
-                </Typography>
-              )}
-            </View>
-          </View>
-        )}
-      />
-    </SafeAreaView>
+          )}
+        />
+      </MySafeAreaView>
+    </View>
   );
 }
 
@@ -154,12 +171,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    height: 52,
+  topSafeArea: {
+    flex: 0,
+  },
+  bodySafeArea: {
+    flex: 1,
   },
   iconBtn: {
     padding: 4,
@@ -167,7 +183,7 @@ const styles = StyleSheet.create({
   segmentContainer: {
     flexDirection: "row",
     marginHorizontal: 20,
-    marginVertical: 12,
+    marginVertical: 16,
     borderRadius: 12,
     padding: 4,
   },
@@ -175,7 +191,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     alignItems: "center",
-    borderRadius: 10,
+    borderRadius: 12,
   },
   listContent: {
     paddingHorizontal: 20,
