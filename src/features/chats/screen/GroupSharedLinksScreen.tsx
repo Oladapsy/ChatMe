@@ -149,7 +149,7 @@ export function GroupSharedLinksScreen({
                 source={
                   item.iconUri
                     ? { uri: item.iconUri }
-                    : require("@/assets/images/default-avatar.png")
+                    : require("@/assets/images/group/defaultLink.png")
                 }
                 style={styles.linkIcon}
               />
@@ -157,14 +157,14 @@ export function GroupSharedLinksScreen({
                 <Typography
                   size={15}
                   weight="bold"
-                  color={themeColors.text}
+                  color={isDark ? themeColors.text : themeColors.mediaTab}
                   numberOfLines={1}
                 >
                   {item.title}
                 </Typography>
                 <Typography
                   size={13}
-                  color={isDark ? "#4EAD87" : "#10B981"}
+                  color={themeColors.primary}
                   numberOfLines={2}
                   style={styles.urlText}
                 >
@@ -225,11 +225,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 10,
-    gap: 14,
+    gap: 17,
   },
   linkIcon: {
-    width: 52,
-    height: 52,
+    width: 72,
+    height: 72,
     borderRadius: 16,
   },
   linkDetails: {
