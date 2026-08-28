@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
-import PhotoIcon from "@/assets/icons/shared/cameraPlus.svg";
+import PhotoIcon from "@/assets/icons/shared/allPhotos.svg";
 import StarIcon from "@/assets/icons/shared/star.svg";
 import LinkIcon from "@/assets/icons/shared/link.svg";
 import ChevronRight from "@/assets/icons/shared/chevron-right.svg";
@@ -42,8 +42,8 @@ export function GroupMediaPreviewRow({
       {/* Photos Navigation Section */}
       <TouchableOpacity style={styles.rowItem} onPress={onPressPhotos}>
         <View style={styles.leftMeta}>
-          <PhotoIcon width={20} height={20} color={themeColors.primary} />
-          <Typography size={15} weight="medium" color={themeColors.text}>
+          <PhotoIcon width={24} height={24} color={themeColors.primary} />
+          <Typography size={15} weight="medium" color={themeColors.descText}>
             {photosCount} photos
           </Typography>
         </View>
@@ -70,8 +70,8 @@ export function GroupMediaPreviewRow({
       {/* Star Messages Navigation Section */}
       <TouchableOpacity style={styles.rowItem} onPress={onPressStars}>
         <View style={styles.leftMeta}>
-          <StarIcon width={20} height={20} color={themeColors.primary} />
-          <Typography size={15} weight="medium" color={themeColors.text}>
+          <StarIcon width={24} height={24} color={themeColors.primary} />
+          <Typography size={15} weight="medium" color={themeColors.descText}>
             {starCount} star messages
           </Typography>
         </View>
@@ -85,8 +85,8 @@ export function GroupMediaPreviewRow({
       {/* Shared Links Navigation Section */}
       <TouchableOpacity style={styles.rowItem} onPress={onPressLinks}>
         <View style={styles.leftMeta}>
-          <LinkIcon width={20} height={20} color={themeColors.primary} />
-          <Typography size={15} weight="medium" color={themeColors.text}>
+          <LinkIcon width={24} height={24} color={themeColors.primary} />
+          <Typography size={15} weight="medium" color={themeColors.descText}>
             {linksCount} shared links
           </Typography>
         </View>
@@ -124,6 +124,6 @@ const styles = StyleSheet.create({
   thumbImage: {
     width: 64,
     height: 64,
-    borderRadius: 12,
+    borderRadius: 16,
   },
 });
