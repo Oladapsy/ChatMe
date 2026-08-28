@@ -49,13 +49,30 @@ export const MOCK_SHARED_LINK_SECTIONS: SharedLinkSection[] = [
     data: [
       {
         id: "6",
-        title: "Notion – Sprint Roadmap & Key Deliverables",
+        title: "Notion - Sprint Roadmap & Key Deliverables",
         url: "https://notion.so/workspace/sprint-roadmap-2026",
         iconUri: "https://picsum.photos/100/100?random=25",
       },
       {
         id: "7",
-        title: "Linear – Bug Triage & Backlog Items",
+        title: "Linear - Bug Triage & Backlog Items",
+        url: "https://linear.app/team/issue/CHAT-102",
+        iconUri: "https://picsum.photos/100/100?random=26",
+      },
+    ],
+  },
+  {
+    title: "25 Oct 2025",
+    data: [
+      {
+        id: "6",
+        title: "Notion - Sprint Roadmap & Key Deliverables",
+        url: "https://notion.so/workspace/sprint-roadmap-2026",
+        iconUri: "https://picsum.photos/100/100?random=25",
+      },
+      {
+        id: "7",
+        title: "Linear - Bug Triage & Backlog Items",
         url: "https://linear.app/team/issue/CHAT-102",
         iconUri: "https://picsum.photos/100/100?random=26",
       },

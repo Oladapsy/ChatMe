@@ -219,7 +219,6 @@ const styles = StyleSheet.create({
   headerLine: {
     flex: 1,
     height: 1,
-    // opacity: 0.6,
   },
   linkRow: {
     flexDirection: "row",
