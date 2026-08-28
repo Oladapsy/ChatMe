@@ -33,7 +33,7 @@ export function GroupHeaderHero({
   const themeColors = Colors[isDark ? "dark" : "light"];
 
   return (
-    <View style={[styles.container]}>
+    <View style={styles.container}>
       <Image
         source={
           coverImageUri
@@ -41,6 +41,7 @@ export function GroupHeaderHero({
             : require("@/assets/images/group/placeholderGroup.png")
         }
         style={styles.coverImage}
+        resizeMode="cover"
       />
       <View style={styles.overlay} />
 
@@ -62,7 +63,12 @@ export function GroupHeaderHero({
 
       {/* Floating Group Name Title */}
       <View style={styles.titleContainer}>
-        <Typography size={28} weight="bold" color="white">
+        <Typography
+          size={28}
+          weight="bold"
+          color="white"
+          style={styles.titleText}
+        >
           {name}
         </Typography>
       </View>
@@ -72,7 +78,7 @@ export function GroupHeaderHero({
 
 const styles = StyleSheet.create({
   container: {
-    height: "30%",
+    height: 270,
     width: "100%",
     position: "relative",
   },
@@ -91,10 +97,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     position: "absolute",
-    bottom: 130,
+    top: 0,
     left: 0,
     right: 0,
     backgroundColor: "transparent",
+    zIndex: 10,
   },
   rightActions: {
     flexDirection: "row",
@@ -110,8 +117,12 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     position: "absolute",
-    bottom: 20,
+    bottom: 24,
     left: 20,
     right: 20,
+    zIndex: 10,
+  },
+  titleText: {
+    lineHeight: 34, // Prevents custom font clipping from the component i created
   },
 });
