@@ -39,7 +39,7 @@ export function StarredMessageItem({ item }: Props) {
             width="100%"
             height="100%"
             preserveAspectRatio="xMidYMid slice"
-            color={isDark ? "#1E3A4C" : "#57B77D"}
+            color={ themeColors.headBg}
           />
         </View>
 
