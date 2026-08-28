@@ -4,18 +4,25 @@ import {
   View,
   TouchableOpacity,
   Image,
-  FlatList,
-  SafeAreaView,
+  ScrollView,
   useColorScheme,
   Dimensions,
 } from "react-native";
-
+import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
-import BackIcon from "@/assets/icons/shared/chevron-left.svg";
+import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 
 const { width } = Dimensions.get("window");
-const ITEM_SIZE = (width - 48) / 3; // 3 columns with padding
+const PADDING = 20;
+const GAP = 8;
+const AVAILABLE_WIDTH = width - PADDING * 2;
+
+const HERO_HEIGHT = 200;
+const THREE_COL_SIZE = (AVAILABLE_WIDTH - GAP * 2) / 3;
+const TALL_WIDTH = (AVAILABLE_WIDTH - GAP) * 0.62;
+const SMALL_STACK_WIDTH = (AVAILABLE_WIDTH - GAP) * 0.38;
+const SMALL_STACK_HEIGHT = (HERO_HEIGHT - GAP) / 2;
 
 interface Props {
   photos: string[];
@@ -44,69 +51,123 @@ export function GroupPhotosScreen({
   };
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: themeColors.background }]}
-    >
-      {/* Header Bar */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={onBack}>
-          <BackIcon width={24} height={24} color={themeColors.text} />
-        </TouchableOpacity>
-        <Typography size={18} weight="bold" color={themeColors.text}>
-          Photos
-        </Typography>
-        <View style={styles.placeholder} />
-      </View>
-
-      {/* Category Segment Control */}
-      <View
-        style={[
-          styles.segmentContainer,
-          { backgroundColor: isDark ? "#122332" : "#F0F4F8" },
-        ]}
+    <View style={styles.container}>
+      {/* 1. Top Safe Area for Status Bar + Header only */}
+      <MySafeAreaView
+        edges={["top"]}
+        color={themeColors.headBg}
+        style={styles.topSafeArea}
       >
-        {(["Photo", "Star", "Links"] as const).map((tab) => {
-          const isActive = activeTab === tab;
-          return (
-            <TouchableOpacity
-              key={tab}
-              style={[
-                styles.segmentBtn,
-                isActive && {
-                  backgroundColor: isDark ? "#1E3447" : "#FFFFFF",
-                },
-              ]}
-              onPress={() => handleTabPress(tab)}
-            >
-              <Typography
-                size={14}
-                weight={isActive ? "bold" : "medium"}
-                color={isActive ? themeColors.text : themeColors.textSecondary}
-              >
-                {tab}
-              </Typography>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+        <SubScreenHeader title="Photos" onBack={onBack} />
+      </MySafeAreaView>
 
-      {/* Photos Grid */}
-      <FlatList
-        data={photos}
-        keyExtractor={(_, index) => index.toString()}
-        numColumns={3}
-        contentContainerStyle={styles.gridContent}
-        columnWrapperStyle={styles.columnWrapper}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => onImagePress?.(item)}
-          >
-            <Image source={{ uri: item }} style={styles.photoThumb} />
-          </TouchableOpacity>
-        )}
-      />
-    </SafeAreaView>
+      {/* 2. Main Content Safe Area (Bottom, Left, Right) */}
+      <MySafeAreaView
+        edges={["bottom", "left", "right"]}
+        color={themeColors.background}
+        style={styles.bodySafeArea}
+      >
+        {/* Category Segment Control */}
+        <View
+          style={[
+            styles.segmentContainer,
+            { backgroundColor: isDark ? "#122332" : "#F0F4F8" },
+          ]}
+        >
+          {(["Photo", "Star", "Links"] as const).map((tab) => {
+            const isActive = activeTab === tab;
+            return (
+              <TouchableOpacity
+                key={tab}
+                style={[
+                  styles.segmentBtn,
+                  isActive && {
+                    backgroundColor: isDark ? "#1E3447" : "#FFFFFF",
+                  },
+                ]}
+                onPress={() => handleTabPress(tab)}
+              >
+                <Typography
+                  size={14}
+                  weight={isActive ? "bold" : "medium"}
+                  color={
+                    isActive ? themeColors.text : themeColors.textSecondary
+                  }
+                >
+                  {tab}
+                </Typography>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Dynamic Photo Gallery Collage */}
+        <ScrollView
+          contentContainerStyle={styles.galleryContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {photos[0] && (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => onImagePress?.(photos[0])}
+            >
+              <Image source={{ uri: photos[0] }} style={styles.heroImage} />
+            </TouchableOpacity>
+          )}
+
+          {photos.length > 1 && (
+            <View style={styles.threeColumnRow}>
+              {photos.slice(1, 4).map((uri, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  activeOpacity={0.8}
+                  onPress={() => onImagePress?.(uri)}
+                >
+                  <Image source={{ uri }} style={styles.threeColImage} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {photos.length > 4 && (
+            <View style={styles.splitRow}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => onImagePress?.(photos[4])}
+              >
+                <Image source={{ uri: photos[4] }} style={styles.tallImage} />
+              </TouchableOpacity>
+
+              <View style={styles.stackedColumn}>
+                {photos.slice(5, 7).map((uri, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    activeOpacity={0.8}
+                    onPress={() => onImagePress?.(uri)}
+                  >
+                    <Image source={{ uri }} style={styles.smallStackedImage} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {photos.length > 7 && (
+            <View style={styles.remainingGrid}>
+              {photos.slice(7).map((uri, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  activeOpacity={0.8}
+                  onPress={() => onImagePress?.(uri)}
+                >
+                  <Image source={{ uri }} style={styles.threeColImage} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      </MySafeAreaView>
+    </View>
   );
 }
 
@@ -114,22 +175,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    height: 52,
+  topSafeArea: {
+    flex: 0,
   },
-  backBtn: {
-    padding: 4,
-  },
-  placeholder: {
-    width: 32,
+  bodySafeArea: {
+    flex: 1,
   },
   segmentContainer: {
     flexDirection: "row",
-    marginHorizontal: 20,
+    marginHorizontal: PADDING,
     marginVertical: 12,
     borderRadius: 12,
     padding: 4,
@@ -140,17 +194,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 10,
   },
-  gridContent: {
-    paddingHorizontal: 20,
+  galleryContent: {
+    paddingHorizontal: PADDING,
     paddingBottom: 24,
+    gap: GAP,
   },
-  columnWrapper: {
-    gap: 8,
-    marginBottom: 8,
+  heroImage: {
+    width: AVAILABLE_WIDTH,
+    height: HERO_HEIGHT,
+    borderRadius: 16,
   },
-  photoThumb: {
-    width: ITEM_SIZE,
-    height: ITEM_SIZE,
+  threeColumnRow: {
+    flexDirection: "row",
+    gap: GAP,
+  },
+  threeColImage: {
+    width: THREE_COL_SIZE,
+    height: THREE_COL_SIZE,
     borderRadius: 12,
+  },
+  splitRow: {
+    flexDirection: "row",
+    gap: GAP,
+  },
+  tallImage: {
+    width: TALL_WIDTH,
+    height: HERO_HEIGHT,
+    borderRadius: 16,
+  },
+  stackedColumn: {
+    width: SMALL_STACK_WIDTH,
+    gap: GAP,
+  },
+  smallStackedImage: {
+    width: "100%",
+    height: SMALL_STACK_HEIGHT,
+    borderRadius: 12,
+  },
+  remainingGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: GAP,
   },
 });
