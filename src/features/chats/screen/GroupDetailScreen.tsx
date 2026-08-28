@@ -43,7 +43,7 @@ export function GroupDetailScreen({
       <GroupDescriptionCard description={groupDetails.description} />
 
       {/* Divider */}
-      <View
+       <View
         style={[
           styles.divider,
           { backgroundColor: isDark ? "#1E2D3B" : "#EAEEF2" },
@@ -84,8 +84,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   divider: {
-    height: 1,
-    marginHorizontal: 20,
+    height: 8,
     marginVertical: 4,
   },
 });

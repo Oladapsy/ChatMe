@@ -22,16 +22,16 @@ export function GroupDescriptionCard({ description }: Props) {
   return (
     <View style={styles.container}>
       <Typography
-        size={16}
+        size={18}
         weight="bold"
-        color={themeColors.text}
+        color={themeColors.descText}
         style={styles.title}
       >
         Description
       </Typography>
 
       <Typography
-        size={14}
+        size={15}
         color={themeColors.textSecondary}
         numberOfLines={isExpanded ? undefined : 2}
         style={styles.description}

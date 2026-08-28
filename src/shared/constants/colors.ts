@@ -22,6 +22,7 @@ export const Colors = {
     modalText: "#1F3C51",
     avatarBg: "#E2E8F0",
     avatarUploadBg: "#F2FAF5",
+    descText: "#1F3C51",
   },
   dark: {
     primary: "#57B77D",
@@ -46,5 +47,6 @@ export const Colors = {
     modalText: "#FFFFFF",
     avatarBg: "#1E293B",
     avatarUploadBg: "#163043",
+    descText: "#B3C2CE",
   },
 };
