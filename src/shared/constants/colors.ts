@@ -52,5 +52,6 @@ export const Colors = {
     descText: "#B3C2CE",
     mediaTab: "#8EA3B3",
     mediaTabBg: "#1E3447"
+  
   },
 };

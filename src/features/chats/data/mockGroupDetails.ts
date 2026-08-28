@@ -5,27 +5,27 @@ export const MOCK_STARRED_MESSAGES: StarredMessage[] = [
   {
     id: "1",
     senderName: "Arlene McCoy",
-    senderAvatar: "https://picsum.photos/100/100?random=10",
+    senderAvatar: "https://picsum.photos/100/100?random=1",
     message:
-      "Hey team, don't forget to review the updated design mockups before our sync today!",
-    timestamp: "10:30 AM",
-    dateLabel: "Today",
+      "Hey team, don't forget to review the updated design mockups before our sync 21/07/2021!",
+    timestamp: "10:30",
+    dateLabel: "21/07/2021",
   },
   {
     id: "2",
     senderName: "Bessie Cooper",
     senderAvatar: "https://picsum.photos/100/100?random=11",
     message:
-      "The server deployment is scheduled for 8 PM EST. Please make sure all PRs are merged.",
-    timestamp: "04:15 PM",
-    dateLabel: "Yesterday",
+      "The server deployment is scheduled for 8 EST. Please make sure all PRs are merged.",
+    timestamp: "04:15",
+    dateLabel: "22/07/2021",
   },
   {
     id: "3",
     senderName: "Arlene McCoy",
-    senderAvatar: "https://picsum.photos/100/100?random=10",
+    senderAvatar: "https://picsum.photos/100/100?random=1",
     message: "Here is the link to the sprint roadmap board for Q3 planning.",
-    timestamp: "11:05 AM",
+    timestamp: "11:05",
     dateLabel: "Aug 12",
   },
   {
@@ -34,7 +34,7 @@ export const MOCK_STARRED_MESSAGES: StarredMessage[] = [
     senderAvatar: "https://picsum.photos/100/100?random=12",
     message:
       "We've updated the API documentation for the authentication endpoints. Please check the latest draft when you get a chance.",
-    timestamp: "09:14 AM",
+    timestamp: "09:14",
     dateLabel: "Aug 10",
   },
   {
@@ -43,7 +43,7 @@ export const MOCK_STARRED_MESSAGES: StarredMessage[] = [
     senderAvatar: "https://picsum.photos/100/100?random=13",
     message:
       "Can someone double-check the database migration script before we push to production?",
-    timestamp: "02:45 PM",
+    timestamp: "02:45",
     dateLabel: "Aug 08",
   },
   {
@@ -51,16 +51,16 @@ export const MOCK_STARRED_MESSAGES: StarredMessage[] = [
     senderName: "Devon Lane",
     senderAvatar: "https://picsum.photos/100/100?random=14",
     message: "Design assets for the onboarding flow are uploaded to Figma.",
-    timestamp: "05:20 PM",
+    timestamp: "05:20",
     dateLabel: "Aug 05",
   },
   {
     id: "7",
     senderName: "Arlene McCoy",
-    senderAvatar: "https://picsum.photos/100/100?random=10",
+    senderAvatar: "https://picsum.photos/100/100?random=14",
     message:
-      "Reminder: All hands meeting tomorrow at 10 AM. Make sure to submit your status updates beforehand.",
-    timestamp: "06:00 PM",
+      "Reminder: All hands meeting tomorrow at 10. Make sure to submit your status updates beforehand.",
+    timestamp: "06:00",
     dateLabel: "Aug 01",
   },
   {
@@ -69,7 +69,7 @@ export const MOCK_STARRED_MESSAGES: StarredMessage[] = [
     senderAvatar: "https://picsum.photos/100/100?random=15",
     message:
       "The new UI components for the dark mode theme have been approved.",
-    timestamp: "11:45 AM",
+    timestamp: "11:45",
     dateLabel: "Jul 29",
   },
   {
@@ -77,7 +77,7 @@ export const MOCK_STARRED_MESSAGES: StarredMessage[] = [
     senderName: "Bessie Cooper",
     senderAvatar: "https://picsum.photos/100/100?random=11",
     message: "Bug fix for the chat scroll position has been merged into main.",
-    timestamp: "01:10 PM",
+    timestamp: "01:10",
     dateLabel: "Jul 25",
   },
   {
@@ -86,7 +86,7 @@ export const MOCK_STARRED_MESSAGES: StarredMessage[] = [
     senderAvatar: "https://picsum.photos/100/100?random=16",
     message:
       "Please review the performance benchmarks for the image caching layer. Looks promising!",
-    timestamp: "03:30 PM",
+    timestamp: "03:30",
     dateLabel: "Jul 20",
   },
   {
@@ -94,15 +94,15 @@ export const MOCK_STARRED_MESSAGES: StarredMessage[] = [
     senderName: "Jane Cooper",
     senderAvatar: "https://picsum.photos/100/100?random=17",
     message: "User testing session results are available in the shared folder.",
-    timestamp: "08:50 AM",
+    timestamp: "08:50",
     dateLabel: "Jul 18",
   },
   {
     id: "12",
     senderName: "Kathryn Murphy",
     senderAvatar: "https://picsum.photos/100/100?random=18",
-    message: "Great work on the release today, everyone!",
-    timestamp: "07:15 PM",
+    message: "Great work on the release 21/07/2021, everyone!",
+    timestamp: "07:15",
     dateLabel: "Jul 15",
   },
 ];

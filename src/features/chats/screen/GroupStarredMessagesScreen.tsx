@@ -55,7 +55,7 @@ export function GroupStarredMessagesScreen({
           onBack={onBack}
           rightAction={
             <TouchableOpacity style={styles.iconBtn} onPress={onSearchPress}>
-              <SearchIcon width={20} height={20} color={themeColors.text} />
+              <SearchIcon width={24} height={24} color={"white"} />
             </TouchableOpacity>
           }
         />
