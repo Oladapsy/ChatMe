@@ -128,13 +128,13 @@ export function GroupSharedLinksScreen({
                 { backgroundColor: themeColors.background },
               ]}
             >
-              <Typography size={15} weight="bold" color={themeColors.text}>
+              <Typography size={17} weight="bold" color={themeColors.linkText}>
                 {title}
               </Typography>
               <View
                 style={[
                   styles.headerLine,
-                  { backgroundColor: isDark ? "#1E3447" : "#E2E8F0" },
+                  { backgroundColor: isDark ? "#1F3C51" : "#EAEEF2" },
                 ]}
               />
             </View>
@@ -214,12 +214,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 16,
     paddingBottom: 12,
-    gap: 12,
+    gap: 16,
   },
   headerLine: {
     flex: 1,
     height: 1,
-    opacity: 0.6,
+    // opacity: 0.6,
   },
   linkRow: {
     flexDirection: "row",
