@@ -33,16 +33,24 @@ export function GroupMembersList({
     <View style={styles.container}>
       {/* Header Row */}
       <View style={styles.headerRow}>
-        <Typography size={16} weight="bold" color={themeColors.text}>
+        <Typography size={16} weight="bold" color={themeColors.descText}>
           {members.length} members
         </Typography>
 
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.iconBtn} onPress={onSearchMembers}>
-            <SearchIcon width={18} height={18} color={themeColors.textSecondary} />
+            <SearchIcon
+              width={20}
+              height={20}
+              color={themeColors.textSecondary}
+            />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn} onPress={onAddMember}>
-            <AddUserIcon width={18} height={18} color={themeColors.textSecondary} />
+            <AddUserIcon
+              width={20}
+              height={20}
+              color={themeColors.textSecondary}
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -73,7 +81,11 @@ export function GroupMembersList({
             </Typography>
             <Typography
               size={13}
-              color={member.isOnline ? themeColors.primary : themeColors.textSecondary}
+              color={
+                member.isOnline
+                  ? themeColors.primary
+                  : themeColors.textSecondary
+              }
             >
               {member.isOnline ? "Online" : "Offline"}
             </Typography>
@@ -113,9 +125,9 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 56,
+    height: 56,
+    borderRadius: 27,
   },
   onlineDot: {
     position: "absolute",
