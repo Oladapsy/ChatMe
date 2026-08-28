@@ -1,5 +1,67 @@
 import { StarredMessage } from "@/features/chats/components/StarredMsgItem";
 import { GroupDetails } from "@/features/chats/types/chat";
+import { SharedLinkSection } from "@/features/chats/screen/GroupSharedLinksScreen";
+
+
+export const MOCK_SHARED_LINK_SECTIONS: SharedLinkSection[] = [
+  {
+    title: "Today",
+    data: [
+      {
+        id: "1",
+        title: "Figma: UI Kit & Design System 2026",
+        url: "https://figma.com/file/sample-ui-kit-design-system",
+        iconUri: "https://picsum.photos/100/100?random=20",
+      },
+      {
+        id: "2",
+        title: "GitHub - React Native Reanimated v3",
+        url: "https://github.com/software-mansion/react-native-reanimated",
+        iconUri: "https://picsum.photos/100/100?random=21",
+      },
+    ],
+  },
+  {
+    title: "Yesterday",
+    data: [
+      {
+        id: "3",
+        title: "Stripe API Reference - Payment Intents",
+        url: "https://stripe.com/docs/api/payment_intents",
+        iconUri: "https://picsum.photos/100/100?random=22",
+      },
+      {
+        id: "4",
+        title: "Expo Documentation: File System",
+        url: "https://docs.expo.dev/versions/latest/sdk/filesystem/",
+        iconUri: "https://picsum.photos/100/100?random=23",
+      },
+      {
+        id: "5",
+        title: "Tailwind CSS - Rapidly build modern websites",
+        url: "https://tailwindcss.com/docs/installation",
+        iconUri: "https://picsum.photos/100/100?random=24",
+      },
+    ],
+  },
+  {
+    title: "26 Oct 2025",
+    data: [
+      {
+        id: "6",
+        title: "Notion – Sprint Roadmap & Key Deliverables",
+        url: "https://notion.so/workspace/sprint-roadmap-2026",
+        iconUri: "https://picsum.photos/100/100?random=25",
+      },
+      {
+        id: "7",
+        title: "Linear – Bug Triage & Backlog Items",
+        url: "https://linear.app/team/issue/CHAT-102",
+        iconUri: "https://picsum.photos/100/100?random=26",
+      },
+    ],
+  },
+];
 
 export const MOCK_STARRED_MESSAGES: StarredMessage[] = [
   {
