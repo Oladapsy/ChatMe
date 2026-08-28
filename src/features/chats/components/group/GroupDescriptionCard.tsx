@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { StyleSheet, View, TouchableOpacity, useColorScheme } from "react-native";
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 
