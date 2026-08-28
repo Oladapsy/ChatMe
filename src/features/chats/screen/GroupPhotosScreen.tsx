@@ -18,7 +18,7 @@ const PADDING = 20;
 const GAP = 8;
 const AVAILABLE_WIDTH = width - PADDING * 2;
 
-const HERO_HEIGHT = 200;
+const HERO_HEIGHT = 190;
 const THREE_COL_SIZE = (AVAILABLE_WIDTH - GAP * 2) / 3;
 const TALL_WIDTH = (AVAILABLE_WIDTH - GAP) * 0.62;
 const SMALL_STACK_WIDTH = (AVAILABLE_WIDTH - GAP) * 0.38;
@@ -71,7 +71,7 @@ export function GroupPhotosScreen({
         <View
           style={[
             styles.segmentContainer,
-            { backgroundColor: isDark ? "#122332" : "#F0F4F8" },
+            { backgroundColor: isDark ? "#0F2637" : "#F5F7F9" },
           ]}
         >
           {(["Photo", "Star", "Links"] as const).map((tab) => {
@@ -82,7 +82,7 @@ export function GroupPhotosScreen({
                 style={[
                   styles.segmentBtn,
                   isActive && {
-                    backgroundColor: isDark ? "#1E3447" : "#FFFFFF",
+                    backgroundColor: themeColors.mediaTabBg,
                   },
                 ]}
                 onPress={() => handleTabPress(tab)}
@@ -90,9 +90,7 @@ export function GroupPhotosScreen({
                 <Typography
                   size={14}
                   weight={isActive ? "bold" : "medium"}
-                  color={
-                    isActive ? themeColors.text : themeColors.textSecondary
-                  }
+                  color={themeColors.mediaTab}
                 >
                   {tab}
                 </Typography>
@@ -184,7 +182,7 @@ const styles = StyleSheet.create({
   segmentContainer: {
     flexDirection: "row",
     marginHorizontal: PADDING,
-    marginVertical: 12,
+    marginVertical: 16,
     borderRadius: 12,
     padding: 4,
   },
@@ -192,7 +190,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     alignItems: "center",
-    borderRadius: 10,
+    borderRadius: 12,
   },
   galleryContent: {
     paddingHorizontal: PADDING,

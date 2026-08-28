@@ -23,6 +23,8 @@ export const Colors = {
     avatarBg: "#E2E8F0",
     avatarUploadBg: "#F2FAF5",
     descText: "#1F3C51",
+    mediaTab: "#081C2C",
+    mediaTabBg: "#FFFFFF"
   },
   dark: {
     primary: "#57B77D",
@@ -48,5 +50,7 @@ export const Colors = {
     avatarBg: "#1E293B",
     avatarUploadBg: "#163043",
     descText: "#B3C2CE",
+    mediaTab: "#8EA3B3",
+    mediaTabBg: "#1E3447"
   },
 };
