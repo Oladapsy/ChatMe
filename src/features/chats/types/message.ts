@@ -41,4 +41,6 @@ export interface Message {
   createdAt: string;
   isMe: boolean;
   showAvatar?: boolean;
+  // added is starred!!!
+  isStarred?: boolean;
 }
