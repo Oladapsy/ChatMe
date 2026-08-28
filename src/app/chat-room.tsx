@@ -27,7 +27,11 @@ import { Message } from "@/features/chats/types/message";
 import { MessageBubble } from "@/features/chats/components/MessageBubble";
 import { MOCK_MESSAGES } from "@/features/chats/data/mockMessages";
 
+// header routing
+import { useRouter } from "expo-router";
+
 export default function ChatRoomScreen() {
+  const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
@@ -129,6 +133,21 @@ export default function ChatRoomScreen() {
     setSelectedImageUris((prev) => prev.filter((uri) => uri !== uriToRemove));
   };
 
+  const handleHeaderPress = () => {
+    if (isGroupChat) {
+      router.push({
+        pathname: "/group-details",
+        params: { id: activeChatId },
+      });
+    } else {
+      // Navigate to User Details route
+      console.log("User details route is coming soon!")
+      // router.push({
+      //   pathname: "/",
+      //   params: { id: activeChatId },
+      // });
+    }
+  };
   return (
     <MySafeAreaView
       color={isDark ? themeColors.background : themeColors.primary}
@@ -139,9 +158,7 @@ export default function ChatRoomScreen() {
         isGroup={isGroupChat}
         membersText={membersText}
         backgroundColor={isDark ? themeColors.background : themeColors.primary}
-        onHeaderPress={() =>
-          console.log("Header pressed — navigate to details")
-        }
+        onHeaderPress={handleHeaderPress}
         onVideoCall={() => console.log("Video call clicked")}
         onVoiceCall={() => console.log("Voice call clicked")}
       />
