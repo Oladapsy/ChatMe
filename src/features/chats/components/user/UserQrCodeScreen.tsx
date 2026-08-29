@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   scanBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1E3447",
+    backgroundColor: "#FFFFFF1F",
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 28,
