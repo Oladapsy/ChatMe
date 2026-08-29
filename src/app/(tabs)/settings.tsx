@@ -50,15 +50,20 @@ export default function SettingsScreen() {
     <MySafeAreaView style={{ backgroundColor: themeColors.background }}>
       {/* Screen Header */}
       <View style={styles.header}>
-        <Typography size={28} weight="bold" color={themeColors.text}>
+        <Typography
+          size={24}
+          weight="bold"
+          color={themeColors.text}
+          style={{ lineHeight: 32 }}
+        >
           Settings
         </Typography>
         <TouchableOpacity
           // onPress={() => router.push("/edit-profile")}
-          onPress={() => console.log("An item pressed")}
+          onPress={() => console.log("moving to edit profile page")}
           style={styles.headerBtn}
         >
-          <EditIcon width={24} height={24} color={themeColors.primary} />
+          <EditIcon width={17} height={17} color={themeColors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -218,8 +223,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 16,
   },
   headerBtn: {
