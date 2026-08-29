@@ -39,6 +39,7 @@ export default function UserDetailsRoute() {
           },
         })
       }
+      onSearchPress={() => console.log("the search activated")}
     />
   );
 }

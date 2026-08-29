@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
 import { UserProfile } from "@/features/chats/types/chat";
-import { UserProfileDetailScreen } from "./UserProfileDetailScreen";
+import { UserProfileDetailScreen } from "@/features/chats/components/user/UserProfileDetailScreen";
 import { StarredMessage } from "@/features/chats/components/StarredMsgItem";
-import { GroupSharedLinksScreen, SharedLinkSection } from "../../screen/GroupSharedLinksScreen";
-import { GroupPhotosScreen } from "../../screen/GroupPhotosScreen";
-import { GroupStarredMessagesScreen } from "../../screen/GroupStarredMessagesScreen";
+import {
+  GroupSharedLinksScreen,
+  SharedLinkSection,
+} from "@/features/chats/screen/GroupSharedLinksScreen";
+import { GroupStarredMessagesScreen } from "@/features/chats/screen/GroupStarredMessagesScreen";
+import { GroupPhotosScreen } from "@/features/chats/screen/GroupPhotosScreen";
 
 type ActiveTab = "Main" | "Photo" | "Star" | "Links";
 
@@ -38,7 +40,6 @@ export function UserInfoFlowContainer({
         photos={profile.previewPhotos}
         onBack={() => setActiveTab("Main")}
         onSelectTab={handleSelectTab}
-        // onSearchPress={onSearchPress}
       />
     );
   }
@@ -80,9 +81,3 @@ export function UserInfoFlowContainer({
     />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
