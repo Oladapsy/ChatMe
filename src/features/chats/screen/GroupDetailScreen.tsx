@@ -6,6 +6,7 @@ import { GroupHeaderHero } from "@/features/chats/components/group/GroupHeaderHe
 import { GroupDescriptionCard } from "@/features/chats/components/group/GroupDescriptionCard";
 import { GroupMediaPreviewRow } from "@/features/chats/components/group/GroupMediaPreviewRow";
 import { GroupMembersList } from "@/features/chats/components/group/GroupMembersList";
+import { useRouter } from "expo-router";
 
 interface Props {
   groupDetails: GroupDetails;
@@ -27,6 +28,7 @@ export function GroupDetailScreen({
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
+  const router = useRouter()
 
   return (
     <View
@@ -37,13 +39,22 @@ export function GroupDetailScreen({
         name={groupDetails.name}
         coverImageUri={groupDetails.coverImageUri}
         onBack={onBack}
+        onSearch={() =>
+          router.push({
+            pathname: "/chat-room",
+            params: {
+              id: groupDetails.id,
+              search: "true", // Tells ChatRoomScreen to open directly in search mode
+            },
+          })
+        }
       />
 
       {/* 2. Description Card */}
       <GroupDescriptionCard description={groupDetails.description} />
 
       {/* Divider */}
-       <View
+      <View
         style={[
           styles.divider,
           { backgroundColor: isDark ? "#1E2D3B" : "#EAEEF2" },
