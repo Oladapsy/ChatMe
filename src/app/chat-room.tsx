@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import MySafeAreaView from "@/shared/components/MySafeAreaView";
+import MySafeAreaView from "@/shared/components/EdgeMySafeAreaView";
 import { Colors } from "@/shared/constants/colors";
 import { ChatRoomHeader } from "@/features/chats/components/ChatRoomHeader";
 import { AttachmentModal } from "@/features/chats/components/AttachmentModal";
@@ -249,16 +249,14 @@ export default function ChatRoomScreen() {
       )}
 
       <KeyboardAvoidingView
-        style={styles.keyboardView}
+        style={[
+          styles.keyboardView,
+          { backgroundColor: isDark ? "#0A1926" : "#F4F6F8" },
+        ]}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={0}
       >
-        <View
-          style={[
-            styles.chatBody,
-            { backgroundColor: isDark ? "#0A1926" : "#F4F6F8" },
-          ]}
-        >
+        <View style={styles.chatBody}>
           {/* Background Vector Pattern */}
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
             <ChatBgIcon

@@ -1,5 +1,11 @@
 import React, { ReactNode } from "react";
-import { StyleSheet, ViewStyle, StyleProp, StatusBar, View } from "react-native";
+import {
+  StyleSheet,
+  ViewStyle,
+  StyleProp,
+  StatusBar,
+  View,
+} from "react-native";
 import {
   SafeAreaView,
   SafeAreaViewProps,

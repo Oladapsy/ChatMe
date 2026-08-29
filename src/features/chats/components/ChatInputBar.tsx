@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   useColorScheme,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
 
 import { Typography } from "@/shared/components/Typography";
@@ -36,6 +37,7 @@ export function ChatInputBar({
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
+  const insets = useSafeAreaInsets();
 
   const [isRecordingState, setIsRecordingState] = useState(false);
   const [recordDuration, setRecordDuration] = useState(0);
@@ -116,7 +118,9 @@ export function ChatInputBar({
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}
+    >
       {isRecordingState ? (
         <View
           style={[
@@ -169,7 +173,6 @@ export function ChatInputBar({
             onSubmitEditing={onSendText}
           />
 
-
           <TouchableOpacity onPress={startRecording} style={styles.iconBtn}>
             <MicIcon width={22} height={22} color={themeColors.textSecondary} />
           </TouchableOpacity>
@@ -197,7 +200,9 @@ export function ChatInputBar({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingTop: 8,
+    backgroundColor: "transparent",
+    // paddingBottom: 8,
   },
   inputPill: {
     flexDirection: "row",
