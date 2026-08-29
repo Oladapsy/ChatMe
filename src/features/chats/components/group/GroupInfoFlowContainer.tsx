@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { GroupDetails } from "@/features/chats/types/chat";
 import { GroupDetailScreen } from "@/features/chats/screen/GroupDetailScreen";
-import { GroupPhotosScreen } from "@/features/chats/screen/GroupPhotosScreen";
-import { GroupStarredMessagesScreen } from "@/features/chats/screen/GroupStarredMessagesScreen";
+import { ChatPhotosScreen } from "@/features/chats/screen/ChatPhotosScreen";
+import { ChatStarredMessagesScreen } from "@/features/chats/screen/ChatStarredMessagesScreen";
 import { StarredMessage } from "@/features/chats/components/StarredMsgItem";
 import {
-  GroupSharedLinksScreen,
+  ChatSharedLinksScreen,
   SharedLinkSection,
-} from "@/features/chats/screen/GroupSharedLinksScreen";
+} from "@/features/chats/screen/ChatSharedLinksScreen";
 
 type ActiveScreen = "details" | "photos" | "stars" | "links";
 
@@ -46,7 +46,7 @@ export function GroupInfoFlowContainer({
       )}
 
       {currentScreen === "photos" && (
-        <GroupPhotosScreen
+        <ChatPhotosScreen
           photos={groupDetails.recentPhotos}
           onBack={() => setCurrentScreen("details")}
           onSelectTab={handleTabSwitch}
@@ -54,7 +54,7 @@ export function GroupInfoFlowContainer({
       )}
 
       {currentScreen === "stars" && (
-        <GroupStarredMessagesScreen
+        <ChatStarredMessagesScreen
           starredMessages={starredMessages}
           onBack={() => setCurrentScreen("details")}
           onSelectTab={handleTabSwitch}
@@ -62,7 +62,7 @@ export function GroupInfoFlowContainer({
       )}
 
       {currentScreen === "links" && (
-        <GroupSharedLinksScreen
+        <ChatSharedLinksScreen
           sections={sharedLinkSections}
           onBack={() => setCurrentScreen("details")}
           onSelectTab={handleTabSwitch}

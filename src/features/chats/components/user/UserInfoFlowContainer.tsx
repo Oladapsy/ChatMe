@@ -3,11 +3,11 @@ import { UserProfile } from "@/features/chats/types/chat";
 import { UserProfileDetailScreen } from "@/features/chats/components/user/UserProfileDetailScreen";
 import { StarredMessage } from "@/features/chats/components/StarredMsgItem";
 import {
-  GroupSharedLinksScreen,
+    ChatSharedLinksScreen,
   SharedLinkSection,
-} from "@/features/chats/screen/GroupSharedLinksScreen";
-import { GroupStarredMessagesScreen } from "@/features/chats/screen/GroupStarredMessagesScreen";
-import { GroupPhotosScreen } from "@/features/chats/screen/GroupPhotosScreen";
+} from "@/features/chats/screen/ChatSharedLinksScreen";
+import { ChatStarredMessagesScreen } from "@/features/chats/screen/ChatStarredMessagesScreen";
+import { ChatPhotosScreen } from "@/features/chats/screen/ChatPhotosScreen";
 
 type ActiveTab = "Main" | "Photo" | "Star" | "Links";
 
@@ -36,7 +36,7 @@ export function UserInfoFlowContainer({
 
   if (activeTab === "Photo") {
     return (
-      <GroupPhotosScreen
+      <ChatPhotosScreen
         photos={profile.previewPhotos}
         onBack={() => setActiveTab("Main")}
         onSelectTab={handleSelectTab}
@@ -46,7 +46,7 @@ export function UserInfoFlowContainer({
 
   if (activeTab === "Star") {
     return (
-      <GroupStarredMessagesScreen
+      <ChatStarredMessagesScreen
         starredMessages={starredMessages}
         onBack={() => setActiveTab("Main")}
         onSelectTab={handleSelectTab}
@@ -57,7 +57,7 @@ export function UserInfoFlowContainer({
 
   if (activeTab === "Links") {
     return (
-      <GroupSharedLinksScreen
+      <ChatSharedLinksScreen
         sections={sharedLinkSections}
         onBack={() => setActiveTab("Main")}
         onSelectTab={handleSelectTab}

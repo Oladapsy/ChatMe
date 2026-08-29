@@ -31,7 +31,8 @@ interface Props {
   onImagePress?: (uri: string) => void;
 }
 
-export function GroupPhotosScreen({
+
+export function ChatPhotosScreen({
   photos,
   onBack,
   onSelectTab,

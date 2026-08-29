@@ -3,38 +3,28 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  Image,
-  SectionList,
+  FlatList,
   useColorScheme,
-  Linking,
 } from "react-native";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 import SearchIcon from "@/assets/icons/shared/search.svg";
-
-export interface SharedLinkItem {
-  id: string;
-  title: string;
-  url: string;
-  iconUri?: string;
-}
-
-export interface SharedLinkSection {
-  title: string;
-  data: SharedLinkItem[];
-}
+import {
+  StarredMessageItem,
+  StarredMessage,
+} from "@/features/chats/components/StarredMsgItem";
 
 interface Props {
-  sections: SharedLinkSection[];
+  starredMessages: StarredMessage[];
   onBack: () => void;
   onSelectTab: (tab: "Photo" | "Star" | "Links") => void;
   onSearchPress?: () => void;
 }
 
-export function GroupSharedLinksScreen({
-  sections,
+export function ChatStarredMessagesScreen({
+  starredMessages,
   onBack,
   onSelectTab,
   onSearchPress,
@@ -44,18 +34,12 @@ export function GroupSharedLinksScreen({
   const themeColors = Colors[isDark ? "dark" : "light"];
 
   const [activeTab, setActiveTab] = useState<"Photo" | "Star" | "Links">(
-    "Links",
+    "Star",
   );
 
   const handleTabPress = (tab: "Photo" | "Star" | "Links") => {
     setActiveTab(tab);
     onSelectTab(tab);
-  };
-
-  const handleOpenUrl = (url: string) => {
-    Linking.openURL(url).catch((err) =>
-      console.error("Couldn't load page", err),
-    );
   };
 
   return (
@@ -67,7 +51,7 @@ export function GroupSharedLinksScreen({
         style={styles.topSafeArea}
       >
         <SubScreenHeader
-          title="Shared Links"
+          title="Star Message"
           onBack={onBack}
           rightAction={
             <TouchableOpacity style={styles.iconBtn} onPress={onSearchPress}>
@@ -115,64 +99,13 @@ export function GroupSharedLinksScreen({
           })}
         </View>
 
-        {/* Date-Grouped Links List */}
-        <SectionList
-          sections={sections}
+        {/* Starred Messages List */}
+        <FlatList
+          data={starredMessages}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          renderSectionHeader={({ section: { title } }) => (
-            <View
-              style={[
-                styles.sectionHeaderRow,
-                { backgroundColor: themeColors.background },
-              ]}
-            >
-              <Typography size={17} weight="bold" color={themeColors.linkText}>
-                {title}
-              </Typography>
-              <View
-                style={[
-                  styles.headerLine,
-                  { backgroundColor: isDark ? "#1F3C51" : "#EAEEF2" },
-                ]}
-              />
-            </View>
-          )}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.linkRow}
-              activeOpacity={0.7}
-              onPress={() => handleOpenUrl(item.url)}
-            >
-              <Image
-                source={
-                  item.iconUri
-                    ? { uri: item.iconUri }
-                    : require("@/assets/images/group/defaultLink.png")
-                }
-                style={styles.linkIcon}
-              />
-              <View style={styles.linkDetails}>
-                <Typography
-                  size={15}
-                  weight="bold"
-                  color={isDark ? themeColors.text : themeColors.mediaTab}
-                  numberOfLines={1}
-                >
-                  {item.title}
-                </Typography>
-                <Typography
-                  size={13}
-                  color={themeColors.primary}
-                  numberOfLines={2}
-                  style={styles.urlText}
-                >
-                  {item.url}
-                </Typography>
-              </View>
-            </TouchableOpacity>
-          )}
+          renderItem={({ item }) => <StarredMessageItem item={item} />}
         />
       </MySafeAreaView>
     </View>
@@ -208,34 +141,6 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 24,
-  },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 16,
-    paddingBottom: 12,
     gap: 16,
-  },
-  headerLine: {
-    flex: 1,
-    height: 1,
-  },
-  linkRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    gap: 17,
-  },
-  linkIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 16,
-  },
-  linkDetails: {
-    flex: 1,
-    gap: 4,
-  },
-  urlText: {
-    lineHeight: 18,
   },
 });

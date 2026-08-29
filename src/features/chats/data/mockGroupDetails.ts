@@ -1,6 +1,6 @@
 import { StarredMessage } from "@/features/chats/components/StarredMsgItem";
 import { GroupDetails } from "@/features/chats/types/chat";
-import { SharedLinkSection } from "@/features/chats/screen/GroupSharedLinksScreen";
+import { SharedLinkSection } from "@/features/chats/screen/ChatSharedLinksScreen";
 
 
 export const MOCK_SHARED_LINK_SECTIONS: SharedLinkSection[] = [

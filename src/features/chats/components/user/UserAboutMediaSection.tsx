@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   StyleSheet,
   View,
@@ -45,16 +45,12 @@ export function UserAboutMediaSection({
   const themeColors = Colors[isDark ? "dark" : "light"];
   const accentColor = themeColors.primary;
 
-  // notification toggle
-  const [isEnabled, setIsEnabled] = useState(false);
-  const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
-
   return (
     <View
       style={[styles.aboutSection, { backgroundColor: themeColors.background }]}
     >
       <Typography
-        size={16}
+        size={17}
         weight="bold"
         color={themeColors.text}
         style={styles.sectionTitle}
@@ -62,6 +58,7 @@ export function UserAboutMediaSection({
         About
       </Typography>
 
+      {/* Photos Row Preview */}
       <TouchableOpacity
         style={styles.mediaHeaderRow}
         activeOpacity={0.7}
@@ -80,6 +77,7 @@ export function UserAboutMediaSection({
         />
       </TouchableOpacity>
 
+      {/* Photo Horizontal Preview Strip */}
       {previewPhotos && previewPhotos.length > 0 && (
         <ScrollView
           horizontal
@@ -96,6 +94,7 @@ export function UserAboutMediaSection({
         </ScrollView>
       )}
 
+      {/* Starred Messages Row */}
       <TouchableOpacity
         style={styles.navRow}
         activeOpacity={0.7}
@@ -104,7 +103,7 @@ export function UserAboutMediaSection({
         <View style={styles.mediaTitleLeft}>
           <StarIcon width={22} height={22} color={accentColor} />
           <Typography size={15} weight="medium" color={themeColors.text}>
-            {starCount} star message
+            {starCount} star messages
           </Typography>
         </View>
         <ChevronRightIcon
@@ -114,6 +113,7 @@ export function UserAboutMediaSection({
         />
       </TouchableOpacity>
 
+      {/* Shared Links Row */}
       <TouchableOpacity
         style={styles.navRow}
         activeOpacity={0.7}
@@ -132,6 +132,7 @@ export function UserAboutMediaSection({
         />
       </TouchableOpacity>
 
+      {/* Controlled Notifications Toggle */}
       <View style={styles.navRow}>
         <View style={styles.mediaTitleLeft}>
           <BellIcon width={24} height={24} color={accentColor} />
@@ -142,7 +143,7 @@ export function UserAboutMediaSection({
         <Switch
           value={!isMuted}
           onValueChange={onToggleNotifications}
-          trackColor={{ false: "#2C3E50", true: "#57B77D" }}
+          trackColor={{ false: "#2C3E50", true: Colors.light.primary }}
         />
       </View>
     </View>
