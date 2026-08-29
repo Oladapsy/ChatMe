@@ -3,7 +3,7 @@ import { UserProfile } from "@/features/chats/types/chat";
 import { UserProfileDetailScreen } from "@/features/chats/components/user/UserProfileDetailScreen";
 import { StarredMessage } from "@/features/chats/components/StarredMsgItem";
 import {
-    ChatSharedLinksScreen,
+  ChatSharedLinksScreen,
   SharedLinkSection,
 } from "@/features/chats/screen/ChatSharedLinksScreen";
 import { ChatStarredMessagesScreen } from "@/features/chats/screen/ChatStarredMessagesScreen";

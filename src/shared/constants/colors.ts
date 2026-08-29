@@ -26,6 +26,7 @@ export const Colors = {
     mediaTab: "#081C2C",
     mediaTabBg: "#FFFFFF",
     linkText: "#1F3C51",
+    qrBg: "#57B77D",
   },
   dark: {
     primary: "#57B77D",
@@ -54,5 +55,6 @@ export const Colors = {
     mediaTab: "#8EA3B3",
     mediaTabBg: "#1E3447",
     linkText: "#B3C2CE",
+    qrBg: "#081C2C",
   },
 };

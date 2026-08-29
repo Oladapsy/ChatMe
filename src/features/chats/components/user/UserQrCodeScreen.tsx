@@ -12,7 +12,7 @@ import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import BackIcon from "@/assets/icons/shared/chevron-left.svg";
-import CameraIcon from "@/assets/icons/shared/gallery.svg";
+import CameraIcon from "@/assets/icons/shared/camera.svg";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -38,51 +38,53 @@ export function UserQrCodeScreen({
   const themeColors = Colors[isDark ? "dark" : "light"];
 
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? "#06131E" : "#F4F6F8" }]}>
-      {/* Top Header */}
-      <MySafeAreaView edges={["top"]} color="transparent">
+    <MySafeAreaView color={themeColors.qrBg}>
+      <View style={[styles.container, { backgroundColor: themeColors.qrBg }]}>
+        {/* Top Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.iconBtn} onPress={onBack}>
             <BackIcon width={24} height={24} color="white" />
           </TouchableOpacity>
         </View>
-      </MySafeAreaView>
 
-      {/* Main Content Area */}
-      <View style={styles.content}>
-        {/* White Card Container */}
-        <View style={styles.card}>
-          {/* Circular Avatar */}
-          <View style={styles.avatarWrapper}>
-            <Image
-              source={
-                avatarUri
-                  ? { uri: avatarUri }
-                  : require("@/assets/images/default-avatar.png")
-              }
-              style={styles.avatar}
-            />
-          </View>
+        {/* Main Content Area */}
+        <View style={styles.content}>
+          {/* White Card Container */}
+          <View style={styles.card}>
+            {/* Circular Avatar */}
+            <View style={styles.avatarWrapper}>
+              <Image
+                source={
+                  avatarUri
+                    ? { uri: avatarUri }
+                    : require("@/assets/images/default-avatar.png")
+                }
+                style={styles.avatar}
+              />
+            </View>
 
-          {/* User Details */}
-          <View style={styles.userInfo}>
-            <Typography size={20} weight="bold" color="#0F2637">
-              {name}
-            </Typography>
-            <Typography size={14} color="#64748B">
-              {phone}
-            </Typography>
-          </View>
+            {/* User Details */}
+            <View style={styles.userInfo}>
+              <Typography size={20} weight="bold" color="#081C2C">
+                {name}
+              </Typography>
+              <Typography size={14} color="#6E8597">
+                {phone}
+              </Typography>
+            </View>
 
-          {/* QR Code Graphic */}
-          <View style={styles.qrContainer}>
-            <QRCode value={qrValue} size={SCREEN_WIDTH * 0.62} logoMargin={2} />
+            {/* QR Code Graphic */}
+            <View style={styles.qrContainer}>
+              <QRCode
+                value={qrValue}
+                size={SCREEN_WIDTH * 0.62}
+                logoMargin={2}
+              />
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Bottom Floating Scan QR Action */}
-      <MySafeAreaView edges={["bottom"]} color="transparent">
+        {/* Bottom Floating Scan QR Action */}
         <View style={styles.bottomBar}>
           <TouchableOpacity
             style={styles.scanBtn}
@@ -95,8 +97,8 @@ export function UserQrCodeScreen({
             </Typography>
           </TouchableOpacity>
         </View>
-      </MySafeAreaView>
-    </View>
+      </View>
+    </MySafeAreaView>
   );
 }
 
@@ -122,8 +124,8 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "100%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
+    backgroundColor: "white",
+    borderRadius: 16,
     alignItems: "center",
     paddingTop: 56,
     paddingBottom: 32,
@@ -132,11 +134,11 @@ const styles = StyleSheet.create({
   },
   avatarWrapper: {
     position: "absolute",
-    top: -44,
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    borderWidth: 4,
+    top: -40,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
     borderColor: "#FFFFFF",
     overflow: "hidden",
     elevation: 4,
