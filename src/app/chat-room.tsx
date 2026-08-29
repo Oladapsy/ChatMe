@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Colors } from "@/shared/constants/colors";
@@ -17,6 +17,10 @@ import { ChatRoomHeader } from "@/features/chats/components/ChatRoomHeader";
 import { AttachmentModal } from "@/features/chats/components/AttachmentModal";
 import { useCameraHandler } from "@/features/chats/hooks/useCameraHandler";
 import { ChatInputBar } from "@/features/chats/components/ChatInputBar";
+
+// Search Feature Components
+import { ChatSearchHeader } from "@/features/chats/components/ChatSearchHeader";
+import { ChatSearchControlBar } from "@/features/chats/components/ChatSearchControlBar";
 
 // Icons & Background
 import CloseIcon from "@/assets/icons/shared/close.svg";
@@ -28,26 +32,37 @@ import { MessageBubble } from "@/features/chats/components/MessageBubble";
 import { MOCK_MESSAGES } from "@/features/chats/data/mockMessages";
 import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 
-// header routing
-import { useRouter } from "expo-router";
-
 export default function ChatRoomScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
-  const { id, name, avatar, isGroup, membersText } = useLocalSearchParams<{
-    id: string;
-    name: string;
-    avatar?: string;
-    isGroup?: string;
-    membersText?: string;
-  }>();
+  const { id, name, avatar, isGroup, membersText, search } =
+    useLocalSearchParams<{
+      id: string;
+      name: string;
+      avatar?: string;
+      isGroup?: string;
+      membersText?: string;
+      search?: string;
+    }>();
 
   const activeChatId = id || "1";
 
-  // Find the matching chat from mock data to access rich object properties like members
+  // Search Mode States
+  const [isSearching, setIsSearching] = useState(search === "true");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+
+  // Sync state if navigation parameter changes dynamically
+  useEffect(() => {
+    if (search === "true") {
+      setIsSearching(true);
+    }
+  }, [search]);
+
+  // Find matching chat details from mock data
   const currentChat = MOCK_CHATS.find((chat) => chat.id === activeChatId);
 
   const isGroupChat = currentChat
@@ -76,6 +91,50 @@ export default function ChatRoomScreen() {
     };
   });
 
+  // Calculate indices of messages that match current search query
+  const matchingIndices = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+
+    const query = searchQuery.toLowerCase();
+    return processedMessages
+      .map((msg, index) =>
+        msg.text && msg.text.toLowerCase().includes(query) ? index : -1,
+      )
+      .filter((idx) => idx !== -1);
+  }, [searchQuery, processedMessages]);
+
+  // Scroll to targeted matching item when match index changes
+  useEffect(() => {
+    if (isSearching && matchingIndices.length > 0) {
+      const targetIndex = matchingIndices[currentMatchIndex];
+      if (targetIndex !== undefined) {
+        flatListRef.current?.scrollToIndex({
+          index: targetIndex,
+          animated: true,
+          viewPosition: 0.5,
+        });
+      }
+    }
+  }, [currentMatchIndex, matchingIndices, isSearching]);
+
+  const handleNextMatch = () => {
+    if (matchingIndices.length === 0) return;
+    setCurrentMatchIndex((prev) => (prev + 1) % matchingIndices.length);
+  };
+
+  const handlePrevMatch = () => {
+    if (matchingIndices.length === 0) return;
+    setCurrentMatchIndex((prev) =>
+      prev === 0 ? matchingIndices.length - 1 : prev - 1,
+    );
+  };
+
+  const handleCloseSearch = () => {
+    setIsSearching(false);
+    setSearchQuery("");
+    setCurrentMatchIndex(0);
+  };
+
   const handleSendText = () => {
     if (!messageText.trim() && selectedImageUris.length === 0) return;
 
@@ -95,7 +154,6 @@ export default function ChatRoomScreen() {
     };
 
     setMessages((prev) => [...prev, newMessage]);
-
     setMessageText("");
     setSelectedImageUris([]);
   };
@@ -159,19 +217,36 @@ export default function ChatRoomScreen() {
 
   return (
     <MySafeAreaView
-      color={isDark ? themeColors.background : themeColors.primary}
+      color={isDark ? themeColors.cardBackground : themeColors.primary}
     >
-      <ChatRoomHeader
-        name={chatName}
-        avatar={chatAvatar}
-        isGroup={isGroupChat}
-        members={groupMembers}
-        membersText={membersText}
-        backgroundColor={isDark ? themeColors.background : themeColors.primary}
-        onHeaderPress={handleHeaderPress}
-        onVideoCall={() => console.log("Video call clicked")}
-        onVoiceCall={() => console.log("Voice call clicked")}
-      />
+      {/* Header View Switching */}
+      {isSearching ? (
+        <ChatSearchHeader
+          searchQuery={searchQuery}
+          onSearchChange={(text) => {
+            setSearchQuery(text);
+            setCurrentMatchIndex(0);
+          }}
+          onCancel={handleCloseSearch}
+          backgroundColor={
+            isDark ? themeColors.cardBackground : themeColors.primary
+          }
+        />
+      ) : (
+        <ChatRoomHeader
+          name={chatName}
+          avatar={chatAvatar}
+          isGroup={isGroupChat}
+          members={groupMembers}
+          membersText={membersText}
+          backgroundColor={
+            isDark ? themeColors.cardBackground : themeColors.primary
+          }
+          onHeaderPress={handleHeaderPress}
+          onVideoCall={() => console.log("Video call clicked")}
+          onVoiceCall={() => console.log("Voice call clicked")}
+        />
+      )}
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
@@ -203,22 +278,34 @@ export default function ChatRoomScreen() {
             ref={flatListRef}
             data={processedMessages}
             keyExtractor={(item) => item.id}
+            onScrollToIndexFailed={(info) => {
+              flatListRef.current?.scrollToOffset({
+                offset: info.averageItemLength * info.index,
+                animated: true,
+              });
+            }}
             renderItem={({ item }) => (
-              <MessageBubble message={item} isGroup={isGroupChat} />
+              <MessageBubble
+                message={item}
+                isGroup={isGroupChat}
+                searchQuery={isSearching ? searchQuery : undefined}
+              />
             )}
             contentContainerStyle={{
               paddingVertical: 10,
               flexGrow: 1,
               justifyContent: "flex-end",
             }}
-            onContentSizeChange={() =>
-              flatListRef.current?.scrollToEnd({ animated: true })
-            }
+            onContentSizeChange={() => {
+              if (!isSearching) {
+                flatListRef.current?.scrollToEnd({ animated: true });
+              }
+            }}
           />
         </View>
 
         {/* Selected Images Strip */}
-        {selectedImageUris.length > 0 && (
+        {selectedImageUris.length > 0 && !isSearching && (
           <View style={styles.previewWrapper}>
             <FlatList
               data={selectedImageUris}
@@ -246,14 +333,25 @@ export default function ChatRoomScreen() {
           </View>
         )}
 
-        <ChatInputBar
-          text={messageText}
-          onChangeText={setMessageText}
-          onSendText={handleSendText}
-          onSendAudio={handleSendAudio}
-          onOpenAttachment={() => setAttachmentVisible(true)}
-          hasAttachments={selectedImageUris.length > 0}
-        />
+        {/* Bottom Bar View Switching */}
+        {isSearching ? (
+          <ChatSearchControlBar
+            currentIndex={currentMatchIndex}
+            totalCount={matchingIndices.length}
+            onNext={handleNextMatch}
+            onPrev={handlePrevMatch}
+            isDark={isDark}
+          />
+        ) : (
+          <ChatInputBar
+            text={messageText}
+            onChangeText={setMessageText}
+            onSendText={handleSendText}
+            onSendAudio={handleSendAudio}
+            onOpenAttachment={() => setAttachmentVisible(true)}
+            hasAttachments={selectedImageUris.length > 0}
+          />
+        )}
       </KeyboardAvoidingView>
 
       <AttachmentModal
