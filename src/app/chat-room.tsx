@@ -22,10 +22,11 @@ import { ChatInputBar } from "@/features/chats/components/ChatInputBar";
 import CloseIcon from "@/assets/icons/shared/close.svg";
 import ChatBgIcon from "@/assets/icons/chat/ChatBg.svg";
 
-// Types & Components
+// Types & Data
 import { Message } from "@/features/chats/types/message";
 import { MessageBubble } from "@/features/chats/components/MessageBubble";
 import { MOCK_MESSAGES } from "@/features/chats/data/mockMessages";
+import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 
 // header routing
 import { useRouter } from "expo-router";
@@ -44,8 +45,17 @@ export default function ChatRoomScreen() {
     membersText?: string;
   }>();
 
-  const isGroupChat = isGroup === "true";
   const activeChatId = id || "1";
+
+  // Find the matching chat from mock data to access rich object properties like members
+  const currentChat = MOCK_CHATS.find((chat) => chat.id === activeChatId);
+
+  const isGroupChat = currentChat
+    ? Boolean(currentChat.isGroup)
+    : isGroup === "true";
+  const chatName = currentChat?.name || name;
+  const chatAvatar = currentChat?.avatar || avatar;
+  const groupMembers = currentChat?.members;
 
   const initialMessages = MOCK_MESSAGES[activeChatId] || [];
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -140,21 +150,22 @@ export default function ChatRoomScreen() {
         params: { id: activeChatId },
       });
     } else {
-      // console.log("User details route is coming soon!")
       router.push({
         pathname: "/user-details",
         params: { id: activeChatId },
       });
     }
   };
+
   return (
     <MySafeAreaView
       color={isDark ? themeColors.background : themeColors.primary}
     >
       <ChatRoomHeader
-        name={name}
-        avatar={avatar}
+        name={chatName}
+        avatar={chatAvatar}
         isGroup={isGroupChat}
+        members={groupMembers}
         membersText={membersText}
         backgroundColor={isDark ? themeColors.background : themeColors.primary}
         onHeaderPress={handleHeaderPress}

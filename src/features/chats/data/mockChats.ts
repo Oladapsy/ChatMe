@@ -1,4 +1,10 @@
-import { Chat } from "@/features/chats/types/chat";
+import { Chat, GroupMember } from "@/features/chats/types/chat";
+
+const MOCK_GROUP_MEMBERS: GroupMember[] = [
+  { id: "m1", name: "Sam", avatarUri: "https://i.pravatar.cc/100?img=1", role: "admin", isOnline: true },
+  { id: "m2", name: "Femi", avatarUri: "https://i.pravatar.cc/100?img=2", role: "member", isOnline: true },
+  { id: "m3", name: "You", avatarUri: "https://i.pravatar.cc/100?img=3", role: "member" },
+];
 
 export const MOCK_CHATS: Chat[] = [
   {
@@ -38,6 +44,7 @@ export const MOCK_CHATS: Chat[] = [
     unreadCount: 0,
     isGroup: true,
     // members: ["Sam", "Me", "You"],
+    members: MOCK_GROUP_MEMBERS,
   },
   {
     id: "5",
@@ -154,6 +161,7 @@ export const MOCK_CHATS: Chat[] = [
     unreadCount: 0,
     isGroup: true,
     // members: ["Sam", "Me", "You"],
+    members: MOCK_GROUP_MEMBERS,
   },
   {
     id: "20",

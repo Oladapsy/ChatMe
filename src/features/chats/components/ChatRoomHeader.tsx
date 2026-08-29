@@ -3,6 +3,7 @@ import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 
 import { Typography } from "@/shared/components/Typography";
+import { GroupMember } from "@/features/chats/types/chat";
 
 // Header Icons
 import BackChevronIcon from "@/assets/icons/shared/chevron-left.svg";
@@ -16,6 +17,7 @@ interface ChatRoomHeaderProps {
   avatar?: string;
   lastSeen?: string;
   isGroup?: boolean;
+  members?: GroupMember[];
   membersText?: string;
   backgroundColor: string;
   onVideoCall?: () => void;
@@ -28,6 +30,7 @@ export function ChatRoomHeader({
   avatar,
   lastSeen = "5 minutes",
   isGroup = false,
+  members,
   membersText = "User1, User2, You",
   backgroundColor,
   onVideoCall,
@@ -36,7 +39,13 @@ export function ChatRoomHeader({
 }: ChatRoomHeaderProps) {
   const router = useRouter();
 
-  const subTitle = isGroup ? membersText : `Active ${lastSeen} ago`;
+  // Helper to resolve group members text from array or fallback string
+  const resolvedMembersText =
+    members && members.length > 0
+      ? members.map((m) => m.name).join(", ")
+      : membersText;
+
+  const subTitle = isGroup ? resolvedMembersText : `Active ${lastSeen} ago`;
 
   return (
     <View style={[styles.header, { backgroundColor }]}>
