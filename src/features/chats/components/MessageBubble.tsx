@@ -17,13 +17,17 @@ import ContactIcon from "@/assets/icons/chat/contact2.svg";
 import PlayIcon from "@/assets/icons/chat/play.svg";
 import PauseIcon from "@/assets/icons/chat/pause.svg";
 
-
 interface Props {
   message: Message;
   isGroup?: boolean;
+  searchQuery?: string;
 }
 
-export function MessageBubble({ message, isGroup = false }: Props) {
+export function MessageBubble({
+  message,
+  isGroup = false,
+  searchQuery,
+}: Props) {
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
@@ -40,6 +44,57 @@ export function MessageBubble({ message, isGroup = false }: Props) {
     const mins = Math.floor(sec / 60);
     const secs = sec % 60;
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
+  // Render text with highlighted search query substrings
+  const renderHighlightedText = (text: string, query?: string) => {
+    if (!query || !query.trim()) {
+      return (
+        <Typography
+          size={16}
+          color={isMe ? "white" : receivedTextColor}
+          style={styles.messageText}
+        >
+          {text}
+        </Typography>
+      );
+    }
+
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(${escapedQuery})`, "gi");
+    const parts = text.split(regex);
+
+    return (
+      <Typography
+        size={16}
+        color={isMe ? "white" : receivedTextColor}
+        style={styles.messageText}
+      >
+        {parts.map((part, i) => {
+          const isMatch = part.toLowerCase() === query.toLowerCase();
+          if (isMatch) {
+            return (
+              <Typography
+                key={i}
+                size={16}
+                color={isMe ? "#0D2131" : "#0D2131"}
+                style={[
+                  styles.highlightText,
+                  {
+                    backgroundColor: isMe
+                      ? "rgba(255, 255, 255, 0.75)"
+                      : "#A7F3D0",
+                  },
+                ]}
+              >
+                {part}
+              </Typography>
+            );
+          }
+          return part;
+        })}
+      </Typography>
+    );
   };
 
   return (
@@ -106,8 +161,6 @@ export function MessageBubble({ message, isGroup = false }: Props) {
           )}
 
           {/* 2. Audio / Voice Note Attachment */}
-          {/* i will check later how to play the audio and also add the pause feature and see what */}
-          {/* i can do about the wave form */}
           {message.type === "audio" && (
             <View style={styles.audioContainer}>
               <TouchableOpacity
@@ -125,7 +178,6 @@ export function MessageBubble({ message, isGroup = false }: Props) {
               </TouchableOpacity>
 
               <View style={styles.audioWaveformContainer}>
-                {/* Visual waveform placeholder lines */}
                 <View style={styles.waveformBar} />
                 <View style={[styles.waveformBar, { height: 18 }]} />
                 <View style={[styles.waveformBar, { height: 12 }]} />
@@ -140,7 +192,7 @@ export function MessageBubble({ message, isGroup = false }: Props) {
                 <View style={[styles.waveformBar, { height: 22 }]} />
                 <View style={[styles.waveformBar, { height: 10 }]} />
                 <View style={[styles.waveformBar, { height: 13 }]} />
-                <View style={[styles.waveformBar, { height: 12 }]} />  
+                <View style={[styles.waveformBar, { height: 12 }]} />
               </View>
 
               <Typography
@@ -154,7 +206,6 @@ export function MessageBubble({ message, isGroup = false }: Props) {
           )}
 
           {/* 3. Document Attachment */}
-          {/* remains downloading on click */}
           {message.document && (
             <View style={styles.attachmentCard}>
               <DocumentIcon
@@ -183,9 +234,8 @@ export function MessageBubble({ message, isGroup = false }: Props) {
           )}
 
           {/* 4. Location Attachment */}
-          {/* i will see how sharing location can be handled as well */}
           {message.location && (
-            <View style={[styles.attachmentCard,  {paddingRight: 12}]}>
+            <View style={[styles.attachmentCard, { paddingRight: 12 }]}>
               <LocationIcon
                 width={22}
                 height={22}
@@ -203,10 +253,6 @@ export function MessageBubble({ message, isGroup = false }: Props) {
           )}
 
           {/* 5. Contact Attachment */}
-          {/*  i dont know if i should make this onclick!!! */}
-          {/* or a button underneath message | add to contact*/}
-          {/* but i have to check if the contact is on the app */}
-          {/* maybe i will create a function that does that */}
           {message.contact && (
             <View style={styles.attachmentCard}>
               {message.contact.avatar ? (
@@ -241,15 +287,8 @@ export function MessageBubble({ message, isGroup = false }: Props) {
           )}
 
           {/* 6. Text Message */}
-          {Boolean(message.text) && (
-            <Typography
-              size={16}
-              color={isMe ? "white" : receivedTextColor}
-              style={styles.messageText}
-            >
-              {message.text}
-            </Typography>
-          )}
+          {Boolean(message.text) &&
+            renderHighlightedText(message.text!, searchQuery)}
         </View>
 
         {/* Timestamp on RIGHT for Received Messages */}
@@ -319,6 +358,11 @@ const styles = StyleSheet.create({
   },
   messageText: {
     lineHeight: 20,
+  },
+  highlightText: {
+    borderRadius: 4,
+    paddingHorizontal: 2,
+    overflow: "hidden",
   },
   timeTextLeft: {
     marginRight: 8,
