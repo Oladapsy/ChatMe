@@ -37,7 +37,7 @@ export const MOCK_CHATS: Chat[] = [
     isPinned: true,
     unreadCount: 0,
     isGroup: true,
-    members: ["Sam", "Me", "You"],
+    // members: ["Sam", "Me", "You"],
   },
   {
     id: "5",
@@ -153,7 +153,7 @@ export const MOCK_CHATS: Chat[] = [
     isPinned: true,
     unreadCount: 0,
     isGroup: true,
-    members: ["Sam", "Me", "You"],
+    // members: ["Sam", "Me", "You"],
   },
   {
     id: "20",

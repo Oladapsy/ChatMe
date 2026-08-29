@@ -1,3 +1,20 @@
+// the user details
+export interface UserProfile {
+  id: string;
+  name: string;
+  avatarUri?: string;
+  lastSeen: string;
+  phone: string;
+  description: string;
+  photoCount: number;
+  previewPhotos: string[];
+  starCount: number;
+  linkCount: number;
+  isMuted: boolean;
+  isBlocked: boolean;
+  qrValue: string;
+}
+
 export interface GroupMember {
   id: string;
   name: string;

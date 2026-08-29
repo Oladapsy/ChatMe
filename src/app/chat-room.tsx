@@ -140,12 +140,11 @@ export default function ChatRoomScreen() {
         params: { id: activeChatId },
       });
     } else {
-      // Navigate to User Details route
-      console.log("User details route is coming soon!")
-      // router.push({
-      //   pathname: "/",
-      //   params: { id: activeChatId },
-      // });
+      // console.log("User details route is coming soon!")
+      router.push({
+        pathname: "/user-details",
+        params: { id: activeChatId },
+      });
     }
   };
   return (
