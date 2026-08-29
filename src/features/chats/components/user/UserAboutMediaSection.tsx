@@ -143,7 +143,11 @@ export function UserAboutMediaSection({
         <Switch
           value={!isMuted}
           onValueChange={onToggleNotifications}
-          trackColor={{ false: "#2C3E50", true: Colors.light.primary }}
+          trackColor={{
+            false: isDark ? "#2C3E50" : "#D1D5DB",
+            true: Colors.light.primary,
+          }}
+          thumbColor={isDark ? "#FFFFFF" : "#FFFFFF"}
         />
       </View>
     </View>

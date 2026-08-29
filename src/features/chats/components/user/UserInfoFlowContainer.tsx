@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function UserInfoFlowContainer({
-  profile,
+  profile: initialProfile,
   starredMessages,
   sharedLinkSections,
   onBack,
@@ -30,14 +30,22 @@ export function UserInfoFlowContainer({
 }: Props) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("Main");
 
+  // 1. Maintain local profile state (specifically tracking isMuted)
+  const [isMuted, setIsMuted] = useState(initialProfile.isMuted);
+
   const handleSelectTab = (tab: "Photo" | "Star" | "Links") => {
     setActiveTab(tab);
+  };
+
+  // 2. Toggle handler: turning switch ON means notifications are active -> isMuted becomes false
+  const handleToggleNotifications = (isNotificationsEnabled: boolean) => {
+    setIsMuted(!isNotificationsEnabled);
   };
 
   if (activeTab === "Photo") {
     return (
       <ChatPhotosScreen
-        photos={profile.previewPhotos}
+        photos={initialProfile.previewPhotos}
         onBack={() => setActiveTab("Main")}
         onSelectTab={handleSelectTab}
       />
@@ -68,7 +76,10 @@ export function UserInfoFlowContainer({
 
   return (
     <UserProfileDetailScreen
-      profile={profile}
+      profile={{
+        ...initialProfile,
+        isMuted,
+      }}
       onBack={onBack}
       onSearchPress={onSearchPress || (() => {})}
       onQrPress={onQrPress}
@@ -76,7 +87,7 @@ export function UserInfoFlowContainer({
       onPhotosPress={() => setActiveTab("Photo")}
       onStarredPress={() => setActiveTab("Star")}
       onLinksPress={() => setActiveTab("Links")}
-      onToggleNotifications={(val) => console.log("Toggle Notifications:", val)}
+      onToggleNotifications={handleToggleNotifications}
       onBlockPress={() => console.log("Block pressed")}
     />
   );
