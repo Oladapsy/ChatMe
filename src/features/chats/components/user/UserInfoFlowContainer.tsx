@@ -8,6 +8,7 @@ import {
 } from "@/features/chats/screen/ChatSharedLinksScreen";
 import { ChatStarredMessagesScreen } from "@/features/chats/screen/ChatStarredMessagesScreen";
 import { ChatPhotosScreen } from "@/features/chats/screen/ChatPhotosScreen";
+import { useRouter } from "expo-router";
 
 type ActiveTab = "Main" | "Photo" | "Star" | "Links";
 
@@ -28,6 +29,7 @@ export function UserInfoFlowContainer({
   onQrPress,
   onSearchPress,
 }: Props) {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<ActiveTab>("Main");
 
   // 1. Maintain local profile state (specifically tracking isMuted)
@@ -81,7 +83,15 @@ export function UserInfoFlowContainer({
         isMuted,
       }}
       onBack={onBack}
-      onSearchPress={onSearchPress || (() => {})}
+       onSearchPress={() =>
+          router.push({
+            pathname: "/chat-room",
+            params: {
+              id: initialProfile.id,
+              search: "true", // Tells ChatRoomScreen to open directly in search mode
+            },
+          })
+        }
       onQrPress={onQrPress}
       onMessagePress={onBack}
       onPhotosPress={() => setActiveTab("Photo")}
