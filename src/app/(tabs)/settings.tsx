@@ -58,8 +58,7 @@ export default function SettingsScreen() {
           Settings
         </Typography>
         <TouchableOpacity
-          // onPress={() => router.push("/edit-profile")}
-          onPress={() => console.log("moving to edit profile page")}
+          onPress={() => router.push("/edit-profile")}
           style={styles.headerBtn}
         >
           <EditIcon width={17} height={17} color={themeColors.primary} />
