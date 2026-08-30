@@ -47,7 +47,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <MySafeAreaView style={{ backgroundColor: themeColors.background }}>
+    <MySafeAreaView style={{ backgroundColor: themeColors.settingsBg}}>
       {/* Screen Header */}
       <View style={styles.header}>
         <Typography
@@ -250,10 +250,10 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    marginVertical: 12,
+    marginVertical: 16,
   },
   versionText: {
-    marginTop: 24,
+    marginTop: 16,
     textAlign: "center",
     opacity: 0.6,
   },

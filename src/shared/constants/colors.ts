@@ -28,6 +28,7 @@ export const Colors = {
     linkText: "#1F3C51",
     qrBg: "#57B77D",
     searchBorder: "#FFFFFF29",
+    settingsBg: "#FFFFFF",
   },
   dark: {
     primary: "#57B77D",
@@ -58,5 +59,6 @@ export const Colors = {
     linkText: "#B3C2CE",
     qrBg: "#081C2C",
     searchBorder: "#6E8597",
+    settingsBg: "#0F2637",
   },
 };
