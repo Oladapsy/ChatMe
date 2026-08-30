@@ -79,15 +79,15 @@ export default function SettingsScreen() {
               {profile.name}
             </Typography>
             <Typography
-              size={14}
+              size={15}
               color={themeColors.textSecondary}
-              style={{ marginTop: 2 }}
+              style={{ marginTop: 4 }}
             >
               {profile.phone}
             </Typography>
           </View>
           <TouchableOpacity
-            onPress={() => console.log("Show QR Code")}
+            onPress={() => router.push("/user-qr")}
             style={styles.qrBtn}
           >
             <QrCodeIcon width={28} height={28} color={themeColors.primary} />
@@ -97,7 +97,7 @@ export default function SettingsScreen() {
         <View
           style={[
             styles.divider,
-            { backgroundColor: isDark ? "#1E2D3B" : "#EAEEF2" },
+            { backgroundColor: isDark ? "#1F3C51" : "#EAEEF2" },
           ]}
         />
 
