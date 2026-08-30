@@ -40,7 +40,7 @@ export function SettingItem({
           style={[
             styles.iconWrapper,
             {
-              backgroundColor: isDark ? "rgba(16, 185, 129, 0.15)" : "#F0FDF4",
+              backgroundColor: isDark ? "#1F3C51" : "#F5FBF7",
             },
           ]}
         >
@@ -50,7 +50,6 @@ export function SettingItem({
           size={16}
           weight="medium"
           color={textColor || themeColors.text}
-          style={styles.label}
         >
           {label}
         </Typography>
@@ -69,8 +68,8 @@ export function SettingItem({
       ) : (
         showChevron && (
           <ChevronRightIcon
-            width={20}
-            height={20}
+            width={16}
+            height={16}
             color={isDark ? "#64748B" : "#94A3B8"}
           />
         )
@@ -84,21 +83,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
+    paddingVertical: 9,
   },
   leftSection: {
     flexDirection: "row",
     alignItems: "center",
   },
   iconWrapper: {
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 14,
-  },
-  label: {
-    fontSize: 16,
   },
 });

@@ -67,11 +67,8 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Profile Card Header */}
+      {/* Profile Card Header */}
+      <View style={styles.scrollContent}>
         <View style={styles.profileSection}>
           <Image source={{ uri: profile.avatar }} style={styles.avatar} />
           <View style={styles.profileDetails}>
@@ -103,15 +100,15 @@ export default function SettingsScreen() {
 
         {/* Section 1 */}
         <SettingItem
-          icon={<StarIcon width={20} height={20} color={themeColors.primary} />}
+          icon={<StarIcon width={16} height={16} color={themeColors.primary} />}
           label="Star messages"
           // onPress={() => router.push("/starred-messages")}
-          onPress={() => console.log("An item pressed")}
+          onPress={() => console.log("Star Messages")}
           isDark={isDark}
           themeColors={themeColors}
         />
         <SettingItem
-          icon={<CallIcon width={20} height={20} color={themeColors.primary} />}
+          icon={<CallIcon width={16} height={16} color={themeColors.primary} />}
           label="Last call"
           // onPress={() => router.push("/calls")}
           onPress={() => console.log("An item pressed")}
@@ -120,7 +117,7 @@ export default function SettingsScreen() {
         />
         <SettingItem
           icon={
-            <FolderIcon width={20} height={20} color={themeColors.primary} />
+            <FolderIcon width={16} height={16} color={themeColors.primary} />
           }
           label="My folder"
           // onPress={() => router.push("/my-folders")}
@@ -131,8 +128,8 @@ export default function SettingsScreen() {
         <SettingItem
           icon={
             <AppearanceIcon
-              width={20}
-              height={20}
+              width={16}
+              height={16}
               color={themeColors.primary}
             />
           }
@@ -145,8 +142,8 @@ export default function SettingsScreen() {
         <SettingItem
           icon={
             <NotificationIcon
-              width={20}
-              height={20}
+              width={16}
+              height={16}
               color={themeColors.primary}
             />
           }
@@ -161,14 +158,14 @@ export default function SettingsScreen() {
         <View
           style={[
             styles.divider,
-            { backgroundColor: isDark ? "#1E2D3B" : "#EAEEF2" },
+            { backgroundColor: isDark ? "#1F3C51" : "#EAEEF2" },
           ]}
         />
 
         {/* Section 2 */}
         <SettingItem
           icon={
-            <PrivacyIcon width={20} height={20} color={themeColors.primary} />
+            <PrivacyIcon width={16} height={16} color={themeColors.primary} />
           }
           label="Privacy"
           // onPress={() => router.push("/privacy")}
@@ -178,7 +175,7 @@ export default function SettingsScreen() {
         />
         <SettingItem
           icon={
-            <StorageIcon width={20} height={20} color={themeColors.primary} />
+            <StorageIcon width={16} height={16} color={themeColors.primary} />
           }
           label="Data and storage"
           // onPress={() => router.push("/data-storage")}
@@ -187,7 +184,7 @@ export default function SettingsScreen() {
           themeColors={themeColors}
         />
         <SettingItem
-          icon={<FaqIcon width={20} height={20} color={themeColors.primary} />}
+          icon={<FaqIcon width={16} height={16} color={themeColors.primary} />}
           label="FAQ"
           // onPress={() => router.push("/faq")}
           onPress={() => console.log("An item pressed")}
@@ -196,7 +193,7 @@ export default function SettingsScreen() {
         />
         <SettingItem
           icon={
-            <LogoutIcon width={20} height={20} color={themeColors.primary} />
+            <LogoutIcon width={16} height={16} color={themeColors.primary} />
           }
           label="Logout"
           showChevron={false}
@@ -213,7 +210,7 @@ export default function SettingsScreen() {
         >
           2026 ChatMe • Ver 1.0
         </Typography>
-      </ScrollView>
+      </View>
     </MySafeAreaView>
   );
 }
@@ -225,7 +222,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 16,
+    paddingBottom: 14,
   },
   headerBtn: {
     padding: 4,
