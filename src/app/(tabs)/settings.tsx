@@ -46,7 +46,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <MySafeAreaView style={{ backgroundColor: themeColors.settingsBg}}>
+    <MySafeAreaView style={{ backgroundColor: themeColors.settingsBg }}>
       {/* Screen Header */}
       <View style={styles.header}>
         <Typography
@@ -163,8 +163,11 @@ export default function SettingsScreen() {
             <PrivacyIcon width={16} height={16} color={themeColors.primary} />
           }
           label="Privacy"
-          // onPress={() => router.push("/privacy")}
-          onPress={() => console.log("An item pressed")}
+          onPress={() =>
+            router.push({
+              pathname: "/(settings)/privacy",
+            })
+          }
           isDark={isDark}
           themeColors={themeColors}
         />
