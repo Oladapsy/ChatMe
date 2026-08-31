@@ -34,28 +34,48 @@ export default function PrivacyScreen() {
           <PrivacyRowItem
             label="Last Seen"
             value="Everyone"
-            onPress={() => router.push("/(settings)/privacy/last-seen")}
+            onPress={() =>
+              router.push({
+                pathname: "/(settings)/privacy/last-seen",
+                params: { title: "Last Seen" },
+              })
+            }
             isDark={isDark}
             themeColors={themeColors}
           />
           <PrivacyRowItem
             label="Profile Photo"
             value="My Contact"
-            onPress={() => router.push("/(settings)/privacy/last-seen")}
+            onPress={() =>
+              router.push({
+                pathname: "/(settings)/privacy/last-seen",
+                params: { title: "Profile Photo" },
+              })
+            }
             isDark={isDark}
             themeColors={themeColors}
           />
           <PrivacyRowItem
             label="About"
             value="My Contact"
-            onPress={() => router.push("/(settings)/privacy/last-seen")}
+            onPress={() =>
+              router.push({
+                pathname: "/(settings)/privacy/last-seen",
+                params: { title: "About" },
+              })
+            }
             isDark={isDark}
             themeColors={themeColors}
           />
           <PrivacyRowItem
             label="Group"
             value="Everyone"
-            onPress={() => router.push("/(settings)/privacy/last-seen")}
+            onPress={() =>
+              router.push({
+                pathname: "/(settings)/privacy/last-seen",
+                params: { title: "Group" },
+              })
+            }
             isDark={isDark}
             themeColors={themeColors}
           />

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
@@ -12,8 +12,11 @@ type LastSeenOption = "Everyone" | "My Contact" | "Nobody";
 
 export default function LastSeenScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ title?: string }>();
   const { isDark, themeColors } = useAppTheme();
   const [selected, setSelected] = useState<LastSeenOption>("Everyone");
+
+  const headerTitle = params.title || "Last Seen";
 
   return (
     <View style={styles.container}>
@@ -22,7 +25,7 @@ export default function LastSeenScreen() {
         color={themeColors.headBg}
         style={styles.topSafeArea}
       >
-        <SubScreenHeader title="Last Seen" onBack={() => router.back()} />
+        <SubScreenHeader title={headerTitle} onBack={() => router.back()} />
       </MySafeAreaView>
 
       <MySafeAreaView
