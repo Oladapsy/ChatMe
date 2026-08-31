@@ -48,8 +48,7 @@ export function FaqAccordionItem({
             <MinusIcon
               width={14}
               height={14}
-              color="#FFFFFF"
-              fill="#FFFFFF"
+              color="white"
             />
           ) : (
             <PlusIcon
@@ -64,7 +63,7 @@ export function FaqAccordionItem({
 
       {isExpanded && (
         <Typography
-          size={14}
+          size={12}
           color={isDark ? themeColors.descText : "#8EA3B3"}
           style={styles.answerText}
         >
@@ -105,7 +104,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   answerText: {
-    marginTop: 10,
+    marginTop: 8,
     lineHeight: 20,
   },
   divider: {

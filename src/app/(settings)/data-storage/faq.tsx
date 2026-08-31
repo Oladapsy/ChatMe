@@ -13,12 +13,12 @@ export default function FaqScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Track active single accordion item ID (default to first item "1")
   const [expandedId, setExpandedId] = useState<string | null>("1");
 
   const filteredFaqs = MOCK_FAQS.filter((faq) =>
-    faq.question.toLowerCase().includes(searchQuery.toLowerCase())
+    faq.question.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleToggle = (id: string) => {
@@ -40,20 +40,14 @@ export default function FaqScreen() {
             style={[
               styles.searchContainer,
               {
-                backgroundColor: isDark
-                  ? "rgba(255, 255, 255, 0.12)"
-                  : "rgba(255, 255, 255, 0.25)",
+                backgroundColor: "#FFFFFF0F",
               },
             ]}
           >
-            <SearchIcon
-              width={18}
-              height={18}
-              color="#FFFFFF"
-            />
+            <SearchIcon width={18} height={18} color="#FFFFFF" />
             <TextInput
               placeholder="Search questions ..."
-              placeholderTextColor="rgba(255, 255, 255, 0.75)"
+              placeholderTextColor="#FFFFFFE5"
               value={searchQuery}
               onChangeText={setSearchQuery}
               style={styles.searchInput}
@@ -105,14 +99,14 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 24,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    height: 44,
+    height: 48,
   },
   searchInput: {
     flex: 1,
     marginLeft: 10,
-    fontSize: 15,
+    fontSize: 16,
     color: "#FFFFFF",
   },
   content: {
