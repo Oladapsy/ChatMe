@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import React from 'react'
+import { Typography } from '@/shared/components/Typography';
 
 export default function FaceIdOverlay() {
   return (
     <View>
-      <Text>FaceIdOverlay</Text>
+      <Typography>FaceIdOverlay: Overlay of face ID</Typography>
     </View>
   )
 }
