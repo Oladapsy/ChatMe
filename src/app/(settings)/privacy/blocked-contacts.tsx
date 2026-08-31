@@ -7,27 +7,8 @@ import { Typography } from "@/shared/components/Typography";
 import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 import { BlockedContactItem } from "@/features/settings/components/BlockedContactItem";
+import { BLOCKED_CONTACTS } from "@/features/settings/data/blockedContacts";
 
-const BLOCKED_CONTACTS = [
-  {
-    id: "1",
-    name: "Annette Black",
-    phone: "+61-827-680-673",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-  },
-  {
-    id: "2",
-    name: "Arlene McCoy",
-    phone: "+61-827-680-673",
-    avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150",
-  },
-  {
-    id: "3",
-    name: "Annie Miles",
-    phone: "+61-827-680-673",
-    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
-  },
-];
 
 export default function BlockedContactsScreen() {
   const router = useRouter();

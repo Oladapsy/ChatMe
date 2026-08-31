@@ -32,7 +32,7 @@ export function BlockedContactItem({
         <Typography size={16} weight="bold" color={themeColors.text}>
           {name}
         </Typography>
-        <Typography size={13} color={themeColors.textSecondary}>
+        <Typography size={14} color={themeColors.textSecondary}>
           {phone}
         </Typography>
       </View>
@@ -54,8 +54,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   avatar: {
-    width: 52,
-    height: 52,
+    width: 56,
+    height: 56,
     borderRadius: 26,
     marginRight: 14,
   },
