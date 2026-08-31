@@ -141,7 +141,7 @@ export default function LastCallScreen() {
               <Typography
                 size={12}
                 weight="bold"
-                color={isDark ? "#5C768D" : "#8EA3B3"}
+                color="#6E8597"
                 style={styles.sectionTitle}
               >
                 {title}
