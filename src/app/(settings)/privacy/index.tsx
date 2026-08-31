@@ -90,7 +90,7 @@ export default function PrivacyScreen() {
           />
           <PrivacyRowItem
             label="Face ID"
-            onPress={() => {}}
+            onPress={() => router.push("/(settings)/privacy/face-id")}
             isDark={isDark}
             themeColors={themeColors}
           />
