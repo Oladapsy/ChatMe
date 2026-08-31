@@ -79,20 +79,19 @@ export function ThemeCard({ theme, isSelected, onSelect }: ThemeCardProps) {
 
 const styles = StyleSheet.create({
   cardContainer: {
-    width: 68,
-    height: 84,
-    borderRadius: 12,
-    overflow: "hidden",
+    width: 69,
+    height: 85,
+    borderRadius: 10,
     justifyContent: "space-between",
     position: "relative",
   },
   checkBadge: {
     position: "absolute",
-    top: 0,
-    right: 0,
+    top: -6,
+    right: -6,
     width: 16,
     height: 16,
-    borderBottomLeftRadius: 8,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
@@ -104,15 +103,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   bubbleRight: {
-    width: 32,
-    height: 10,
-    borderRadius: 5,
+    width: 36,
+    height: 13,
+    borderRadius: 6.5,
     alignSelf: "flex-end",
   },
   bubbleLeft: {
-    width: 32,
-    height: 10,
-    borderRadius: 5,
+    width: 36,
+    height: 13,
+    borderRadius: 6.5,
     alignSelf: "flex-start",
   },
   labelBox: {
