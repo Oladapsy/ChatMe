@@ -12,7 +12,7 @@ export default function FaceId() {
     <MySafeAreaView
       style={{ backgroundColor: themeColors.background, padding: 20 }}
     >
-      <View style={{marginBottom: 20}}>
+      <View style={{ marginBottom: 20 }}>
         <BackButton />
       </View>
       <Typography>face-id yet to be implemented</Typography>

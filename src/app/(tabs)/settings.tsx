@@ -176,16 +176,14 @@ export default function SettingsScreen() {
             <StorageIcon width={16} height={16} color={themeColors.primary} />
           }
           label="Data and storage"
-          // onPress={() => router.push("/data-storage")}
-          onPress={() => console.log("An item pressed")}
+          onPress={() => router.push("/(settings)/data-storage")}
           isDark={isDark}
           themeColors={themeColors}
         />
         <SettingItem
           icon={<FaqIcon width={16} height={16} color={themeColors.primary} />}
           label="FAQ"
-          // onPress={() => router.push("/faq")}
-          onPress={() => console.log("An item pressed")}
+          onPress={() => router.push("/(settings)/data-storage/faq")}
           isDark={isDark}
           themeColors={themeColors}
         />
