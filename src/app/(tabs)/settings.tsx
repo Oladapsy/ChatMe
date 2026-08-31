@@ -108,8 +108,8 @@ export default function SettingsScreen() {
         <SettingItem
           icon={<CallIcon width={16} height={16} color={themeColors.primary} />}
           label="Last call"
-          // onPress={() => router.push("/calls")}
-          onPress={() => console.log("An item pressed")}
+          onPress={() => router.push("/last-call")}
+          // onPress={() => console.log("An item pressed")}
           isDark={isDark}
           themeColors={themeColors}
         />
