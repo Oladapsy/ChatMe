@@ -1,15 +1,12 @@
 import React from "react";
-import {
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  useColorScheme,
-} from "react-native";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import CheckIcon from "@/assets/icons/shared/check.svg"; // or checkmark icon
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import CheckIcon from "@/assets/icons/shared/check.svg";
+import { IconThemeId } from "./AppIconItem";
 
 export interface ThemeOption {
-  id: "green" | "blue" | "red" | "orange";
+  id: IconThemeId;
   label: string;
   primaryColor: string;
   lightBg: string;
@@ -19,24 +16,24 @@ export interface ThemeOption {
 interface ThemeCardProps {
   theme: ThemeOption;
   isSelected: boolean;
-  onSelect: (id: ThemeOption["id"]) => void;
+  onSelect: (id: IconThemeId) => void;
 }
 
 export function ThemeCard({ theme, isSelected, onSelect }: ThemeCardProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
+  const { isDark } = useAppTheme();
+  const containerBg = isDark ? theme.darkBg : theme.lightBg;
 
   return (
     <TouchableOpacity
       style={[
         styles.cardContainer,
-        { backgroundColor: isDark ? "#0A1F2D" : "#F8FAFC" },
+        { backgroundColor: containerBg },
         isSelected && { borderColor: theme.primaryColor, borderWidth: 1.5 },
       ]}
       onPress={() => onSelect(theme.id)}
       activeOpacity={0.8}
     >
-      {/* Selection Check Badge */}
+      {/* Check Badge */}
       {isSelected && (
         <View
           style={[styles.checkBadge, { backgroundColor: theme.primaryColor }]}
@@ -45,7 +42,7 @@ export function ThemeCard({ theme, isSelected, onSelect }: ThemeCardProps) {
         </View>
       )}
 
-      {/* Card Preview Graphic */}
+      {/* Mini Chat Bubbles Preview */}
       <View style={styles.previewArea}>
         <View
           style={[styles.bubbleRight, { backgroundColor: theme.primaryColor }]}
@@ -53,21 +50,23 @@ export function ThemeCard({ theme, isSelected, onSelect }: ThemeCardProps) {
         <View
           style={[
             styles.bubbleLeft,
-            { backgroundColor: isDark ? "#163043" : "#FFFFFF" },
+            { backgroundColor: isDark ? "#081C2C" : "#FFFFFF" },
           ]}
         />
       </View>
 
-      {/* Label Box */}
+      {/* Label Footer */}
       <View
         style={[
           styles.labelBox,
-          isSelected && { backgroundColor: theme.primaryColor },
+          {
+            backgroundColor: isSelected ? theme.primaryColor : "transparent",
+          },
         ]}
       >
         <Typography
           size={12}
-          weight="bold"
+          weight="medium"
           color={isSelected ? "white" : theme.primaryColor}
           align="center"
         >
@@ -80,44 +79,44 @@ export function ThemeCard({ theme, isSelected, onSelect }: ThemeCardProps) {
 
 const styles = StyleSheet.create({
   cardContainer: {
-    width: 72,
-    height: 88,
+    width: 68,
+    height: 84,
     borderRadius: 12,
     overflow: "hidden",
-    position: "relative",
     justifyContent: "space-between",
+    position: "relative",
   },
   checkBadge: {
     position: "absolute",
-    top: -2,
-    right: -2,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    top: 0,
+    right: 0,
+    width: 16,
+    height: 16,
+    borderBottomLeftRadius: 8,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
   },
   previewArea: {
     flex: 1,
-    padding: 8,
+    padding: 10,
     gap: 6,
     justifyContent: "center",
   },
   bubbleRight: {
-    width: 36,
+    width: 32,
     height: 10,
     borderRadius: 5,
     alignSelf: "flex-end",
   },
   bubbleLeft: {
-    width: 36,
+    width: 32,
     height: 10,
     borderRadius: 5,
     alignSelf: "flex-start",
   },
   labelBox: {
-    paddingVertical: 6,
+    paddingVertical: 5,
     alignItems: "center",
   },
 });

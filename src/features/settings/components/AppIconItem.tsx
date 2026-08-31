@@ -3,23 +3,12 @@ import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
+// Shared imports
+import { IconThemeId } from "@/shared/types/theme";
+import { ICON_CONFIGS } from "@/shared/constants/theme";
+
 // Icons
 import AppIcon from "@/assets/icons/settings/appIcon.svg";
-
-export type IconThemeId = "green" | "blue" | "red" | "orange";
-
-interface AppIconConfig {
-  color: string;
-  lightBg: string;
-  darkBg: string;
-}
-
-const ICON_CONFIGS: Record<IconThemeId, AppIconConfig> = {
-  green: { color: "#57B77D", lightBg: "#F5FBF7", darkBg: "#0F2B22" },
-  blue: { color: "#007CFF", lightBg: "#ECF5FF", darkBg: "#0A2440" },
-  red: { color: "#E8503A", lightBg: "#FFF5F5", darkBg: "#3B1416" },
-  orange: { color: "#FFB23F", lightBg: "#FFF0D9", darkBg: "#3D230A" },
-};
 
 interface AppIconItemProps {
   id: IconThemeId;
@@ -37,15 +26,13 @@ export function AppIconItem({
   const { isDark, themeColors } = useAppTheme();
   const config = ICON_CONFIGS[id];
 
-  // Dynamic Background: Light/Dark Mode + Color Spec
   const containerBg = isDark ? config.darkBg : config.lightBg;
 
-  // Active label to match label
   const labelColor = isSelected
     ? config.color
     : isDark
-      ? themeColors.textSecondary
-      : "#8EA3B3";
+    ? themeColors.textSecondary
+    : "#8EA3B3";
 
   return (
     <TouchableOpacity
@@ -66,7 +53,6 @@ export function AppIconItem({
         <AppIcon width={48} height={48} color={config.color} />
       </View>
 
-      {/* Dynamic Colored Label */}
       <Typography size={12} weight="medium" color={labelColor} align="center">
         {label}
       </Typography>
