@@ -7,15 +7,6 @@ import StarBgIcon from "@/assets/icons/shared/starBg.svg";
 import ChevronRightIcon from "@/assets/icons/shared/chevron-right.svg";
 import { StarredMessage } from "@/features/chats/types/starredMsg";
 
-// export interface StarredMessage {
-//   id: string;
-//   senderName: string;
-//   senderAvatar?: string;
-//   message: string;
-//   timestamp: string;
-//   dateLabel?: string;
-// }
-
 interface Props {
   item: StarredMessage;
 }
