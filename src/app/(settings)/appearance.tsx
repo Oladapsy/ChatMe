@@ -1,46 +1,50 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  ScrollView,
-  useColorScheme,
-} from "react-native";
+import { StyleSheet, View, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 import { SettingItem } from "@/features/settings/components/SettingItem";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
+
+// Shared Theme Constants & Types
+import { ICON_CONFIGS } from "@/shared/constants/theme";
+import { IconThemeId } from "@/shared/types/theme";
 
 // Components
-import { ThemeCard, ThemeOption } from "@/features/settings/components/ThemeCard";
+import {
+  ThemeCard,
+  ThemeOption,
+} from "@/features/settings/components/ThemeCard";
 import { AppIconItem } from "@/features/settings/components/AppIconItem";
 
 // Icons
-import StarBgIcon from "@/assets/icons/shared/starBg.svg";
+import StarBgIcon from "@/assets/icons/chat/ChatBg.svg";
 import NightModeIcon from "@/assets/icons/settings/moon.svg";
 import EmojiIcon from "@/assets/icons/settings/emoji.svg";
 
-const THEME_OPTIONS: ThemeOption[] = [
-  { id: "green", label: "Green", primaryColor: "#10B981", lightBg: "#F5FBF7", darkBg: "#0F2637" },
-  { id: "blue", label: "Blue", primaryColor: "#007AFF", lightBg: "#EFF6FF", darkBg: "#0A1F33" },
-  { id: "red", label: "Red", primaryColor: "#FF3B30", lightBg: "#FEF2F2", darkBg: "#330F10" },
-  { id: "orange", label: "Orange", primaryColor: "#FF9500", lightBg: "#FFFBEB", darkBg: "#33210A" },
-];
+// Dynamically construct THEME_OPTIONS using shared ICON_CONFIGS
+const THEME_OPTIONS: ThemeOption[] = (
+  Object.keys(ICON_CONFIGS) as IconThemeId[]
+).map((id) => ({
+  id,
+  label: id.charAt(0).toUpperCase() + id.slice(1),
+  primaryColor: ICON_CONFIGS[id].color,
+  lightBg: ICON_CONFIGS[id].lightBg,
+  darkBg: ICON_CONFIGS[id].darkBg,
+}));
 
 export default function AppearanceScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
 
-  const [selectedTheme, setSelectedTheme] = useState<ThemeOption["id"]>("green");
+  const [selectedTheme, setSelectedTheme] = useState<IconThemeId>("green");
   const [nightMode, setNightMode] = useState(isDark);
   const [largeEmoji, setLargeEmoji] = useState(false);
-  const [selectedAppIcon, setSelectedAppIcon] = useState("green");
+  const [selectedAppIcon, setSelectedAppIcon] = useState<IconThemeId>("green");
 
-  const activeThemeColor = THEME_OPTIONS.find((t) => t.id === selectedTheme)?.primaryColor || themeColors.primary;
+  const activeThemeColor = ICON_CONFIGS[selectedTheme].color;
 
   return (
     <View style={styles.container}>
@@ -50,10 +54,7 @@ export default function AppearanceScreen() {
         color={themeColors.headBg}
         style={styles.topSafeArea}
       >
-        <SubScreenHeader
-          title="Appearance"
-          onBack={() => router.back()}
-        />
+        <SubScreenHeader title="Appearance" onBack={() => router.back()} />
       </MySafeAreaView>
 
       {/* Main Body */}
@@ -62,33 +63,67 @@ export default function AppearanceScreen() {
         color={themeColors.background}
         style={styles.bodySafeArea}
       >
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
           {/* 1. CHAT PREVIEW BOX */}
-          <View style={[styles.previewBox, { backgroundColor: isDark ? "#0A1926" : "#F5FBF7" }]}>
+          <View
+            style={[
+              styles.previewBox,
+              {
+                backgroundColor: isDark
+                  ? ICON_CONFIGS[selectedTheme].darkBg
+                  : ICON_CONFIGS[selectedTheme].lightBg,
+              },
+            ]}
+          >
             <View style={StyleSheet.absoluteFill} pointerEvents="none">
-              <StarBgIcon width="100%" height="100%" preserveAspectRatio="xMidYMid slice" color={isDark ? "#122A3B" : "#E8F5ED"} />
+              <StarBgIcon
+                width="100%"
+                height="100%"
+                preserveAspectRatio="xMidYMid slice"
+                color={isDark ? "#122A3B" : "#E8F5ED"}
+              />
             </View>
 
             {/* Left Chat Bubble */}
             <View style={styles.bubbleRowLeft}>
-              <View style={[styles.chatBubbleLeft, { backgroundColor: isDark ? "#081C2C" : "#FFFFFF" }]}>
-                <Typography size={14} color={themeColors.text}>
+              <View
+                style={[
+                  styles.chatBubbleLeft,
+                  { backgroundColor: isDark ? "#081C2C" : "#FFFFFF" },
+                ]}
+              >
+                <Typography size={16} color={themeColors.text}>
                   Habitant elit pellentesque curabitur morbi sit fusce elit
                 </Typography>
               </View>
-              <Typography size={12} color={themeColors.textSecondary} style={styles.timeText}>
+              <Typography
+                size={14}
+                color={themeColors.textSecondary}
+                style={styles.timeText}
+              >
                 18:25
               </Typography>
             </View>
 
             {/* Right Chat Bubble */}
             <View style={styles.bubbleRowRight}>
-              <Typography size={12} color={themeColors.textSecondary} style={styles.timeText}>
+              <Typography
+                size={14}
+                color={themeColors.textSecondary}
+                style={styles.timeText}
+              >
                 19:40
               </Typography>
-              <View style={[styles.chatBubbleRight, { backgroundColor: activeThemeColor }]}>
-                <Typography size={14} color="white">
+              <View
+                style={[
+                  styles.chatBubbleRight,
+                  { backgroundColor: activeThemeColor },
+                ]}
+              >
+                <Typography size={16} color="white">
                   Gravida lectus semper orci
                 </Typography>
               </View>
@@ -96,7 +131,12 @@ export default function AppearanceScreen() {
           </View>
 
           {/* 2. SELECT A THEME */}
-          <Typography size={16} weight="bold" color={themeColors.text} style={styles.sectionTitle}>
+          <Typography
+            size={18}
+            weight="bold"
+            color={isDark? themeColors.mediaTab: themeColors.descText}
+            style={styles.sectionTitle}
+          >
             Select a Theme
           </Typography>
           <View style={styles.rowGrid}>
@@ -110,10 +150,16 @@ export default function AppearanceScreen() {
             ))}
           </View>
 
-          {/* 3. TOGGLE SETTINGS */}
+          {/* 3. TOGGLE SETTINGS NiGHT Mode and Large Emoji*/}
           <View style={styles.settingsGroup}>
             <SettingItem
-              icon={<NightModeIcon width={16} height={16} color={activeThemeColor} />}
+              icon={
+                <NightModeIcon
+                  width={16}
+                  height={16}
+                  color={activeThemeColor}
+                />
+              }
               label="Night Mode"
               hasSwitch
               switchValue={nightMode}
@@ -121,8 +167,11 @@ export default function AppearanceScreen() {
               isDark={isDark}
               themeColors={themeColors}
             />
+
             <SettingItem
-              icon={<EmojiIcon width={16} height={16} color={activeThemeColor} />}
+              icon={
+                <EmojiIcon width={16} height={16} color={activeThemeColor} />
+              }
               label="Large Emoji"
               hasSwitch
               switchValue={largeEmoji}
@@ -133,7 +182,12 @@ export default function AppearanceScreen() {
           </View>
 
           {/* 4. APP ICON SELECTOR */}
-          <Typography size={16} weight="bold" color={themeColors.text} style={styles.sectionTitle}>
+          <Typography
+            size={18}
+            weight="bold"
+            color={isDark? themeColors.mediaTab: themeColors.descText}
+            style={styles.sectionTitle}
+          >
             App Icon
           </Typography>
           <View style={styles.rowGrid}>
@@ -143,11 +197,10 @@ export default function AppearanceScreen() {
                 id={item.id}
                 label={item.label}
                 isSelected={selectedAppIcon === item.id}
-                onSelect={(id) => setSelectedAppIcon(id)}
+                onSelect={(id) => setSelectedAppIcon(id as IconThemeId)}
               />
             ))}
           </View>
-
         </ScrollView>
       </MySafeAreaView>
     </View>
@@ -204,15 +257,16 @@ const styles = StyleSheet.create({
   sectionTitle: {
     paddingHorizontal: 20,
     marginTop: 24,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   rowGrid: {
     flexDirection: "row",
-    justifyContent: "space-between",
     paddingHorizontal: 20,
+    justifyContent: "space-between",
   },
   settingsGroup: {
     paddingHorizontal: 20,
-    marginTop: 16,
+    marginTop: 24,
+    gap: 1.5,
   },
 });

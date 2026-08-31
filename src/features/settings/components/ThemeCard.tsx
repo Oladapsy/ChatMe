@@ -3,7 +3,7 @@ import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 import CheckIcon from "@/assets/icons/shared/check.svg";
-import { IconThemeId } from "./AppIconItem";
+import { IconThemeId } from "@/shared/types/theme";
 
 export interface ThemeOption {
   id: IconThemeId;
