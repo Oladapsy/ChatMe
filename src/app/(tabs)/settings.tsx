@@ -101,7 +101,6 @@ export default function SettingsScreen() {
           icon={<StarIcon width={16} height={16} color={themeColors.primary} />}
           label="Star messages"
           onPress={() => router.push("/starred-messages")}
-          // onPress={() => console.log("Star Messages")}
           isDark={isDark}
           themeColors={themeColors}
         />
@@ -109,7 +108,6 @@ export default function SettingsScreen() {
           icon={<CallIcon width={16} height={16} color={themeColors.primary} />}
           label="Last call"
           onPress={() => router.push("/last-call")}
-          // onPress={() => console.log("An item pressed")}
           isDark={isDark}
           themeColors={themeColors}
         />
@@ -119,7 +117,7 @@ export default function SettingsScreen() {
           }
           label="My folder"
           // onPress={() => router.push("/my-folders")}
-          onPress={() => console.log("An item pressed")}
+          onPress={() => console.log("Folder Part will come in 2.0")}
           isDark={isDark}
           themeColors={themeColors}
         />
@@ -132,8 +130,7 @@ export default function SettingsScreen() {
             />
           }
           label="Appearence"
-          onPress={() => console.log("An item pressed")}
-          // onPress={() => router.push("/appearance")}
+          onPress={() => router.push("/appearance")}
           isDark={isDark}
           themeColors={themeColors}
         />

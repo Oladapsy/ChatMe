@@ -29,6 +29,9 @@ export const Colors = {
     qrBg: "#57B77D",
     searchBorder: "#FFFFFF29",
     settingsBg: "#FFFFFF",
+    blue: "#007CFF",
+    red: "#E8503A",
+    orange: "#FFB23F",
   },
   dark: {
     primary: "#57B77D",
@@ -60,5 +63,8 @@ export const Colors = {
     qrBg: "#081C2C",
     searchBorder: "#6E8597",
     settingsBg: "#0F2637",
+    blue: "#007CFF",
+    red: "#E8503A",
+    orange: "#FFB23F",
   },
 };
