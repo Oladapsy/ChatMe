@@ -1,4 +1,4 @@
-import { StarredMessage } from "@/features/chats/components/StarredMsgItem";
+import { StarredMessage } from "@/features/chats/types/starredMsg";
 import { GroupDetails } from "@/features/chats/types/chat";
 import { SharedLinkSection } from "@/features/chats/screen/ChatSharedLinksScreen";
 
@@ -219,3 +219,6 @@ export const getMockGroupDetails = (id?: string): GroupDetails => ({
     { id: "10", name: "Bessie Cooper", isOnline: false },
   ],
 });
+
+
+

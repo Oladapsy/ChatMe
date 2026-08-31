@@ -5,15 +5,16 @@ import { Colors } from "@/shared/constants/colors";
 import StarFilledIcon from "@/assets/icons/shared/starMsg.svg";
 import StarBgIcon from "@/assets/icons/shared/starBg.svg";
 import ChevronRightIcon from "@/assets/icons/shared/chevron-right.svg";
+import { StarredMessage } from "@/features/chats/types/starredMsg";
 
-export interface StarredMessage {
-  id: string;
-  senderName: string;
-  senderAvatar?: string;
-  message: string;
-  timestamp: string;
-  dateLabel?: string;
-}
+// export interface StarredMessage {
+//   id: string;
+//   senderName: string;
+//   senderAvatar?: string;
+//   message: string;
+//   timestamp: string;
+//   dateLabel?: string;
+// }
 
 interface Props {
   item: StarredMessage;
@@ -39,7 +40,7 @@ export function StarredMessageItem({ item }: Props) {
             width="100%"
             height="100%"
             preserveAspectRatio="xMidYMid slice"
-            color={ themeColors.headBg}
+            color={isDark ? "#163043" : "#E8F5ED"}
           />
         </View>
 

@@ -100,8 +100,8 @@ export default function SettingsScreen() {
         <SettingItem
           icon={<StarIcon width={16} height={16} color={themeColors.primary} />}
           label="Star messages"
-          // onPress={() => router.push("/starred-messages")}
-          onPress={() => console.log("Star Messages")}
+          onPress={() => router.push("/starred-messages")}
+          // onPress={() => console.log("Star Messages")}
           isDark={isDark}
           themeColors={themeColors}
         />

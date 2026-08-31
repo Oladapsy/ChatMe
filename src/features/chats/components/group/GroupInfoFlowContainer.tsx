@@ -4,7 +4,7 @@ import { GroupDetails } from "@/features/chats/types/chat";
 import { GroupDetailScreen } from "@/features/chats/screen/GroupDetailScreen";
 import { ChatPhotosScreen } from "@/features/chats/screen/ChatPhotosScreen";
 import { ChatStarredMessagesScreen } from "@/features/chats/screen/ChatStarredMessagesScreen";
-import { StarredMessage } from "@/features/chats/components/StarredMsgItem";
+import { StarredMessage } from "@/features/chats/types/starredMsg";
 import {
   ChatSharedLinksScreen,
   SharedLinkSection,

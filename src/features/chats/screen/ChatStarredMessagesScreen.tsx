@@ -11,10 +11,8 @@ import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 import SearchIcon from "@/assets/icons/shared/search.svg";
-import {
-  StarredMessageItem,
-  StarredMessage,
-} from "@/features/chats/components/StarredMsgItem";
+import { StarredMessageItem } from "@/features/chats/components/StarredMsgItem";
+import { StarredMessage } from "@/features/chats/types/starredMsg";
 
 interface Props {
   starredMessages: StarredMessage[];
