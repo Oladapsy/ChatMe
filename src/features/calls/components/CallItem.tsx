@@ -50,7 +50,7 @@ export function CallItem({
         return <OutgoingCallIcon width={14} height={14} color="#8EA3B3" />;
       case "missed":
         return (
-          <MissedCallIcon width={14} height={14} color={Colors.light.error} />
+          <MissedCallIcon width={14} height={14} color={themeColors.error} />
         );
     }
   };
@@ -96,7 +96,7 @@ export function CallItem({
               size={12}
               color={
                 item.type === "missed"
-                  ? Colors.light.error
+                  ? themeColors.error
                   : themeColors.textSecondary
               }
               style={{ marginLeft: 4 }}
