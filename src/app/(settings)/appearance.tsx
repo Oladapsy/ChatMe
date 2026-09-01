@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 
+// the dynamic app icon
+import ExpoDynamicAppIcon from "@variant-systems/expo-dynamic-app-icon";
+
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
