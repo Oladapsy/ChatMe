@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo/ui": "~57.0.14",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@variant-systems/expo-dynamic-app-icon": "^1.0.2",
     "expo": "~57.0.18",
     "expo-audio": "~57.0.4",
     "expo-blur": "~57.0.2",

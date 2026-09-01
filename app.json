@@ -49,7 +49,7 @@
           "contactsPermission": "Allow $(PRODUCT_NAME) to access your contacts."
         }
       ],
-       [
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your friends.",
@@ -78,9 +78,9 @@
           "barcodeScannerEnabled": true
         }
       ],
-      
       "expo-audio",
-      "expo-image"
+      "expo-image",
+      "@variant-systems/expo-dynamic-app-icon"
     ],
     "experiments": {
       "typedRoutes": true,
