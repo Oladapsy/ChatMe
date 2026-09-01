@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { StyleSheet, View, ScrollView } from "react-native";
+import { StyleSheet, View, ScrollView, Alert, NativeModules } from "react-native";
 import { useRouter } from "expo-router";
 
-// the dynamic app icon
-import ExpoDynamicAppIcon from "@variant-systems/expo-dynamic-app-icon";
+// import ExpoDynamicAppIcon from "@variant-systems/expo-dynamic-app-icon";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
@@ -27,7 +26,6 @@ import StarBgIcon from "@/assets/icons/chat/ChatBg.svg";
 import NightModeIcon from "@/assets/icons/settings/moon.svg";
 import EmojiIcon from "@/assets/icons/settings/emoji.svg";
 
-// Dynamically construct THEME_OPTIONS using shared ICON_CONFIGS
 const THEME_OPTIONS: ThemeOption[] = (
   Object.keys(ICON_CONFIGS) as IconThemeId[]
 ).map((id) => ({
@@ -48,6 +46,27 @@ export default function AppearanceScreen() {
   const [selectedAppIcon, setSelectedAppIcon] = useState<IconThemeId>("green");
 
   const activeThemeColor = ICON_CONFIGS[selectedTheme].color;
+
+  const handleAppIconChange = async (iconId: IconThemeId) => {
+    setSelectedAppIcon(iconId);
+
+    // 1. Guard against Expo Go environments safely
+    if (!NativeModules.ExpoDynamicAppIcon) {
+      Alert.alert(
+        "Expo Go Notice",
+        "Dynamic app icons require a native development build. Run 'npx expo run:ios' or 'npx expo run:android'."
+      );
+      return;
+    }
+
+    // 2. Dynamically require the package only when running native builds
+    try {
+      const ExpoDynamicAppIcon = require("@variant-systems/expo-dynamic-app-icon").default;
+      await ExpoDynamicAppIcon.setAppIcon(iconId);
+    } catch (error) {
+      console.warn("Failed to set app icon:", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -153,7 +172,7 @@ export default function AppearanceScreen() {
             ))}
           </View>
 
-          {/* 3. TOGGLE SETTINGS NiGHT Mode and Large Emoji*/}
+          {/* 3. TOGGLE SETTINGS: Night Mode and Large Emoji */}
           <View style={styles.settingsGroup}>
             <SettingItem
               icon={
@@ -200,7 +219,7 @@ export default function AppearanceScreen() {
                 id={item.id}
                 label={item.label}
                 isSelected={selectedAppIcon === item.id}
-                onSelect={(id) => setSelectedAppIcon(id as IconThemeId)}
+                onSelect={(id) => handleAppIconChange(id as IconThemeId)}
               />
             ))}
           </View>
