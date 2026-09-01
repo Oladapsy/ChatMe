@@ -16,7 +16,6 @@ export default function SettingsLayout() {
       <Stack.Screen name="privacy/last-seen" />
       <Stack.Screen name="privacy/blocked-contacts" />
       <Stack.Screen name="data-storage/index" />
-      <Stack.Screen name="data-storage/faq" />
       <Stack.Screen name="data-storage/manage" />
       <Stack.Screen name="data-storage/option" />
     </Stack>

@@ -121,6 +121,7 @@ export default function SettingsScreen() {
           isDark={isDark}
           themeColors={themeColors}
         />
+        {/* Appearance */}
         <SettingItem
           icon={
             <AppearanceIcon
@@ -130,7 +131,7 @@ export default function SettingsScreen() {
             />
           }
           label="Appearence"
-          onPress={() => router.push("/appearance")}
+          onPress={() => router.push("/(settings)/appearance")}
           isDark={isDark}
           themeColors={themeColors}
         />
@@ -157,7 +158,7 @@ export default function SettingsScreen() {
           ]}
         />
 
-        {/* Section 2 */}
+        {/* Section 2 -> Privacy*/}
         <SettingItem
           icon={
             <PrivacyIcon width={16} height={16} color={themeColors.primary} />
@@ -183,7 +184,7 @@ export default function SettingsScreen() {
         <SettingItem
           icon={<FaqIcon width={16} height={16} color={themeColors.primary} />}
           label="FAQ"
-          onPress={() => router.push("/(settings)/data-storage/faq")}
+          onPress={() => router.push("/(settings)/faq")}
           isDark={isDark}
           themeColors={themeColors}
         />

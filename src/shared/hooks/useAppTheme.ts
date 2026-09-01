@@ -8,13 +8,3 @@ export function useAppTheme() {
 
   return { isDark, themeColors };
 }
-
-
-// usage!!!
-// import { useAppTheme } from "@/shared/hooks/useAppTheme";
-
-// export function CallItem({ /* ... */ }) {
-//   const { isDark, themeColors } = useAppTheme(); // Much cleaner
-
-  // ...rest of component
-// }

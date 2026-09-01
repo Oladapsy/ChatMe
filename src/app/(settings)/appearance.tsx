@@ -134,7 +134,7 @@ export default function AppearanceScreen() {
           <Typography
             size={18}
             weight="bold"
-            color={isDark? themeColors.mediaTab: themeColors.descText}
+            color={isDark ? themeColors.mediaTab : themeColors.descText}
             style={styles.sectionTitle}
           >
             Select a Theme
@@ -185,7 +185,7 @@ export default function AppearanceScreen() {
           <Typography
             size={18}
             weight="bold"
-            color={isDark? themeColors.mediaTab: themeColors.descText}
+            color={isDark ? themeColors.mediaTab : themeColors.descText}
             style={styles.sectionTitle}
           >
             App Icon
