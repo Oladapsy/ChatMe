@@ -72,7 +72,7 @@
       [
         "@variant-systems/expo-dynamic-app-icon",
         {
-          "green": { "image": "./assets/images/appIcons/greenIcon.png", "prerendered": true },
+          "green": { "image": "./assets/images/appIcons/greenIcon.png", "prerender": true },
           "blue": { "image": "./assets/images/appIcons/blueIcon.png" },
           "red": { "image": "./assets/images/appIcons/redIcon.png" },
           "orange": { "image": "./assets/images/appIcons/orangeIcon.png" }
@@ -87,9 +87,7 @@
           "barcodeScannerEnabled": true
         }
       ],
-      "expo-audio",
-      "expo-image",
-      "@variant-systems/expo-dynamic-app-icon"
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,
