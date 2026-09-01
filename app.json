@@ -70,6 +70,15 @@
         }
       ],
       [
+        "@variant-systems/expo-dynamic-app-icon",
+        {
+          "green": { "image": "./assets/images/appIcons/greenIcon.png", "prerendered": true },
+          "blue": { "image": "./assets/images/appIcons/blueIcon.png" },
+          "red": { "image": "./assets/images/appIcons/redIcon.png" },
+          "orange": { "image": "./assets/images/appIcons/orangeIcon.png" }
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
