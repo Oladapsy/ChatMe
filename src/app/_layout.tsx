@@ -5,6 +5,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { Colors } from "@/shared/constants/colors";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { ThemeProvider } from "@/shared/context/ThemeContext";
 
 // Prevent auto-hiding until fonts are fully loaded
 SplashScreen.preventAutoHideAsync();
@@ -37,7 +38,9 @@ export default function RootLayout() {
   }
 
   return (
+    <ThemeProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
+
       <Stack
         screenOptions={{
           headerShown: false,
@@ -53,5 +56,6 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
       </Stack>
     </GestureHandlerRootView>
+    </ThemeProvider>
   );
 }
