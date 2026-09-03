@@ -8,14 +8,14 @@ import { IconThemeId } from "@/shared/types/theme";
 type ThemeMode = "light" | "dark" | "system";
 
 interface ThemeContextType {
-  themeMode: ThemeMode;
   isDark: boolean;
-  themeColors: typeof Colors.light;
+  themeMode: ThemeMode;
   accentTheme: IconThemeId;
-  activeAccentColor: string;
+  activeThemeColor: string;
+  themeColors: typeof Colors.light & { primary: string };
   setThemeMode: (mode: ThemeMode) => void;
-  setAccentTheme: (theme: IconThemeId) => void;
   toggleNightMode: (value: boolean) => void;
+  setAccentTheme: (theme: IconThemeId) => void;
 }
 
 const STORAGE_KEY_MODE = "@chatme_theme_mode";
@@ -28,7 +28,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeMode, setThemeModeState] = useState<ThemeMode>("system");
   const [accentTheme, setAccentThemeState] = useState<IconThemeId>("green");
 
-  // Load saved preferences on launch
   useEffect(() => {
     (async () => {
       try {
@@ -37,20 +36,24 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
         if (savedMode) setThemeModeState(savedMode as ThemeMode);
         if (savedAccent) setAccentThemeState(savedAccent as IconThemeId);
-      } catch (e) {
-        console.warn("Failed to load theme preference", e);
+      } catch (error) {
+        console.warn("Failed to load saved theme:", error);
       }
     })();
   }, []);
 
-  // Compute active dark mode state
   const isDark =
     themeMode === "system"
       ? systemColorScheme === "dark"
       : themeMode === "dark";
 
-  const themeColors = Colors[isDark ? "dark" : "light"];
-  const activeAccentColor = ICON_CONFIGS[accentTheme].color;
+  const activeThemeColor = ICON_CONFIGS[accentTheme].color;
+
+  // Dynamically inject the selected accent theme color into themeColors.primary
+  const themeColors = {
+    ...Colors[isDark ? "dark" : "light"],
+    primary: activeThemeColor,
+  };
 
   const setThemeMode = (mode: ThemeMode) => {
     setThemeModeState(mode);
@@ -69,14 +72,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <ThemeContext.Provider
       value={{
-        themeMode,
         isDark,
-        themeColors,
+        themeMode,
         accentTheme,
-        activeAccentColor,
+        activeThemeColor,
+        themeColors,
         setThemeMode,
-        setAccentTheme,
         toggleNightMode,
+        setAccentTheme,
       }}
     >
       {children}
