@@ -18,6 +18,8 @@ import { Button } from "@/shared/components/Button";
 import { Colors } from "@/shared/constants/colors";
 import { COUNTRIES } from "@/features/auth/constants/countryData";
 import { useRouter } from "expo-router";
+// api
+import { useRequestOtp } from "@/features/auth/hooks/useRequestOtp";
 
 type Country = (typeof COUNTRIES)[number];
 
@@ -26,6 +28,7 @@ export default function PhoneAuthScreen() {
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
   const router = useRouter();
+  const requestOtpMutation = useRequestOtp();
 
   const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -41,13 +44,28 @@ export default function PhoneAuthScreen() {
 
   const handleNext = () => {
     if (!isValidNumber) return;
+
     const fullNumber = `${selectedCountry.code}${phoneNumber}`;
-    // console number for testing will be removed later 
-    // console.log("Proceeding with phone number:", fullNumber);
-    router.push({
-      pathname: "/(auth)/verify-otp",
-      params: { phone: fullNumber },
-    });
+
+    requestOtpMutation.mutate(
+      {
+        phoneNumber: fullNumber,
+      },
+      {
+        onSuccess: (data) => {
+          router.push({
+            pathname: "/(auth)/verify-otp",
+            params: {
+              challengeId: data.challengeId,
+              phone: fullNumber,
+            },
+          });
+        },
+        onError: (error) => {
+          console.error("OTP request failed:", error);
+        },
+      },
+    );
   };
 
   return (
@@ -195,9 +213,9 @@ export default function PhoneAuthScreen() {
           {/* Action Button */}
           <View style={styles.footer}>
             <Button
-              title="Next"
+              title={requestOtpMutation.isPending ? "Sending..." : "Next"}
               onPress={handleNext}
-              disabled={!isValidNumber}
+              disabled={!isValidNumber || requestOtpMutation.isPending}
               textWeight="bold"
             />
           </View>

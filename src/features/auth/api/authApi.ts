@@ -4,6 +4,10 @@ export type RequestOtpPayload = {
   phoneNumber: string;
 };
 
+export type ResendOtpPayload = {
+  challengeId: string;
+};
+
 export type RequestOtpResponse = {
   challengeId: string;
   phoneNumberMasked: string;
@@ -11,6 +15,7 @@ export type RequestOtpResponse = {
   resendInSeconds: number;
   codeLength: number;
 };
+
 
 export async function requestOtp(
   payload: RequestOtpPayload,
@@ -20,5 +25,16 @@ export async function requestOtp(
     payload,
   );
 
+  return response.data;
+}
+
+
+export async function resendOtp(
+  payload: ResendOtpPayload,
+): Promise<RequestOtpResponse> {
+  const response = await api.post<RequestOtpResponse>(
+    "/auth/otp/resend",
+    payload
+  );
   return response.data;
 }

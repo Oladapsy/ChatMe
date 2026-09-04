@@ -1,16 +1,16 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-    Keyboard,
-    KeyboardAvoidingView,
-    NativeSyntheticEvent,
-    Platform,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    useColorScheme,
-    View,
+  Keyboard,
+  KeyboardAvoidingView,
+  NativeSyntheticEvent,
+  Platform,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useColorScheme,
+  View,
 } from "react-native";
 
 import { BackButton } from "@/shared/components/BackButton";
@@ -19,13 +19,23 @@ import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 
+// to get the otp again and challenge id
+import { useResendOtp } from "@/features/auth/hooks/useResendOtp";
+
 const OTP_LENGTH = 4;
 const RESEND_TIMER = 30;
 
 export default function OtpVerificationScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ phone?: string }>();
+  const params = useLocalSearchParams<{
+    phone?: string;
+    challengeId?: string;
+  }>();
   const phone = params.phone || "unknown number";
+  const [currentChallengeId, setCurrentChallengeId] = useState(
+    params.challengeId,
+  );
+  const resendOtpMutation = useResendOtp();
 
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
@@ -79,12 +89,30 @@ export default function OtpVerificationScreen() {
 
   const isComplete = otp.every((digit) => digit !== "");
 
-  const handleResendCode = () => {
-    if (timer > 0) return;
-    setTimer(RESEND_TIMER);
-    setOtp(Array(OTP_LENGTH).fill(""));
-    inputRefs.current[0]?.focus();
-  };
+const handleResendCode = () => {
+  if (timer > 0 || !currentChallengeId) return;
+
+  console.log("Resending with challengeId:", currentChallengeId);
+
+  resendOtpMutation.mutate(
+    {
+      challengeId: currentChallengeId,
+    },
+    {
+      onSuccess: (data) => {
+        console.log("OTP resent:", data);
+
+        setCurrentChallengeId(data.challengeId);
+        setTimer(data.resendInSeconds);
+        setOtp(Array(OTP_LENGTH).fill(""));
+        inputRefs.current[0]?.focus();
+      },
+      onError: (error) => {
+        console.error("OTP resend failed:", error);
+      },
+    },
+  );
+};
 
   const handleVerify = () => {
     if (!isComplete) return;
@@ -193,6 +221,7 @@ export default function OtpVerificationScreen() {
               {timer === 0 && (
                 <TouchableOpacity
                   onPress={handleResendCode}
+                  disabled={resendOtpMutation.isPending}
                   activeOpacity={0.7}
                   style={styles.resendButton}
                 >
@@ -203,7 +232,9 @@ export default function OtpVerificationScreen() {
                     color={themeColors.primary}
                     align="center"
                   >
-                    Resend code
+                    {resendOtpMutation.isPending
+                      ? "Resending..."
+                      : "Resend code"}
                   </Typography>
                 </TouchableOpacity>
               )}
