@@ -21,21 +21,27 @@ import { Colors } from "@/shared/constants/colors";
 
 // to get the otp again and challenge id
 import { useResendOtp } from "@/features/auth/hooks/useResendOtp";
+import { useVerifyOtp } from "@/features/auth/hooks/useVerifyOtp";
+
+// storage
+import { saveSession } from "@/services/authStorage";
 
 const OTP_LENGTH = 4;
-const RESEND_TIMER = 30;
 
 export default function OtpVerificationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     phone?: string;
     challengeId?: string;
+    resendInSeconds?: string;
   }>();
   const phone = params.phone || "unknown number";
   const [currentChallengeId, setCurrentChallengeId] = useState(
     params.challengeId,
   );
+
   const resendOtpMutation = useResendOtp();
+  const verifyOtpMutation = useVerifyOtp();
 
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
@@ -43,7 +49,7 @@ export default function OtpVerificationScreen() {
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [focusedIndex, setFocusedIndex] = useState<number>(0);
-  const [timer, setTimer] = useState<number>(RESEND_TIMER);
+  const [timer, setTimer] = useState(Number(params.resendInSeconds ?? 0));
 
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
@@ -89,36 +95,67 @@ export default function OtpVerificationScreen() {
 
   const isComplete = otp.every((digit) => digit !== "");
 
-const handleResendCode = () => {
-  if (timer > 0 || !currentChallengeId) return;
+  const handleResendCode = () => {
+    if (timer > 0 || !currentChallengeId) return;
 
-  console.log("Resending with challengeId:", currentChallengeId);
+    console.log("Resending with challengeId:", currentChallengeId);
 
-  resendOtpMutation.mutate(
-    {
-      challengeId: currentChallengeId,
-    },
-    {
-      onSuccess: (data) => {
-        console.log("OTP resent:", data);
-
-        setCurrentChallengeId(data.challengeId);
-        setTimer(data.resendInSeconds);
-        setOtp(Array(OTP_LENGTH).fill(""));
-        inputRefs.current[0]?.focus();
+    resendOtpMutation.mutate(
+      {
+        challengeId: currentChallengeId,
       },
-      onError: (error) => {
-        console.error("OTP resend failed:", error);
+      {
+        onSuccess: (data) => {
+          console.log("OTP resent successfully:", data);
+
+          setCurrentChallengeId(data.challengeId);
+          setTimer(data.resendInSeconds);
+          setOtp(Array(OTP_LENGTH).fill(""));
+          inputRefs.current[0]?.focus();
+        },
+        onError: (error) => {
+          console.error("OTP resend failed:", error);
+        },
       },
-    },
-  );
-};
+    );
+  };
 
   const handleVerify = () => {
-    if (!isComplete) return;
+    if (!isComplete || !currentChallengeId) return;
+
     const code = otp.join("");
-    console.log("Verifying OTP:", code);
-    router.push("/(auth)/setup-profile");
+
+    console.log("Verifying OTP:", {
+      challengeId: currentChallengeId,
+      code,
+    });
+
+    verifyOtpMutation.mutate(
+      {
+        challengeId: currentChallengeId,
+        code,
+        device: {
+          name: "Chateo Mobile",
+          platform: Platform.OS === "ios" ? "ios" : "android",
+        },
+      },
+      {
+        onSuccess: async (data) => {
+          await saveSession({
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+            accessTokenExpiresAt:
+              Date.now() + data.accessTokenExpiresInSeconds * 1000,
+            refreshTokenExpiresAt:
+              Date.now() + data.refreshTokenExpiresInSeconds * 1000,
+          });
+          router.replace("/(auth)/setup-profile");
+        },
+        onError: (error) => {
+          console.error("OTP verification failed:", error);
+        },
+      },
+    );
   };
 
   return (
@@ -244,9 +281,9 @@ const handleResendCode = () => {
           {/* Action Button */}
           <View style={styles.footer}>
             <Button
-              title="Next"
+              title={verifyOtpMutation.isPending ? "Verifying..." : "Next"}
               onPress={handleVerify}
-              disabled={!isComplete}
+              disabled={!isComplete || verifyOtpMutation.isPending}
               textWeight="bold"
             />
           </View>

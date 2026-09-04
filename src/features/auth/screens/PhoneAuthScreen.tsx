@@ -58,6 +58,7 @@ export default function PhoneAuthScreen() {
             params: {
               challengeId: data.challengeId,
               phone: fullNumber,
+              resendInSeconds: String(data.resendInSeconds),
             },
           });
         },

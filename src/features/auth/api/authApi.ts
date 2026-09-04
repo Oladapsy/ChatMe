@@ -16,6 +16,32 @@ export type RequestOtpResponse = {
   codeLength: number;
 };
 
+export type VerifyOtpPayload = {
+  challengeId: string;
+  code: string;
+  device: {
+    name: string;
+    platform: "ios" | "android" | "web" | "unknown";
+  };
+};
+
+export type VerifyOtpUser = {
+  id: string;
+  phoneNumber: string;
+  displayName: string;
+  avatarUrl: string | null;
+  profileComplete: boolean;
+  createdAt: string;
+};
+
+export type VerifyOtpResponse = {
+  accessToken: string;
+  accessTokenExpiresInSeconds: number;
+  refreshToken: string;
+  refreshTokenExpiresInSeconds: number;
+  user: VerifyOtpUser;
+};
+
 
 export async function requestOtp(
   payload: RequestOtpPayload,
@@ -34,7 +60,19 @@ export async function resendOtp(
 ): Promise<RequestOtpResponse> {
   const response = await api.post<RequestOtpResponse>(
     "/auth/otp/resend",
-    payload
+    payload,
   );
+
+  return response.data;
+}
+
+export async function verifyOtp(
+  payload: VerifyOtpPayload,
+): Promise<VerifyOtpResponse> {
+  const response = await api.post<VerifyOtpResponse>(
+    "/auth/otp/verify",
+    payload,
+  );
+
   return response.data;
 }
