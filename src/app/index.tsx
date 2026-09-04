@@ -4,13 +4,29 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PhoneAuthScreen from "@/features/auth/screens/PhoneAuthScreen";
 import { Colors } from "@/shared/constants/colors";
+import { api } from "@/services/api";
+import axios from "axios";
 
 export default function Index() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
+  // testing endpoint
+  async function checkHealth() {
+    try {
+      console.log("Testing API...");
+
+      const response = await api.get("/health");
+
+      console.log("Health response:", response.data);
+    } catch (error) {
+      console.error("Health check failed:", error);
+    }
+  }
+
   useEffect(() => {
     checkOnboarding();
+    checkHealth();
   }, []);
 
   const checkOnboarding = async () => {
