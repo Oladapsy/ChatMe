@@ -50,6 +50,13 @@
         }
       ],
       [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your friends.",
@@ -72,10 +79,19 @@
       [
         "@variant-systems/expo-dynamic-app-icon",
         {
-          "green": { "image": "./assets/images/appIcons/greenIcon.png", "prerender": true },
-          "blue": { "image": "./assets/images/appIcons/blueIcon.png" },
-          "red": { "image": "./assets/images/appIcons/redIcon.png" },
-          "orange": { "image": "./assets/images/appIcons/orangeIcon.png" }
+          "green": {
+            "image": "./assets/images/appIcons/greenIcon.png",
+            "prerender": true
+          },
+          "blue": {
+            "image": "./assets/images/appIcons/blueIcon.png"
+          },
+          "red": {
+            "image": "./assets/images/appIcons/redIcon.png"
+          },
+          "orange": {
+            "image": "./assets/images/appIcons/orangeIcon.png"
+          }
         }
       ],
       [
@@ -87,7 +103,8 @@
           "barcodeScannerEnabled": true
         }
       ],
-      "expo-image"
+      "expo-image",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
