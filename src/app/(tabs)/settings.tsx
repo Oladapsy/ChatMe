@@ -26,11 +26,15 @@ import StorageIcon from "@/assets/icons/settings/storage.svg";
 import FaqIcon from "@/assets/icons/settings/faq.svg";
 import LogoutIcon from "@/assets/icons/settings/logout.svg";
 
+// logout function
+import { useLogout } from "@/features/auth/hooks/useLogout";
+
 export default function SettingsScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
+  const logoutMutation = useLogout();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
@@ -42,7 +46,7 @@ export default function SettingsScreen() {
   };
 
   const handleLogout = () => {
-    console.log("Logout triggered");
+    logoutMutation.mutate();
   };
 
   return (

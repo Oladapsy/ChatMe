@@ -108,3 +108,11 @@ export async function updateMe(payload: UpdateMePayload): Promise<MeUser> {
 
   return response.data;
 }
+
+
+// Logout
+export async function logout(refreshToken: string): Promise<void> {
+  await api.post("/auth/logout", {
+    refreshToken,
+  });
+}
