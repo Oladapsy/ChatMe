@@ -15,7 +15,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function RootLayout() {
-  const { isDark, themeColors } = useAppTheme();
+  const { themeColors } = useAppTheme();
 
   const { isInitializing } = useInitializeAuth();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -41,42 +41,40 @@ export default function RootLayout() {
     "SFProDisplay-UltralightItalic": require("@/assets/fonts/SFPRODISPLAYULTRALIGHTITALIC.OTF"),
   });
 
+  const isReady = (loaded || error) && !isInitializing;
+
   useEffect(() => {
-    if (loaded || error) {
+    if (isReady) {
       SplashScreen.hideAsync();
     }
-  }, [loaded, error]);
+  }, [isReady]);
 
-  if (!loaded && !error) {
-    return null;
-  }
-
-  if (isInitializing) {
+  if (!isReady) {
     return null;
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: themeColors.background },
-            }}
-          >
-            <Stack.Protected guard={!isAuthenticated}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="onboarding" />
-              <Stack.Screen name="(auth)/verify-otp" />
-              <Stack.Screen name="(auth)/setup-profile" />
-              <Stack.Screen name="(auth)/upload-photo" />
-              <Stack.Screen name="(auth)/setup-pin" />
-            </Stack.Protected>
-            <Stack.Protected guard={isAuthenticated}>
-              <Stack.Screen name="(tabs)" />
-            </Stack.Protected>
-          </Stack>
-        </GestureHandlerRootView>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: themeColors.background },
+          }}
+        >
+          <Stack.Protected guard={!isAuthenticated}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="onboarding" />
+            <Stack.Screen name="(auth)/verify-otp" />
+            <Stack.Screen name="(auth)/setup-profile" />
+            <Stack.Screen name="(auth)/upload-photo" />
+            <Stack.Screen name="(auth)/setup-pin" />
+          </Stack.Protected>
+          <Stack.Protected guard={isAuthenticated}>
+            <Stack.Screen name="(tabs)" />
+          </Stack.Protected>
+        </Stack>
+      </GestureHandlerRootView>
     </QueryClientProvider>
   );
 }

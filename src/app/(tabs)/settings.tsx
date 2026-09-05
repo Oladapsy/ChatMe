@@ -43,15 +43,36 @@ export default function SettingsScreen() {
   // Mock Profile Data
   if (isPending) {
     return (
-      <View>
+      <MySafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: themeColors.settingsBg,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <ActivityIndicator color={themeColors.primary} />
-      </View>
+      </MySafeAreaView>
     );
   }
 
   if (isError) {
     console.log("Failed to fetch user:", error);
-    return null;
+
+    return (
+      <MySafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: themeColors.settingsBg,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Typography color={themeColors.text}>
+          Failed to load your profile.
+        </Typography>
+      </MySafeAreaView>
+    );
   }
 
   const handleLogout = () => {
