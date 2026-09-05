@@ -51,10 +51,17 @@ export type MeUser = {
   createdAt: string;
 };
 
-
 export type UpdateMePayload = {
   displayName?: string;
   avatarUrl?: string | null;
+};
+
+export type RefreshResponse = {
+  accessToken: string;
+  accessTokenExpiresInSeconds: number;
+  refreshToken: string;
+  refreshTokenExpiresInSeconds: number;
+  user: MeUser;
 };
 
 export async function requestOtp(
@@ -67,7 +74,6 @@ export async function requestOtp(
 
   return response.data;
 }
-
 
 export async function resendOtp(
   payload: ResendOtpPayload,
@@ -97,9 +103,7 @@ export async function getMe(): Promise<MeUser> {
   return response.data;
 }
 
-export async function updateMe(
-  payload: UpdateMePayload,
-): Promise<MeUser> {
+export async function updateMe(payload: UpdateMePayload): Promise<MeUser> {
   const response = await api.patch<MeUser>("/me", payload);
 
   return response.data;
