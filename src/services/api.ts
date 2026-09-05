@@ -23,6 +23,7 @@ let refreshPromise: Promise<void> | null = null;
 // Add access token to every request
 api.interceptors.request.use(async (config) => {
   const accessToken = await getAccessToken();
+  // const accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NmQ5YmZmYS0wZTdhLTQzN2MtYWZiNy03ZDA0ZjVjNjA3ZGYiLCJzaWQiOiIwOGUxYzE5My02NTcxLTQxMmMtOWVmNy02OGQ0ZmFmNTRjMmYiLCJwcm9maWxlQ29tcGxldGUiOmZhbHNlLCJpYXQiOjE3ODg1OTEzOTAsImV4cCI6MTc4ODU5MjI5MCwiYXVkIjoiY2hhdGVvLW1vYmlsZSIsImlzcyI6ImNoYXRlby1hcGkifQ.nnj1IVS0FPSalPwyiATcx7G31dPhXsfGVb3w2cJK1UE"
 
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
@@ -37,59 +38,73 @@ api.interceptors.response.use(
     return response;
   },
 
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
+async (error: AxiosError) => {
+  console.log("RESPONSE ERROR:", error.response?.status);
+
+  const originalRequest =
+    error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
 
-    // Only handle 401 errors
-    if (error.response?.status !== 401) {
-      return Promise.reject(error);
-    }
+  if (error.response?.status !== 401) {
+    return Promise.reject(error);
+  }
 
-    // Don't retry the same request more than once
-    if (originalRequest._retry) {
-      return Promise.reject(error);
-    }
+  console.log("401 DETECTED — attempting refresh");
 
-    originalRequest._retry = true;
+  if (originalRequest._retry) {
+    console.log("Already retried — stopping");
+    return Promise.reject(error);
+  }
 
-    try {
-      const refreshToken = await getRefreshToken();
+  originalRequest._retry = true;
 
-      if (!refreshToken) {
-        await clearSession();
-        return Promise.reject(error);
-      }
+  try {
+    const refreshToken = await getRefreshToken();
 
-      // If another request is already refreshing,
-      // wait for that refresh instead of starting another one.
-      if (!refreshPromise) {
-        refreshPromise = refreshSession().then(() => {
-          refreshPromise = null;
-        });
-      }
-
-      await refreshPromise;
-
-      // Get the newly saved access token
-      const newAccessToken = await getAccessToken();
-
-      if (!newAccessToken) {
-        throw new Error("Failed to get new access token");
-      }
-
-      // Put the new token on the original request
-      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-      // Retry the original request
-      return api(originalRequest);
-    } catch (refreshError) {
-      refreshPromise = null;
-
+    if (!refreshToken) {
+      console.log("NO REFRESH TOKEN");
       await clearSession();
-
-      return Promise.reject(refreshError);
+      return Promise.reject(error);
     }
-  },
+
+    console.log("REFRESH TOKEN FOUND");
+
+    if (!refreshPromise) {
+      console.log("STARTING TOKEN REFRESH");
+
+      refreshPromise = refreshSession().then(() => {
+        console.log("TOKEN REFRESH SUCCESSFUL");
+        refreshPromise = null;
+      });
+    } else {
+      console.log("REFRESH ALREADY IN PROGRESS — WAITING");
+    }
+
+    await refreshPromise;
+
+    const newAccessToken = await getAccessToken();
+
+    // console.log("NEW ACCESS TOKEN:", newAccessToken);
+
+    if (!newAccessToken) {
+      throw new Error("Failed to get new access token");
+    }
+
+    originalRequest.headers.Authorization =
+      `Bearer ${newAccessToken}`;
+
+    console.log("RETRYING ORIGINAL REQUEST");
+
+    return api(originalRequest);
+  } catch (refreshError) {
+    console.log("TOKEN REFRESH FAILED:", refreshError);
+
+    refreshPromise = null;
+
+    await clearSession();
+
+    return Promise.reject(refreshError);
+  }
+}
 );
