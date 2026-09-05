@@ -5,11 +5,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import PhoneAuthScreen from "@/features/auth/screens/PhoneAuthScreen";
 import { Colors } from "@/shared/constants/colors";
 import { api } from "@/services/api";
-import axios from "axios";
+import { useInitializeAuth } from "@/features/auth/hooks/useInitializeAuth";
 
 export default function Index() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+
+  const { isInitializing: isAuthInitializing, isAuthenticated } =
+    useInitializeAuth();
 
   // testing endpoint
   async function checkHealth() {
@@ -43,13 +46,16 @@ export default function Index() {
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.light.primary} />
-      </View>
-    );
-  }
+  if (isAuthInitializing) {
+  return (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator
+        size="large"
+        color={Colors.light.primary}
+      />
+    </View>
+  );
+}
 
   return <PhoneAuthScreen />;
 }
