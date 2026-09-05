@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   useColorScheme,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -28,6 +29,7 @@ import LogoutIcon from "@/assets/icons/settings/logout.svg";
 
 // logout function
 import { useLogout } from "@/features/auth/hooks/useLogout";
+import { useMe } from "@/features/auth/hooks/useMe";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -37,13 +39,21 @@ export default function SettingsScreen() {
   const logoutMutation = useLogout();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const { data: profile, isPending, isError, error } = useMe();
 
   // Mock Profile Data
-  const profile = {
-    name: "Roberto William",
-    phone: "+61-827-680-673",
-    avatar: "https://i.pravatar.cc/300?img=12",
-  };
+  if (isPending) {
+    return (
+      <View>
+        <ActivityIndicator color={themeColors.primary} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    console.log("Failed to fetch user:", error);
+    return null;
+  }
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -72,17 +82,24 @@ export default function SettingsScreen() {
       {/* Profile Card Header */}
       <View style={styles.scrollContent}>
         <View style={styles.profileSection}>
-          <Image source={{ uri: profile.avatar }} style={styles.avatar} />
+          <Image
+            source={
+              profile.avatarUrl
+                ? { uri: profile.avatarUrl }
+                : require("@/assets/images/default-avatar.png")
+            }
+            style={styles.avatar}
+          />
           <View style={styles.profileDetails}>
             <Typography size={20} weight="bold" color={themeColors.text}>
-              {profile.name}
+              {profile.displayName || "no name"}
             </Typography>
             <Typography
               size={15}
               color={themeColors.textSecondary}
               style={{ marginTop: 4 }}
             >
-              {profile.phone}
+              {profile.phoneNumber ? profile.phoneNumber : "no phone"}
             </Typography>
           </View>
           <TouchableOpacity
@@ -134,7 +151,7 @@ export default function SettingsScreen() {
               color={themeColors.primary}
             />
           }
-          label="Appearence"
+          label="Appearance"
           onPress={() => router.push("/(settings)/appearance")}
           isDark={isDark}
           themeColors={themeColors}

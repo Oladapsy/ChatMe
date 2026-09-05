@@ -6,6 +6,7 @@ import {
   ScrollView,
   useColorScheme,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -20,6 +21,8 @@ import { CountryPhoneInput } from "@/features/contacts/components/CountryPhoneIn
 
 import UserIcon from "@/assets/icons/shared/user.svg";
 import { Button } from "@/shared/components/Button";
+import { useMe } from "@/features/auth/hooks/useMe";
+import { useUpdateMe } from "@/features/auth/hooks/useUpdateMe";
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -27,16 +30,35 @@ export default function EditProfileScreen() {
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
+  const { data: user, isPending, isError, error } = useMe();
+  const updateMeMutation = useUpdateMe();
+
+  if (isPending) {
+    return <ActivityIndicator color={themeColors.primary} />;
+  }
+  
+  if (isError) {
+    console.log("Failed to fetch user:", error);
+    return null;
+  }
+
   // Mock initial profile state (replace with your global state or auth hook)
   const [avatarUri, setAvatarUri] = useState<string | undefined>(
-    "https://i.pravatar.cc/300?img=12",
+    user?.avatarUrl || undefined,
   );
-  const [name, setName] = useState("Roberto William");
-  const [phone, setPhone] = useState("85-830-544-382");
+  const [name, setName] = useState(user?.displayName || undefined);
+  const [phone, setPhone] = useState(user?.phoneNumber || "0000000000");
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const isValid = name.trim().length > 0 && phone.trim().length > 0;
+  // remove the +234 or other country code if present in the phone number
+  const handlePhoneChange = (text: string) => {
+    if (text.startsWith("+234")) {
+      setPhone(text.slice(4));
+    } else {
+      setPhone(text);
+    }}
 
   const handleSave = async () => {
     if (!isValid || saving) return;
