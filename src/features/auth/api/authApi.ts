@@ -42,6 +42,20 @@ export type VerifyOtpResponse = {
   user: VerifyOtpUser;
 };
 
+export type MeUser = {
+  id: string;
+  phoneNumber: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  profileComplete: boolean;
+  createdAt: string;
+};
+
+
+export type UpdateMePayload = {
+  displayName?: string;
+  avatarUrl?: string | null;
+};
 
 export async function requestOtp(
   payload: RequestOtpPayload,
@@ -73,6 +87,20 @@ export async function verifyOtp(
     "/auth/otp/verify",
     payload,
   );
+
+  return response.data;
+}
+
+export async function getMe(): Promise<MeUser> {
+  const response = await api.get<MeUser>("/me");
+
+  return response.data;
+}
+
+export async function updateMe(
+  payload: UpdateMePayload,
+): Promise<MeUser> {
+  const response = await api.patch<MeUser>("/me", payload);
 
   return response.data;
 }

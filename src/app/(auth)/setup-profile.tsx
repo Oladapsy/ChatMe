@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -18,6 +18,8 @@ import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 
 import UserIcon from "@/assets/icons/profile/user.svg";
+import { useMe } from "@/features/auth/hooks/useMe";
+import { useUpdateMe } from "@/features/auth/hooks/useUpdateMe";
 
 export default function SetupProfileScreen() {
   const router = useRouter();
@@ -29,12 +31,45 @@ export default function SetupProfileScreen() {
   const [isFocused, setIsFocused] = useState(false);
 
   const isValidName = name.trim().length >= 2;
+  //data fetching
+  const { data: user, isPending, isError, error } = useMe();
+  const updateMeMutation = useUpdateMe();
+
+  useEffect(() => {
+    if (user?.displayName) {
+      setName(user.displayName);
+    }
+  }, [user]);
+
+  if (isPending) {
+    return null;
+  }
+
+  if (isError) {
+    console.log("Failed to fetch user:", error);
+    return null;
+  }
+  console.log("USER:", user);
 
   const handleNext = () => {
-    if (!isValidName) return;
-    console.log("Saving user name:", name.trim());
-    router.replace("/(auth)/upload-photo");
+    if (!isValidName || updateMeMutation.isPending) return;
+
+    updateMeMutation.mutate(
+      {
+        displayName: name.trim(),
+      },
+      {
+        onSuccess: () => {
+          router.replace("/(auth)/upload-photo");
+        },
+        onError: (error) => {
+          console.error("Failed to update profile:", error);
+        },
+      },
+    );
   };
+
+  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -119,9 +154,9 @@ export default function SetupProfileScreen() {
           {/* Action Button */}
           <View style={styles.footer}>
             <Button
-              title="Next"
+              title={updateMeMutation.isPending ? "Saving..." : "Next"}
               onPress={handleNext}
-              disabled={!isValidName}
+              disabled={!isValidName || updateMeMutation.isPending}
               textWeight="bold"
             />
           </View>

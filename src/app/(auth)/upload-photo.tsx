@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -23,6 +23,11 @@ import PlaceholderGraphic from "@/assets/icons/auth/Placeholder.svg";
 import AddPhotoIcon from "@/assets/icons/auth/add-a-photo.svg";
 import UploadingBg from "@/assets/icons/auth/uploading.svg";
 
+//test cloudinary
+import { uploadImage } from "@/services/cloudinary";
+import { useUpdateMe } from "@/features/auth/hooks/useUpdateMe";
+import { useMe } from "@/features/auth/hooks/useMe";
+
 type UploadStatus = "idle" | "uploading" | "success";
 
 export default function UploadPhotoScreen() {
@@ -32,13 +37,22 @@ export default function UploadPhotoScreen() {
   const themeColors = Colors[isDark ? "dark" : "light"];
 
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [showPickerModal, setShowPickerModal] = useState(false);
+  const updateMeMutation = useUpdateMe();
+  const { data: user } = useMe();
+
+  useEffect(() => {
+    if (user?.avatarUrl) {
+      setUploadedImageUrl(user.avatarUrl);
+      setStatus("success");
+    }
+  }, [user]);
 
   const handleTakePhone = async () => {
     setShowPickerModal(false);
-    const permissionResult =
-      await ImagePicker.requestCameraPermissionsAsync();
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permissionResult.granted) {
       alert("Permission to access camera is required!");
@@ -83,22 +97,46 @@ export default function UploadPhotoScreen() {
     processImageUpload(uri);
   };
 
-  const processImageUpload = (uri: string) => {
-    setImageUri(uri);
-    setStatus("uploading");
+  const processImageUpload = async (uri: string) => {
+    try {
+      setImageUri(uri);
+      setStatus("uploading");
 
-    setTimeout(() => {
+      const result = await uploadImage(uri);
+
+      const imageUrl = result.secure_url;
+
+      console.log("Cloudinary upload successful");
+      console.log("Image URL:", imageUrl);
+
+      setUploadedImageUrl(imageUrl);
+
+      await updateMeMutation.mutateAsync({
+        avatarUrl: imageUrl,
+      });
+
       setStatus("success");
-    }, 2000);
+    } catch (error) {
+      console.error("Photo upload failed:", error);
+      setStatus("idle");
+    }
   };
 
-  const handleRemovePhoto = () => {
+ const handleRemovePhoto = async () => {
+  try {
+    await updateMeMutation.mutateAsync({
+      avatarUrl: null,
+    });
+
     setImageUri(null);
+    setUploadedImageUrl(null);
     setStatus("idle");
-  };
+  } catch (error) {
+    console.error("Failed to remove photo:", error);
+  }
+};
 
   const handleNext = () => {
-    console.log("Uploaded photo URI:", imageUri);
     router.replace("/(tabs)");
   };
 
@@ -189,7 +227,7 @@ export default function UploadPhotoScreen() {
               </View>
             )}
 
-            {status === "success" && imageUri && (
+            {status === "success" && (uploadedImageUrl || imageUri) && (
               <View style={styles.successContainer}>
                 <TouchableOpacity
                   style={styles.avatarWrapper}
@@ -197,7 +235,9 @@ export default function UploadPhotoScreen() {
                   activeOpacity={0.8}
                 >
                   <Image
-                    source={{ uri: imageUri }}
+                    source={{
+                      uri: uploadedImageUrl ?? imageUri ?? undefined,
+                    }}
                     style={styles.avatarImage}
                   />
                   <View
