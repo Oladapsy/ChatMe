@@ -23,7 +23,7 @@ export default function RootLayout() {
   const { isInitializing } = useInitializeAuth();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  
-  // creating tanstack query client
+  // creating tanstack query client!
   const [queryClient] = useState(
     () =>
       new QueryClient({
