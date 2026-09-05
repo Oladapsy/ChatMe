@@ -182,7 +182,7 @@ export function ChatInputBar({
               {
                 backgroundColor: canSend
                   ? themeColors.primary
-                  : "rgba(16, 185, 129, 0.4)",
+                  : themeColors.primary + "80",
               },
             ]}
             onPress={onSendText}

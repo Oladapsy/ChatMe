@@ -32,12 +32,16 @@ export function UserQrCodeScreen({
   onBack,
   onScanQrPress,
 }: Props) {
-    const { isDark, themeColors } = useAppTheme();
-
+  const { isDark, themeColors } = useAppTheme();
 
   return (
-    <MySafeAreaView color={isDark? themeColors.qrBg: themeColors.primary}>
-      <View style={[styles.container, { backgroundColor: themeColors.qrBg }]}>
+    <MySafeAreaView color={isDark ? themeColors.qrBg : themeColors.primary}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: isDark ? themeColors.qrBg : themeColors.primary },
+        ]}
+      >
         {/* Top Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.iconBtn} onPress={onBack}>
