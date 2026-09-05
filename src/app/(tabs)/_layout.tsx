@@ -33,6 +33,7 @@ export default function TabLayout() {
           marginTop: 4,
         },
       }}
+      initialRouteName="index"
     >
       <Tabs.Screen
         name="call"

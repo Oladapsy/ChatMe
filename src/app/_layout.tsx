@@ -12,10 +12,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // Prevent auto-hiding until fonts are fully loaded
 SplashScreen.preventAutoHideAsync();
 
+// auth user
+import { useInitializeAuth } from "@/features/auth/hooks/useInitializeAuth";
+import { useAuthStore } from "@/store/authStore";
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const themeColors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
+  const { isInitializing } = useInitializeAuth();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   // creating tanstack query client
   const [queryClient] = useState(
     () =>
@@ -47,6 +53,10 @@ export default function RootLayout() {
     return null;
   }
 
+  if (isInitializing) {
+    return null;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -57,13 +67,17 @@ export default function RootLayout() {
               contentStyle: { backgroundColor: themeColors.background },
             }}
           >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="onboarding" />
-            <Stack.Screen name="(auth)/verify-otp" />
-            <Stack.Screen name="(auth)/setup-profile" />
-            <Stack.Screen name="(auth)/upload-photo" />
-            <Stack.Screen name="(auth)/setup-pin" />
-            <Stack.Screen name="(tabs)" />
+            <Stack.Protected guard={!isAuthenticated}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="onboarding" />
+              <Stack.Screen name="(auth)/verify-otp" />
+              <Stack.Screen name="(auth)/setup-profile" />
+              <Stack.Screen name="(auth)/upload-photo" />
+              <Stack.Screen name="(auth)/setup-pin" />
+            </Stack.Protected>
+            <Stack.Protected guard={isAuthenticated}>
+              <Stack.Screen name="(tabs)" />
+            </Stack.Protected>
           </Stack>
         </GestureHandlerRootView>
       </ThemeProvider>

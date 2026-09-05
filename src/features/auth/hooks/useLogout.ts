@@ -27,6 +27,7 @@ export function useLogout() {
       await clearSession();
 
       queryClient.clear();
+      useAuthStore.getState().setAuthenticated(false);
 
       console.log("LOGOUT: complete");
     },

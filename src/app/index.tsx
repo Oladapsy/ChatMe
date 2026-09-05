@@ -4,46 +4,14 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PhoneAuthScreen from "@/features/auth/screens/PhoneAuthScreen";
 import { Colors } from "@/shared/constants/colors";
-import { api } from "@/services/api";
-import { useInitializeAuth } from "@/features/auth/hooks/useInitializeAuth";
-import { useAuthStore } from "@/store/authStore";
 
 export default function Index() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
-  const { isInitializing: isAuthInitializing } = useInitializeAuth();
-
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  // testing endpoint
-  async function checkHealth() {
-    try {
-      console.log("Testing API...");
-
-      const response = await api.get("/health");
-
-      console.log("Health response:", response.data);
-    } catch (error) {
-      console.error("Health check failed:", error);
-    }
-  }
-
   useEffect(() => {
     checkOnboarding();
-    checkHealth();
   }, []);
-
-  useEffect(() => {
-    if (isAuthInitializing) {
-      return;
-    }
-    isAuthInitializing && console.log("Auth is initializing...");
-    isAuthenticated && console.log("User is authenticated");
-
-    if (isAuthenticated) {
-      router.replace("/(tabs)");
-    }
-  }, [isAuthInitializing, isAuthenticated]);
 
   const checkOnboarding = async () => {
     try {
@@ -52,14 +20,13 @@ export default function Index() {
         router.replace("/onboarding");
       } else {
         setLoading(false);
-        // router.replace("/(tabs)");
       }
     } catch {
       setLoading(false);
     }
   };
 
-  if (isAuthInitializing) {
+  if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.light.primary} />

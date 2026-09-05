@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
+
 import { getRefreshToken } from "@/services/authStorage";
 import { getMe } from "@/features/auth/api/authApi";
-// store import
 import { useAuthStore } from "@/store/authStore";
 
 export function useInitializeAuth() {
@@ -14,14 +14,27 @@ export function useInitializeAuth() {
 
         const refreshToken = await getRefreshToken();
 
+        console.log("AUTH INIT: refresh token exists?", !!refreshToken);
+
         if (!refreshToken) {
+          console.log("AUTH INIT: no refresh token");
+
           useAuthStore.getState().setAuthenticated(false);
           return;
         }
 
-        await getMe();
+        console.log("AUTH INIT: calling /me...");
+
+        const user = await getMe();
+
+        console.log("AUTH INIT: /me successful", user);
+
         useAuthStore.getState().setAuthenticated(true);
-      } catch {
+
+        console.log("AUTH INIT: authenticated = true");
+      } catch (error) {
+        console.log("AUTH INIT: failed", error);
+
         useAuthStore.getState().setAuthenticated(false);
       } finally {
         setIsInitializing(false);
