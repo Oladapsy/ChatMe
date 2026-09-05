@@ -32,6 +32,18 @@ export default function Index() {
     checkHealth();
   }, []);
 
+  useEffect(() => {
+    if (isAuthInitializing) {
+      return;
+    }
+    isAuthInitializing && console.log("Auth is initializing...");
+    isAuthenticated && console.log("User is authenticated");
+
+    if (isAuthenticated) {
+      router.replace("/(tabs)");
+    }
+  }, [isAuthInitializing, isAuthenticated]);
+
   const checkOnboarding = async () => {
     try {
       const hasSeen = await AsyncStorage.getItem("@has_seen_onboarding");
@@ -47,15 +59,12 @@ export default function Index() {
   };
 
   if (isAuthInitializing) {
-  return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator
-        size="large"
-        color={Colors.light.primary}
-      />
-    </View>
-  );
-}
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+      </View>
+    );
+  }
 
   return <PhoneAuthScreen />;
 }
