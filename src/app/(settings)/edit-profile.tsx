@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
-  TouchableOpacity,
   ScrollView,
   useColorScheme,
   Alert,
@@ -11,7 +10,6 @@ import {
 import { useRouter } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
-import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { BackButton } from "@/shared/components/BackButton";
 
@@ -21,83 +19,134 @@ import { CountryPhoneInput } from "@/features/contacts/components/CountryPhoneIn
 
 import UserIcon from "@/assets/icons/shared/user.svg";
 import { Button } from "@/shared/components/Button";
+
 import { useMe } from "@/features/auth/hooks/useMe";
 import { useUpdateMe } from "@/features/auth/hooks/useUpdateMe";
+import { uploadImage } from "@/services/cloudinary";
 
 export default function EditProfileScreen() {
   const router = useRouter();
+
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const themeColors = Colors[isDark ? "dark" : "light"];
 
+  // Get current profile
   const { data: user, isPending, isError, error } = useMe();
+
+  // Update profile mutation
   const updateMeMutation = useUpdateMe();
 
-  if (isPending) {
-    return <ActivityIndicator color={themeColors.primary} />;
-  }
-  
-  if (isError) {
-    console.log("Failed to fetch user:", error);
-    return null;
-  }
+  // Form state
+  const [avatarUri, setAvatarUri] = useState<string | undefined>();
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
 
-  // Mock initial profile state (replace with your global state or auth hook)
-  const [avatarUri, setAvatarUri] = useState<string | undefined>(
-    user?.avatarUrl || undefined,
-  );
-  const [name, setName] = useState(user?.displayName || undefined);
-  const [phone, setPhone] = useState(user?.phoneNumber || "0000000000");
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
 
-  const isValid = name.trim().length > 0 && phone.trim().length > 0;
-  // remove the +234 or other country code if present in the phone number
-  const handlePhoneChange = (text: string) => {
-    if (text.startsWith("+234")) {
-      setPhone(text.slice(4));
-    } else {
-      setPhone(text);
-    }}
+  // Populate form when user data arrives
+  useEffect(() => {
+    if (user) {
+      setAvatarUri(user.avatarUrl ?? undefined);
+      setName(user.displayName ?? "");
+
+      const phoneNumber = user.phoneNumber ?? "";
+
+      if (phoneNumber.startsWith("+234")) {
+        setPhone(phoneNumber.slice(4));
+      } else {
+        setPhone(phoneNumber);
+      }
+    }
+  }, [user]);
+
+  if (isPending) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator color={themeColors.primary} />
+      </View>
+    );
+  }
+
+  if (isError || !user) {
+    console.log("Failed to fetch user:", error);
+
+    return (
+      <View style={styles.loadingContainer}>
+        <Button title="Go Back" onPress={() => router.back()} />
+      </View>
+    );
+  }
+
+  const isValid = name.trim().length > 3 && phone.trim().length > 5 && phone.trim().length < 15 ;
 
   const handleSave = async () => {
-    if (!isValid || saving) return;
+    if (!isValid || updateMeMutation.isPending) {
+      return;
+    }
 
-    setSaving(true);
     try {
-      // API or storage save operation goes here
-      console.log("Saving updated profile...", { avatarUri, name, phone });
+      let finalAvatarUrl = user.avatarUrl;
+
+      if (avatarUri && avatarUri !== user.avatarUrl) {
+        console.log("Uploading new avatar...");
+
+        const uploadResult = await uploadImage(avatarUri);
+
+        console.log("Cloudinary upload result:", uploadResult);
+
+        finalAvatarUrl = uploadResult.secure_url;
+
+        console.log("Final avatar URL:", finalAvatarUrl);
+      }
+
+      await updateMeMutation.mutateAsync({
+        displayName: name.trim(),
+        avatarUrl: finalAvatarUrl ?? null,
+      });
 
       router.back();
-    } catch (error) {
-      console.warn("Failed to update profile:", error);
-      Alert.alert("Error", "Could not update your profile. Please try again.");
-    } finally {
-      setSaving(false);
+    } catch (error: any) {
+      console.log("UPDATE PROFILE ERROR");
+      console.log("STATUS:", error.response?.status);
+      console.log("DATA:", error.response?.data);
+
+      Alert.alert(
+        "Error",
+        error.response?.data?.message ||
+          "Could not update your profile. Please try again.",
+      );
     }
   };
 
   return (
     <MySafeAreaView color={themeColors.headBg} edges={["top"]}>
-      <View style={{ flex: 1, backgroundColor: themeColors.background }}>
-        {/* 1. TOP HEADER GREEN BANNER */}
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: themeColors.background,
+        }}
+      >
+        {/* HEADER */}
         <View
-          style={[styles.topSection, { backgroundColor: themeColors.headBg }]}
+          style={[
+            styles.topSection,
+            {
+              backgroundColor: themeColors.headBg,
+            },
+          ]}
         >
           <View style={styles.header}>
             <BackButton showBorder={false} Iconcolor="white" />
           </View>
         </View>
 
-        {/* 2. OVERLAPPING AVATAR */}
+        {/* AVATAR */}
         <View style={styles.avatarAbsoluteWrapper}>
-          <AvatarPicker
-            uri={avatarUri}
-            onSelectImage={(uri) => setAvatarUri(uri)}
-          />
+          <AvatarPicker uri={avatarUri} onSelectImage={setAvatarUri} />
         </View>
 
-        {/* 3. EDIT PROFILE FORM */}
+        {/* FORM */}
         <View style={{ flex: 1 }}>
           <ScrollView
             contentContainerStyle={styles.formContent}
@@ -122,6 +171,7 @@ export default function EditProfileScreen() {
 
             <CountryPhoneInput
               value={phone}
+              editable={false}
               onChangeText={setPhone}
               onFocus={() => setFocusedInput("phone")}
               onBlur={() => setFocusedInput(null)}
@@ -129,11 +179,12 @@ export default function EditProfileScreen() {
             />
           </ScrollView>
 
+          {/* SAVE */}
           <View style={styles.footer}>
             <Button
               title="Save"
-              loading={saving}
-              disabled={!isValid || saving}
+              loading={updateMeMutation.isPending}
+              disabled={!isValid || updateMeMutation.isPending}
               onPress={handleSave}
               textWeight="bold"
             />
@@ -145,15 +196,23 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   topSection: {
     height: 140,
   },
+
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     height: 48,
   },
+
   avatarAbsoluteWrapper: {
     position: "absolute",
     top: 55,
@@ -163,11 +222,13 @@ const styles = StyleSheet.create({
     zIndex: 10,
     elevation: 10,
   },
+
   formContent: {
     paddingTop: 84,
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
+
   footer: {
     paddingHorizontal: 20,
     paddingBottom: 16,
