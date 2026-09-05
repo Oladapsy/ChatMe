@@ -1,26 +1,28 @@
 import { useEffect, useState } from "react";
 import { getRefreshToken } from "@/services/authStorage";
 import { getMe } from "@/features/auth/api/authApi";
+// store import
+import { useAuthStore } from "@/store/authStore";
 
 export function useInitializeAuth() {
   const [isInitializing, setIsInitializing] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     async function initialize() {
       try {
+        console.log("AUTH INIT: checking session...");
+
         const refreshToken = await getRefreshToken();
 
         if (!refreshToken) {
-          setIsAuthenticated(false);
+          useAuthStore.getState().setAuthenticated(false);
           return;
         }
 
         await getMe();
-
-        setIsAuthenticated(true);
+        useAuthStore.getState().setAuthenticated(true);
       } catch {
-        setIsAuthenticated(false);
+        useAuthStore.getState().setAuthenticated(false);
       } finally {
         setIsInitializing(false);
       }
@@ -31,6 +33,5 @@ export function useInitializeAuth() {
 
   return {
     isInitializing,
-    isAuthenticated,
   };
 }

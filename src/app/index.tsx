@@ -6,14 +6,15 @@ import PhoneAuthScreen from "@/features/auth/screens/PhoneAuthScreen";
 import { Colors } from "@/shared/constants/colors";
 import { api } from "@/services/api";
 import { useInitializeAuth } from "@/features/auth/hooks/useInitializeAuth";
+import { useAuthStore } from "@/store/authStore";
 
 export default function Index() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
-  const { isInitializing: isAuthInitializing, isAuthenticated } =
-    useInitializeAuth();
+  const { isInitializing: isAuthInitializing } = useInitializeAuth();
 
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   // testing endpoint
   async function checkHealth() {
     try {
