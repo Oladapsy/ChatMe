@@ -3,7 +3,6 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import BackIcon from "@/assets/icons/shared/chevron-left.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface ArchivedHeaderProps {
   title?: string;
@@ -22,9 +22,8 @@ export function ArchivedHeader({
   onBackPress,
 }: ArchivedHeaderProps) {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   const topHeaderBg = isDark ? themeColors.onboardingTop : themeColors.primary;
 

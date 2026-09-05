@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { StyleSheet, useColorScheme, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Swipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -8,7 +8,6 @@ import { SharedValue } from "react-native-reanimated";
 import { ChatListItem } from "@/features/chats/components/ChatListItem";
 import { SwipeActionButton } from "@/features/chats/components/SwipeActionButton";
 import { Chat } from "@/features/chats/types/chat";
-import { Colors } from "@/shared/constants/colors";
 
 // SVG Icons
 import ArchiveIcon from "@/assets/icons/chat/archive.svg";
@@ -16,6 +15,7 @@ import MoreIcon from "@/assets/icons/chat/more.svg";
 import MuteIcon from "@/assets/icons/chat/mute.svg";
 import PinIcon from "@/assets/icons/chat/pin.svg";
 import TrashIcon from "@/assets/icons/chat/trash.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface SwipeableChatRowProps {
   chat: Chat;
@@ -42,9 +42,8 @@ export function SwipeableChatRow({
 }: SwipeableChatRowProps) {
   const swipeableRef = useRef<SwipeableMethods>(null);
   const [isSwiped, setIsSwiped] = useState(false);
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+      const { isDark, themeColors } = useAppTheme();
+
 
   const closeSwipe = () => {
     swipeableRef.current?.close();

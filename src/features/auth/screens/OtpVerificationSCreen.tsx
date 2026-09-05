@@ -9,7 +9,6 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  useColorScheme,
   View,
 } from "react-native";
 
@@ -17,7 +16,6 @@ import { BackButton } from "@/shared/components/BackButton";
 import { Button } from "@/shared/components/Button";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 
 // to get the otp again and challenge id
 import { useResendOtp } from "@/features/auth/hooks/useResendOtp";
@@ -25,6 +23,7 @@ import { useVerifyOtp } from "@/features/auth/hooks/useVerifyOtp";
 
 // storage
 import { saveSession } from "@/services/authStorage";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 const OTP_LENGTH = 4;
 
@@ -43,9 +42,8 @@ export default function OtpVerificationScreen() {
   const resendOtpMutation = useResendOtp();
   const verifyOtpMutation = useVerifyOtp();
 
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { themeColors } = useAppTheme();
+
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [focusedIndex, setFocusedIndex] = useState<number>(0);

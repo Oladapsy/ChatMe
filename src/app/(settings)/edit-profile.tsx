@@ -3,7 +3,6 @@ import {
   StyleSheet,
   View,
   ScrollView,
-  useColorScheme,
   Alert,
   ActivityIndicator,
 } from "react-native";
@@ -23,13 +22,12 @@ import { Button } from "@/shared/components/Button";
 import { useMe } from "@/features/auth/hooks/useMe";
 import { useUpdateMe } from "@/features/auth/hooks/useUpdateMe";
 import { uploadImage } from "@/services/cloudinary";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function EditProfileScreen() {
   const router = useRouter();
 
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
 
   // Get current profile
   const { data: user, isPending, isError, error } = useMe();
@@ -78,7 +76,10 @@ export default function EditProfileScreen() {
     );
   }
 
-  const isValid = name.trim().length > 3 && phone.trim().length > 5 && phone.trim().length < 15 ;
+  const isValid =
+    name.trim().length > 3 &&
+    phone.trim().length > 5 &&
+    phone.trim().length < 15;
 
   const handleSave = async () => {
     if (!isValid || updateMeMutation.isPending) {
@@ -120,7 +121,10 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <MySafeAreaView color={themeColors.headBg} edges={["top"]}>
+    <MySafeAreaView
+      color={isDark ? themeColors.headBg : themeColors.primary}
+      edges={["top"]}
+    >
       <View
         style={{
           flex: 1,
@@ -132,7 +136,9 @@ export default function EditProfileScreen() {
           style={[
             styles.topSection,
             {
-              backgroundColor: themeColors.headBg,
+              backgroundColor: isDark
+                ? themeColors.headBg
+                : themeColors.primary,
             },
           ]}
         >

@@ -9,24 +9,22 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  useColorScheme,
 } from "react-native";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Button } from "@/shared/components/Button";
-import { Colors } from "@/shared/constants/colors";
 import { COUNTRIES } from "@/features/auth/constants/countryData";
 import { useRouter } from "expo-router";
 // api
 import { useRequestOtp } from "@/features/auth/hooks/useRequestOtp";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 type Country = (typeof COUNTRIES)[number];
 
 export default function PhoneAuthScreen() {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
   const router = useRouter();
   const requestOtpMutation = useRequestOtp();
 

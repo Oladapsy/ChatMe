@@ -5,10 +5,10 @@ import {
   StyleSheet,
   ActivityIndicator,
   ViewStyle,
-  useColorScheme,
 } from "react-native";
 import { Colors } from "@/shared/constants/colors";
 import { Typography, TypographyWeight } from "@/shared/components/Typography";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 export type ButtonVariant = "filled" | "outlined" | "text";
 
@@ -34,8 +34,7 @@ export function Button({
   onPress,
   ...props
 }: ButtonProps) {
-  const scheme = useColorScheme();
-  const themeColors = Colors[scheme === "dark" ? "dark" : "light"];
+  const { themeColors } = useAppTheme();
 
   const isFilled = variant === "filled";
   const isOutlined = variant === "outlined";

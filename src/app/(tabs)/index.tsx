@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { StyleSheet, View, FlatList, useColorScheme } from "react-native";
+import { StyleSheet, View, FlatList} from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -10,17 +10,16 @@ import { EmptyChatState } from "@/features/chats/components/EmptyChatState";
 import PinPromptModal from "@/features/security/components/PinPromptModal";
 import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 import { Chat } from "@/features/chats/types/chat";
-import { Colors } from "@/shared/constants/colors";
 
 // for the plus fab Menu
 import { FabMenuOverlay } from "@/features/chats/components/FabMenuOverlay";
 import { NewGroupModal } from "@/features/chats/components/NewGroupModal";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+      const { isDark, themeColors } = useAppTheme();
+
 
   // the top head color -> safe area side
   const topHeaderBg = isDark ? themeColors.onboardingTop : themeColors.primary;

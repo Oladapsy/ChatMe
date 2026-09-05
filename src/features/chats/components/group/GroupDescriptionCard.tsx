@@ -3,19 +3,18 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   description: string;
 }
 
 export function GroupDescriptionCard({ description }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   const [isExpanded, setIsExpanded] = useState(false);
 

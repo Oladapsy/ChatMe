@@ -4,7 +4,6 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { UserProfile } from "@/features/chats/types/chat";
 import { UserHeaderHero } from "@/features/chats/components/user/UserHeaderHero";
@@ -13,6 +12,7 @@ import { UserAboutMediaSection } from "@/features/chats/components/user/UserAbou
 import { Typography } from "@/shared/components/Typography";
 import BlockIcon from "@/assets/icons/shared/Block.svg";
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   profile: UserProfile;
@@ -39,9 +39,8 @@ export function UserProfileDetailScreen({
   onToggleNotifications,
   onBlockPress,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <View style={styles.container}>

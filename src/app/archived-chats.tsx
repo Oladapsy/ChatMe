@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { StyleSheet, View, FlatList, useColorScheme } from "react-native";
+import { StyleSheet, View, FlatList } from "react-native";
 import { useRouter } from "expo-router";
 
 import { SwipeableChatRow } from "@/features/chats/components/SwipeableChatRow";
@@ -8,12 +8,12 @@ import { ArchivedHeader } from "@/features/chats/components/ArchivedHeader";
 import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 import { Chat } from "@/features/chats/types/chat";
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function ArchivedChatsScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+     const { isDark, themeColors } = useAppTheme();
+
 
   // 1. Initialize local state with MOCK_CHATS
   const [chats, setChats] = useState<Chat[]>(MOCK_CHATS);

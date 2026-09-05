@@ -4,15 +4,14 @@ import {
   View,
   TouchableOpacity,
   Image,
-  useColorScheme,
   Dimensions,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import BackIcon from "@/assets/icons/shared/chevron-left.svg";
 import CameraIcon from "@/assets/icons/shared/camera.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -33,12 +32,11 @@ export function UserQrCodeScreen({
   onBack,
   onScanQrPress,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   return (
-    <MySafeAreaView color={themeColors.qrBg}>
+    <MySafeAreaView color={isDark? themeColors.qrBg: themeColors.primary}>
       <View style={[styles.container, { backgroundColor: themeColors.qrBg }]}>
         {/* Top Header */}
         <View style={styles.header}>

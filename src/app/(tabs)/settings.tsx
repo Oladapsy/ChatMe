@@ -4,7 +4,6 @@ import {
   View,
   Image,
   TouchableOpacity,
-  useColorScheme,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -30,12 +29,12 @@ import LogoutIcon from "@/assets/icons/settings/logout.svg";
 // logout function
 import { useLogout } from "@/features/auth/hooks/useLogout";
 import { useMe } from "@/features/auth/hooks/useMe";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
+
   const logoutMutation = useLogout();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);

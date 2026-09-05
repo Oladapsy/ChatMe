@@ -4,14 +4,13 @@ import {
   View,
   TouchableOpacity,
   Image,
-  useColorScheme,
 } from "react-native";
 import * as SMS from "expo-sms";
 
 import { Typography } from "@/shared/components/Typography";
 import { ContactItem } from "@/features/contacts/hooks/useContacts";
 import ChevronRightIcon from "@/assets/icons/shared/chevron-right.svg";
-import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   item: ContactItem;
@@ -20,9 +19,8 @@ interface Props {
 }
 
 export function ContactItemRow({ item, textColor, onSelect }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+   const { isDark, themeColors } = useAppTheme();
+
 
   const numberColor = isDark ? "#8EA3B3" : "#6E8597";
 

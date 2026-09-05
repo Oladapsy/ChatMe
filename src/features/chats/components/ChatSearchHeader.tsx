@@ -4,11 +4,11 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import SearchIcon from "@/assets/icons/chat/search.svg";
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   searchQuery: string;
@@ -23,9 +23,8 @@ export function ChatSearchHeader({
   onCancel,
   backgroundColor,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {

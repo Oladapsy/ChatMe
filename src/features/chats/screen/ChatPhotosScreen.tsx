@@ -5,13 +5,13 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  useColorScheme,
   Dimensions,
 } from "react-native";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 const { width } = Dimensions.get("window");
 const PADDING = 20;
@@ -31,16 +31,13 @@ interface Props {
   onImagePress?: (uri: string) => void;
 }
 
-
 export function ChatPhotosScreen({
   photos,
   onBack,
   onSelectTab,
   onImagePress,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
 
   const [activeTab, setActiveTab] = useState<"Photo" | "Star" | "Links">(
     "Photo",
@@ -56,7 +53,7 @@ export function ChatPhotosScreen({
       {/* 1. Top Safe Area for Status Bar + Header only */}
       <MySafeAreaView
         edges={["top"]}
-        color={themeColors.headBg}
+        color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
         <SubScreenHeader title="Photos" onBack={onBack} />

@@ -4,9 +4,9 @@ import { Colors } from "@/shared/constants/colors";
 import {
     StyleSheet,
     TouchableOpacity,
-    useColorScheme,
     View,
 } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface KeypadProps {
   onPressDigit: (digit: string) => void;
@@ -21,9 +21,8 @@ const KEYS = [
 ];
 
 export default function Keypad({ onPressDigit, onDelete }: KeypadProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   const keyBgColor =
     themeColors.cardBackground || (isDark ? "#1F3C51" : "#F9FAFB");

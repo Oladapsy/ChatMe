@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { StyleSheet, View, TextInput, useColorScheme } from "react-native";
+import { StyleSheet, View, TextInput} from "react-native";
 import SearchIcon from "@/assets/icons/shared/search.svg";
-import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   value: string;
@@ -9,9 +9,8 @@ interface Props {
 }
 
 export function ContactSearchBar({ value, onChangeText }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+      const { isDark, themeColors } = useAppTheme();
+
 
   const [isFocused, setIsFocused] = useState(false);
 

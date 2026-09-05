@@ -18,7 +18,7 @@ export default function PrivacyScreen() {
     <View style={styles.container}>
       <MySafeAreaView
         edges={["top"]}
-        color={themeColors.headBg}
+        color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
         <SubScreenHeader title="Privacy" onBack={() => router.back()} />

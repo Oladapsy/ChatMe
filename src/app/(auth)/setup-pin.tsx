@@ -1,20 +1,19 @@
 import React, { useState } from "react";
-import { StyleSheet, View, useColorScheme } from "react-native";
+import { StyleSheet, View} from "react-native";
 import { useRouter } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { BackButton } from "@/shared/components/BackButton";
 import Keypad from "@/shared/components/Keypad";
-import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 const PIN_LENGTH = 4;
 
 export default function SetupPinScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+      const { isDark, themeColors } = useAppTheme();
+
 
   const [pin, setPin] = useState<string[]>([]);
 

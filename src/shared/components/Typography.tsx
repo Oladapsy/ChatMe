@@ -3,10 +3,10 @@ import {
   StyleSheet,
   Text as RNText,
   TextProps as RNTextProps,
-  useColorScheme,
 } from "react-native";
 import { Colors } from "@/shared/constants/colors";
 import { Fonts } from "@/shared/constants/fonts";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 export type TypographyVariant =
   | "h1"
@@ -42,8 +42,8 @@ export function Typography({
   children,
   ...props
 }: TypographyProps) {
-  const scheme = useColorScheme();
-  const themeColors = Colors[scheme === "dark" ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
+
 
   const defaultTextColor = secondary
     ? themeColors.textSecondary

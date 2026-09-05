@@ -7,7 +7,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableWithoutFeedback,
-  useColorScheme,
   View,
 } from "react-native";
 
@@ -20,12 +19,11 @@ import { Colors } from "@/shared/constants/colors";
 import UserIcon from "@/assets/icons/profile/user.svg";
 import { useMe } from "@/features/auth/hooks/useMe";
 import { useUpdateMe } from "@/features/auth/hooks/useUpdateMe";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function SetupProfileScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
 
   const [name, setName] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -68,8 +66,6 @@ export default function SetupProfileScreen() {
       },
     );
   };
-
-  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

@@ -4,10 +4,9 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface Props {
   visible: boolean;
@@ -24,9 +23,8 @@ export function CustomAlertModal({
   buttonText = "OK",
   onClose,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <Modal
@@ -60,7 +58,7 @@ export function CustomAlertModal({
           </Typography>
 
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: Colors.light.primary }]}
+            style={[styles.button, { backgroundColor: themeColors.primary }]}
             onPress={onClose}
             activeOpacity={0.8}
           >

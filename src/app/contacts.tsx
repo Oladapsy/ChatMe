@@ -2,13 +2,7 @@
 // contact first...
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  SectionList,
-  StyleSheet,
-  useColorScheme,
-  View,
-} from "react-native";
+import { ActivityIndicator, SectionList, StyleSheet, View } from "react-native";
 
 import { ContactItemRow } from "@/features/contacts/components/ContactItemRow";
 import { ContactSearchBar } from "@/features/contacts/components/ContactSearchBar";
@@ -18,13 +12,11 @@ import {
 } from "@/features/contacts/hooks/useContacts";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function ContactsScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
 
   const [searchQuery, setSearchQuery] = useState("");
   const { contacts, loading } = useContacts();

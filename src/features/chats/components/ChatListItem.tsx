@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  StyleSheet,
-  View,
-  Image,
-  TouchableOpacity,
-  useColorScheme,
-} from "react-native";
+import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { Chat } from "@/features/chats/types/chat";
@@ -13,6 +7,7 @@ import PinIcon from "@/assets/icons/shared/pin.svg";
 import GroupIcon from "@/assets/icons/chat/user-group.svg";
 import MutedIcon from "@/assets/icons/chat/mute.svg";
 import UserIcon from "@/assets/icons/shared/user.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface ChatListItemProps {
   chat: Chat;
@@ -27,9 +22,7 @@ export function ChatListItem({
   onPress,
   onLongPress,
 }: ChatListItemProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { themeColors } = useAppTheme();
 
   return (
     <TouchableOpacity
@@ -57,7 +50,14 @@ export function ChatListItem({
           </View>
         )}
 
-        {chat.isOnline && !chat.isGroup && <View style={styles.onlineBadge} />}
+        {chat.isOnline && !chat.isGroup && (
+          <View
+            style={[
+              styles.onlineBadge,
+              { backgroundColor: themeColors.primary },
+            ]}
+          />
+        )}
       </View>
 
       {/* Main Info */}
@@ -141,7 +141,6 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: Colors.dark.primary,
     borderWidth: 2,
     borderColor: "white",
   },

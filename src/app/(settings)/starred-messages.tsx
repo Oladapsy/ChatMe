@@ -4,7 +4,6 @@ import {
   View,
   TouchableOpacity,
   FlatList,
-  useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -16,19 +15,19 @@ import { StarredMessageItem } from "@/features/chats/components/StarredMsgItem";
 
 // Mock Data
 import { MOCK_STARRED_MESSAGES } from "@/features/chats/data/mockStarredMsg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function StarredMessagesScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+     const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <View style={styles.container}>
       {/* 1. Header Safe Area */}
       <MySafeAreaView
         edges={["top"]}
-        color={themeColors.headBg}
+        color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
         <SubScreenHeader

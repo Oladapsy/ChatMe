@@ -3,11 +3,11 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import BackIcon from "@/assets/icons/shared/chevron-left.svg";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface Props {
   title: string;
@@ -22,12 +22,15 @@ export function SubScreenHeader({
   showBackButton = true,
   rightAction,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
 
   return (
-    <View style={[styles.header, { backgroundColor: themeColors.headBg }]}>
+    <View
+      style={[
+        styles.header,
+        { backgroundColor: isDark ? themeColors.headBg : themeColors.primary },
+      ]}
+    >
       {/* Left Slot: Back Button or Alignment Placeholder */}
       <View style={styles.leftSlot}>
         {showBackButton && onBack ? (

@@ -30,7 +30,7 @@ export default function FaqScreen() {
       {/* Header with Search */}
       <MySafeAreaView
         edges={["top"]}
-        color={themeColors.headBg}
+        color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
         <SubScreenHeader title="FAQ" onBack={() => router.back()} />

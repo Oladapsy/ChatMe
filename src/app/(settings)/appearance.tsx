@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { StyleSheet, View, ScrollView, Alert, NativeModules } from "react-native";
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  Alert,
+  NativeModules,
+  Appearance,
+} from "react-native";
 import { useRouter } from "expo-router";
 
 // import ExpoDynamicAppIcon from "@variant-systems/expo-dynamic-app-icon";
@@ -25,6 +32,7 @@ import { AppIconItem } from "@/features/settings/components/AppIconItem";
 import StarBgIcon from "@/assets/icons/chat/ChatBg.svg";
 import NightModeIcon from "@/assets/icons/settings/moon.svg";
 import EmojiIcon from "@/assets/icons/settings/emoji.svg";
+import { useAppearanceStore } from "@/store/appearanceStore";
 
 const THEME_OPTIONS: ThemeOption[] = (
   Object.keys(ICON_CONFIGS) as IconThemeId[]
@@ -40,8 +48,12 @@ export default function AppearanceScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
 
-  const [selectedTheme, setSelectedTheme] = useState<IconThemeId>("green");
-  const [nightMode, setNightMode] = useState(isDark);
+  const selectedTheme = useAppearanceStore((state) => state.selectedTheme);
+
+  const setSelectedTheme = useAppearanceStore(
+    (state) => state.setSelectedTheme,
+  );
+
   const [largeEmoji, setLargeEmoji] = useState(false);
   const [selectedAppIcon, setSelectedAppIcon] = useState<IconThemeId>("green");
 
@@ -54,14 +66,15 @@ export default function AppearanceScreen() {
     if (!NativeModules.ExpoDynamicAppIcon) {
       Alert.alert(
         "Expo Go Notice",
-        "Dynamic app icons require a native development build. Run 'npx expo run:ios' or 'npx expo run:android'."
+        "Dynamic app icons require a native development build. Run 'npx expo run:ios' or 'npx expo run:android'.",
       );
       return;
     }
 
     // 2. Dynamically require the package only when running native builds
     try {
-      const ExpoDynamicAppIcon = require("@variant-systems/expo-dynamic-app-icon").default;
+      const ExpoDynamicAppIcon =
+        require("@variant-systems/expo-dynamic-app-icon").default;
       await ExpoDynamicAppIcon.setAppIcon(iconId);
     } catch (error) {
       console.warn("Failed to set app icon:", error);
@@ -73,7 +86,7 @@ export default function AppearanceScreen() {
       {/* Header */}
       <MySafeAreaView
         edges={["top"]}
-        color={themeColors.headBg}
+        color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
         <SubScreenHeader title="Appearance" onBack={() => router.back()} />
@@ -184,8 +197,10 @@ export default function AppearanceScreen() {
               }
               label="Night Mode"
               hasSwitch
-              switchValue={nightMode}
-              onSwitchChange={setNightMode}
+              switchValue={isDark}
+              onSwitchChange={(value) => {
+                Appearance.setColorScheme(value ? "dark" : "light");
+              }}
               isDark={isDark}
               themeColors={themeColors}
             />

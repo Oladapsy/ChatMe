@@ -1,5 +1,4 @@
 import React from "react";
-import { useColorScheme } from "react-native";
 import { Tabs } from "expo-router";
 
 import Phone from "@/assets/icons/tabs/phone.svg";
@@ -7,11 +6,11 @@ import Chat from "@/assets/icons/tabs/chat.svg";
 import Settings from "@/assets/icons/tabs/settings.svg";
 
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function TabLayout() {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { themeColors } = useAppTheme();
+
 
   return (
     <Tabs

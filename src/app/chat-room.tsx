@@ -4,7 +4,6 @@ import {
   View,
   Image,
   TouchableOpacity,
-  useColorScheme,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -31,12 +30,11 @@ import { Message } from "@/features/chats/types/message";
 import { MessageBubble } from "@/features/chats/components/MessageBubble";
 import { MOCK_MESSAGES } from "@/features/chats/data/mockMessages";
 import { MOCK_CHATS } from "@/features/chats/data/mockChats";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function ChatRoomScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
 
   const { id, name, avatar, isGroup, membersText, search } =
     useLocalSearchParams<{

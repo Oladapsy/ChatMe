@@ -4,13 +4,13 @@ import {
   View,
   Image,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import CheckIcon from "@/assets/icons/shared/check.svg";
 import UserIcon from "@/assets/icons/shared/user.svg";
 import { Contact } from "@/features/contacts/data/mockContacts";
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   contact: Contact;
@@ -19,9 +19,8 @@ interface Props {
 }
 
 export function ParticipantItem({ contact, selected, onToggle }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <TouchableOpacity
@@ -49,7 +48,7 @@ export function ParticipantItem({ contact, selected, onToggle }: Props) {
         )}
 
         {selected && (
-          <View style={styles.outerRing}>
+          <View style={[styles.outerRing, {borderColor: themeColors.primary}]}>
             <View style={styles.innerRing}>
               <CheckIcon width={24} height={24} color="white" />
             </View>
@@ -95,7 +94,6 @@ const styles = StyleSheet.create({
     bottom: -4,
     borderRadius: 32,
     borderWidth: 2,
-    borderColor: Colors.light.primary,
     padding: 2,
   },
   innerRing: {

@@ -16,7 +16,7 @@ export default function DataAndStorageScreen() {
     <View style={styles.container}>
       <MySafeAreaView
         edges={["top"]}
-        color={themeColors.headBg}
+        color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
         <SubScreenHeader

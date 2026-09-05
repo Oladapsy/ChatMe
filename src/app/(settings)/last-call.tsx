@@ -4,7 +4,6 @@ import {
   View,
   TouchableOpacity,
   SectionList,
-  useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -16,19 +15,20 @@ import EditIcon from "@/assets/icons/shared/edit.svg";
 
 import { CallItem } from "@/features/calls/components/CallItem";
 import { MOCK_CALL_LOGS } from "@/features/calls/data/mockCallLog";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function LastCallScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  
+    const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <View style={styles.container}>
       {/* 1. Header Safe Area */}
       <MySafeAreaView
         edges={["top"]}
-        color={themeColors.headBg}
+        color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
         <SubScreenHeader

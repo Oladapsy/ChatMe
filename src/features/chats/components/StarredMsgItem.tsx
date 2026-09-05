@@ -1,20 +1,19 @@
 import React from "react";
-import { StyleSheet, View, Image, useColorScheme } from "react-native";
+import { StyleSheet, View, Image } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import StarFilledIcon from "@/assets/icons/shared/starMsg.svg";
 import StarBgIcon from "@/assets/icons/shared/starBg.svg";
 import ChevronRightIcon from "@/assets/icons/shared/chevron-right.svg";
 import { StarredMessage } from "@/features/chats/types/starredMsg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   item: StarredMessage;
 }
 
 export function StarredMessageItem({ item }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <View style={styles.messageGroupContainer}>

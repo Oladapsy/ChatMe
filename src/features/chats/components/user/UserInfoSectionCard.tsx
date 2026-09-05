@@ -1,7 +1,7 @@
 import React from "react";
-import { StyleSheet, View, useColorScheme } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   phone: string;
@@ -9,9 +9,8 @@ interface Props {
 }
 
 export function UserInfoSectionCard({ phone, description }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+      const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <View

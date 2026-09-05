@@ -5,7 +5,6 @@ import {
   View,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  useColorScheme,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -17,6 +16,7 @@ import { AddParticipantsStep } from "@/features/chats/components/AddParticipants
 import { Contact } from "@/features/contacts/data/mockContacts";
 import { Typography } from "@/shared/components/Typography";
 import BackIcon from "@/assets/icons/shared/chevron-left.svg"; // Adjust path if needed
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   visible: boolean;
@@ -30,9 +30,8 @@ interface Props {
 }
 
 export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
@@ -124,7 +123,7 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
                         <Typography
                           size={18}
                           weight="bold"
-                          color={Colors.light.primary}
+                          color={themeColors.primary}
                         >
                           ({selectedContacts.length})
                         </Typography>

@@ -6,7 +6,6 @@ import {
   ScrollView,
   Image,
   TouchableWithoutFeedback,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
@@ -25,6 +24,7 @@ import {
   Query,
   requestPermissionsAsync,
 } from "expo-media-library";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   visible: boolean;
@@ -52,9 +52,8 @@ export function AttachmentModal({
   onSelectLocation,
   onSelectContact,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   const [previews, setPreviews] = useState<GalleryPreview[]>([]);
 

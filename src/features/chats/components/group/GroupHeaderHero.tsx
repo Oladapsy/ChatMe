@@ -4,14 +4,13 @@ import {
   View,
   Image,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import BackIcon from "@/assets/icons/shared/chevron-left.svg";
 import SearchIcon from "@/assets/icons/shared/search.svg";
 import QrIcon from "@/assets/icons/chat/qrcode.svg";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
-import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   name: string;
@@ -28,9 +27,8 @@ export function GroupHeaderHero({
   onSearch,
   onShowQR,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <View style={styles.container}>

@@ -4,7 +4,6 @@ import {
   View,
   TouchableOpacity,
   FlatList,
-  useColorScheme,
 } from "react-native";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
@@ -13,6 +12,7 @@ import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 import SearchIcon from "@/assets/icons/shared/search.svg";
 import { StarredMessageItem } from "@/features/chats/components/StarredMsgItem";
 import { StarredMessage } from "@/features/chats/types/starredMsg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   starredMessages: StarredMessage[];
@@ -27,9 +27,8 @@ export function ChatStarredMessagesScreen({
   onSelectTab,
   onSearchPress,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+      const { isDark, themeColors } = useAppTheme();
+
 
   const [activeTab, setActiveTab] = useState<"Photo" | "Star" | "Links">(
     "Star",
@@ -45,7 +44,7 @@ export function ChatStarredMessagesScreen({
       {/* 1. Top Safe Area for Status Bar + Header */}
       <MySafeAreaView
         edges={["top"]}
-        color={themeColors.headBg}
+        color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
         <SubScreenHeader

@@ -1,8 +1,8 @@
 import ChevronLeft from "@/assets/icons/auth/chevron-left.svg";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import { useRouter } from "expo-router";
-import { StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface BackButtonProps {
   onPress?: () => void;
@@ -16,9 +16,8 @@ export function BackButton({
   Iconcolor,
 }: BackButtonProps) {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+      const { isDark, themeColors } = useAppTheme();
+
 
   const activeIconColor = Iconcolor || themeColors.text;
 

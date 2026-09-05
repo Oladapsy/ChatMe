@@ -4,7 +4,6 @@ import {
   View,
   Image,
   TouchableOpacity,
-  useColorScheme,
   ActionSheetIOS,
   Platform,
   Alert,
@@ -14,6 +13,7 @@ import * as ImagePicker from "expo-image-picker";
 import CameraPlusIcon from "@/assets/icons/shared/cameraPlus.svg";
 import UserIcon from "@/assets/icons/shared/user.svg";
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   uri?: string;
@@ -21,9 +21,7 @@ interface Props {
 }
 
 export function AvatarPicker({ uri, onSelectImage }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { themeColors } = useAppTheme();
 
   const handlePickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -93,7 +91,13 @@ export function AvatarPicker({ uri, onSelectImage }: Props) {
           </View>
         )}
         <View
-          style={[styles.cameraBadge, { borderColor: themeColors.background }]}
+          style={[
+            styles.cameraBadge,
+            {
+              borderColor: themeColors.background,
+              backgroundColor: themeColors.primary,
+            },
+          ]}
         >
           <CameraPlusIcon width={16} height={16} color="white" />
         </View>
@@ -133,7 +137,6 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: Colors.light.primary,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,

@@ -3,12 +3,11 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import { Chat } from "@/features/chats/types/chat";
 import ArchiveIcon from "@/assets/icons/chat/archive.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface ArchivedHeaderRowProps {
   archivedChats: Chat[];
@@ -19,9 +18,8 @@ export function ArchivedHeaderRow({
   archivedChats,
   onPress,
 }: ArchivedHeaderRowProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+   const { themeColors } = useAppTheme();
+
 
   if (archivedChats.length === 0) return null;
 
@@ -36,7 +34,7 @@ export function ArchivedHeaderRow({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={styles.iconContainer}>
+      <View style={[styles.iconContainer, {backgroundColor: themeColors.primary}] }>
         <ArchiveIcon width={24} height={24} color="white" />
       </View>
 
@@ -78,7 +76,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#57B77D",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 14,

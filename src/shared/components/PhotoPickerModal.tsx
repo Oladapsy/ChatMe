@@ -7,7 +7,6 @@ import {
   Image,
   Modal,
   TouchableWithoutFeedback,
-  useColorScheme,
 } from "react-native";
 
 import { Typography } from "@/shared/components/Typography";
@@ -24,6 +23,7 @@ import {
   Query,
   requestPermissionsAsync,
 } from "expo-media-library";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface PhotoPickerModalProps {
   visible: boolean;
@@ -45,9 +45,8 @@ export function PhotoPickerModal({
   onChooseFromLibrary,
   onSelectImage,
 }: PhotoPickerModalProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   const [previews, setPreviews] = useState<GalleryPreview[]>([]);
 

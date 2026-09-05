@@ -48,7 +48,7 @@ export default function CallsTabScreen() {
       {/* 1. TOP HEADER */}
       <MySafeAreaView
         edges={["top"]}
-        color={themeColors.headBg}
+        color={isDark? themeColors.headBg: themeColors.primary}
         style={styles.topSafeArea}
       >
         <SubScreenHeader

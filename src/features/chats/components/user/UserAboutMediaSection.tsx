@@ -6,7 +6,6 @@ import {
   Image,
   ScrollView,
   Switch,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
@@ -16,6 +15,7 @@ import StarIcon from "@/assets/icons/shared/star.svg";
 import LinkIcon from "@/assets/icons/shared/link.svg";
 import BellIcon from "@/assets/icons/shared/volume.svg";
 import ChevronRightIcon from "@/assets/icons/shared/chevron-right.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   photoCount: number;
@@ -40,9 +40,8 @@ export function UserAboutMediaSection({
   onLinksPress,
   onToggleNotifications,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
+
   const accentColor = themeColors.primary;
 
   return (
@@ -145,7 +144,7 @@ export function UserAboutMediaSection({
           onValueChange={onToggleNotifications}
           trackColor={{
             false: isDark ? "#2C3E50" : "#D1D5DB",
-            true: Colors.light.primary,
+            true: themeColors.primary,
           }}
           thumbColor={isDark ? "#FFFFFF" : "#FFFFFF"}
         />

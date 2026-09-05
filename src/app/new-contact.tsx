@@ -4,10 +4,9 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
-  useColorScheme,
   Alert,
 } from "react-native";
-import { useRouter, useLocalSearchParams  } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Contact, requestPermissionsAsync } from "expo-contacts";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
@@ -20,21 +19,19 @@ import { BackButton } from "@/shared/components/BackButton";
 
 import UserIcon from "@/assets/icons/shared/user.svg";
 import QrCodeIcon from "@/assets/icons/chat/qrcode.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 // to get the qr-code data i'll use uselocalsearxhparams
 
-
 export default function NewContactScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
 
-   // get data from qr code
-   const params = useLocalSearchParams<{ 
-    scannedFirstName?: string; 
-    scannedLastName?: string; 
-    scannedPhone?: string; 
+  // get data from qr code
+  const params = useLocalSearchParams<{
+    scannedFirstName?: string;
+    scannedLastName?: string;
+    scannedPhone?: string;
   }>();
 
   const [avatarUri, setAvatarUri] = useState<string>();
@@ -47,7 +44,7 @@ export default function NewContactScreen() {
   const isValid = firstName.trim().length > 0 && phone.trim().length > 0;
 
   // this set based on the params received!
-   useEffect(() => {
+  useEffect(() => {
     if (params.scannedFirstName) setFirstName(params.scannedFirstName);
     if (params.scannedLastName) setLastName(params.scannedLastName);
     if (params.scannedPhone) setPhone(params.scannedPhone);
@@ -62,7 +59,7 @@ export default function NewContactScreen() {
       if (status !== "granted") {
         Alert.alert(
           "Permission needed",
-          "Allow contacts access in Settings to save this contact to your phone."
+          "Allow contacts access in Settings to save this contact to your phone.",
         );
         return;
       }
@@ -92,11 +89,14 @@ export default function NewContactScreen() {
   };
 
   return (
-    <MySafeAreaView color={themeColors.headBg} edges={["top"]}>
+    <MySafeAreaView
+      color={isDark ? themeColors.headBg : themeColors.primary}
+      edges={["top"]}
+    >
       <View style={{ flex: 1, backgroundColor: themeColors.background }}>
         {/* 1. TOP HEADER REGION */}
         <View
-          style={[styles.topSection, { backgroundColor: themeColors.headBg }]}
+          style={[styles.topSection, { backgroundColor: isDark ? themeColors.headBg : themeColors.primary }]}
         >
           <View style={styles.header}>
             <BackButton showBorder={false} Iconcolor="white" />
@@ -185,10 +185,10 @@ export default function NewContactScreen() {
               style={[
                 styles.saveBtn,
                 isValid
-                  ? styles.saveBtnActive
+                  ? [styles.saveBtnActive, {backgroundColor: themeColors.primary}]
                   : isDark
-                    ? styles.saveBtnDisabledDark
-                    : styles.saveBtnDisabledLight,
+                    ? [styles.saveBtnDisabledDark, {backgroundColor: themeColors.primary}]
+                    : [styles.saveBtnDisabledLight, {backgroundColor: themeColors.primary}]
               ]}
               onPress={handleSave}
               disabled={!isValid || saving}
@@ -250,12 +250,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveBtnDisabledDark: {
-    backgroundColor: "#ABDBBE",
+    opacity: 0.5,
   },
   saveBtnDisabledLight: {
-    backgroundColor: "#ABDBBE",
+    opacity: 0.5,
   },
   saveBtnActive: {
-    backgroundColor: Colors.light.primary,
   },
 });

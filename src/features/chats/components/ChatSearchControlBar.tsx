@@ -4,6 +4,7 @@ import { Typography } from "@/shared/components/Typography";
 import ChevronUpIcon from "@/assets/icons/chat/chevronUp.svg";
 import ChevronDownIcon from "@/assets/icons/chat/chevronDown.svg";
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   currentIndex: number;
@@ -21,6 +22,7 @@ export function ChatSearchControlBar({
   isDark,
 }: Props) {
   if (totalCount === 0) return null;
+  const { themeColors } = useAppTheme();
 
   return (
     <View
@@ -29,7 +31,7 @@ export function ChatSearchControlBar({
         { backgroundColor: isDark ? "#0D2131" : "#FFFFFF" },
       ]}
     >
-      <Typography size={16} color={Colors.light.primary} weight="medium">
+      <Typography size={16} color={themeColors.primary} weight="medium">
         {currentIndex + 1} from {totalCount}
       </Typography>
 

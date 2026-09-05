@@ -1,12 +1,12 @@
 import React from "react";
-import { ScrollView, StyleSheet, View, useColorScheme } from "react-native";
-import { Colors } from "@/shared/constants/colors";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { GroupDetails, GroupMember } from "@/features/chats/types/chat";
 import { GroupHeaderHero } from "@/features/chats/components/group/GroupHeaderHero";
 import { GroupDescriptionCard } from "@/features/chats/components/group/GroupDescriptionCard";
 import { GroupMediaPreviewRow } from "@/features/chats/components/group/GroupMediaPreviewRow";
 import { GroupMembersList } from "@/features/chats/components/group/GroupMembersList";
 import { useRouter } from "expo-router";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   groupDetails: GroupDetails;
@@ -25,9 +25,8 @@ export function GroupDetailScreen({
   onNavigateLinks,
   onSelectMember,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+      const { isDark, themeColors } = useAppTheme();
+
   const router = useRouter()
 
   return (

@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  useColorScheme,
   ScrollView,
 } from "react-native";
 
@@ -14,6 +13,7 @@ import { Colors } from "@/shared/constants/colors";
 import CameraIcon from "@/assets/icons/shared/add-a-photo.svg";
 import { useCameraHandler } from "@/features/chats/hooks/useCameraHandler";
 import { Button } from "@/shared/components/Button";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   onCreate: (groupData: {
@@ -25,8 +25,8 @@ interface Props {
 }
 
 export function NameGroupStep({ onCreate, isDark }: Props) {
-  const scheme = useColorScheme();
-  const themeColors = Colors[scheme === "dark" ? "dark" : "light"];
+   const {  themeColors } = useAppTheme();
+
 
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");

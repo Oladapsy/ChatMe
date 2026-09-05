@@ -1,7 +1,7 @@
 import React from "react";
-import { StyleSheet, View, Image, useColorScheme } from "react-native";
+import { StyleSheet, View, Image } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface EmptyChatStateProps {
   title?: string;
@@ -9,9 +9,7 @@ interface EmptyChatStateProps {
 }
 
 export function EmptyChatState({ title, description }: EmptyChatStateProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { themeColors } = useAppTheme();
 
   const ContactTotal = 27;
   const ContactLeft = ContactTotal - 5;

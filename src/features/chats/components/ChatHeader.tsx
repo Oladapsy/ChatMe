@@ -1,8 +1,8 @@
 import React from "react";
-import { StyleSheet, View, TextInput, useColorScheme } from "react-native";
+import { StyleSheet, View, TextInput } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import SearchIcon from "@/assets/icons/chat/search.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface ChatHeaderProps {
   searchQuery: string;
@@ -10,9 +10,7 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ searchQuery, onSearchChange }: ChatHeaderProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
 
   // header bg color
   const headerBgColor = isDark
@@ -54,10 +52,7 @@ export function ChatHeader({ searchQuery, onSearchChange }: ChatHeaderProps) {
           onChangeText={onSearchChange}
           placeholder="Search chat, people and more..."
           placeholderTextColor={isDark ? "#64748B" : "rgba(255, 255, 255, 0.7)"}
-          style={[
-            styles.input,
-            { color: isDark ? themeColors.text : "white" },
-          ]}
+          style={[styles.input, { color: isDark ? themeColors.text : "white" }]}
         />
       </View>
     </View>

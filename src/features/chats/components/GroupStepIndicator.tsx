@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   currentStep: 1 | 2;
@@ -8,7 +9,9 @@ interface Props {
 }
 
 export function GroupStepIndicator({ currentStep, isDark }: Props) {
-  const activeColor = Colors.light.primary;
+  const { themeColors } = useAppTheme();
+
+  const activeColor = themeColors.primary;
   const inactiveColor = isDark ? "#3A566A" : "#E8F5ED";
 
   return (

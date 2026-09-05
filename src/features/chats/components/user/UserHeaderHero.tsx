@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
-  useColorScheme,
 } from "react-native";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
@@ -15,6 +14,7 @@ import SearchIcon from "@/assets/icons/shared/search.svg";
 import QrCodeIcon from "@/assets/icons/chat/qrcode.svg";
 import ChatBubbleIcon from "@/assets/icons/shared/chatBubble.svg";
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -37,9 +37,8 @@ export function UserHeaderHero({
   onQrPress,
   onMessagePress,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  //   const themeColors = Colors[isDark ? "dark" : "light"];
+   const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <View style={styles.bannerContainer}>
@@ -94,7 +93,7 @@ export function UserHeaderHero({
       </View>
 
       <TouchableOpacity
-        style={styles.floatingMsgBtn}
+        style={[styles.floatingMsgBtn, {backgroundColor: themeColors.primary}]}
         activeOpacity={0.85}
         onPress={onMessagePress}
       >
@@ -159,7 +158,6 @@ const styles = StyleSheet.create({
     width: 75,
     height: 75,
     borderRadius: 40,
-    backgroundColor: Colors.light.primary,
     alignItems: "center",
     justifyContent: "center",
     elevation: 6,

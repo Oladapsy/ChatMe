@@ -4,7 +4,6 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
@@ -16,6 +15,7 @@ import PaperclipIcon from "@/assets/icons/chat/paperClip.svg";
 import SendIcon from "@/assets/icons/chat/send.svg";
 import MicIcon from "@/assets/icons/chat/mic.svg";
 import TrashIcon from "@/assets/icons/chat/trash.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   text: string;
@@ -34,9 +34,8 @@ export function ChatInputBar({
   onOpenAttachment,
   hasAttachments = false,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
   const insets = useSafeAreaInsets();
 
   const [isRecordingState, setIsRecordingState] = useState(false);

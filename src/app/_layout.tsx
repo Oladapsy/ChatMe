@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
-import { useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
-import { Colors } from "@/shared/constants/colors";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ThemeProvider } from "@/shared/context/ThemeContext";
 // tanstack
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -15,14 +12,14 @@ SplashScreen.preventAutoHideAsync();
 // auth user
 import { useInitializeAuth } from "@/features/auth/hooks/useInitializeAuth";
 import { useAuthStore } from "@/store/authStore";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const themeColors = Colors[colorScheme === "dark" ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
 
   const { isInitializing } = useInitializeAuth();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
- 
+
   // creating tanstack query client!
   const [queryClient] = useState(
     () =>
@@ -60,7 +57,6 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack
             screenOptions={{
@@ -81,7 +77,6 @@ export default function RootLayout() {
             </Stack.Protected>
           </Stack>
         </GestureHandlerRootView>
-      </ThemeProvider>
     </QueryClientProvider>
   );
 }

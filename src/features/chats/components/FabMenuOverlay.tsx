@@ -4,7 +4,6 @@ import {
   View,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  useColorScheme,
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { Typography } from "@/shared/components/Typography";
@@ -16,6 +15,7 @@ import ChatIcon from "@/assets/icons/chat/chat.svg";
 import ContactIcon from "@/assets/icons/chat/contact2.svg";
 import GroupIcon from "@/assets/icons/chat/group.svg";
 import CloseIcon from "@/assets/icons/shared/close.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface FabMenuOverlayProps {
   isOpen: boolean;
@@ -32,9 +32,8 @@ export function FabMenuOverlay({
   onNewContact,
   onNewGroup,
 }: FabMenuOverlayProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   // Default static + button 
   if (!isOpen) {

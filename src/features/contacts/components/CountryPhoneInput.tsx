@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   ScrollView,
   Keyboard,
-  useColorScheme,
   TextInputProps,
 } from "react-native";
 
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { COUNTRIES } from "@/features/auth/constants/countryData";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export type Country = (typeof COUNTRIES)[number];
 
@@ -34,9 +34,8 @@ export function CountryPhoneInput({
   onBlur,
   ...props
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   const [currentCountry, setCurrentCountry] =
     useState<Country>(selectedCountry);
@@ -53,7 +52,7 @@ export function CountryPhoneInput({
     setShowDropdown(false);
   };
 
-  const borderColor = isFocused ? "#52C47C" : isDark ? "#6E8597" : "#EAEEF2";
+  const borderColor = isFocused ? themeColors.primary : isDark ? "#6E8597" : "#EAEEF2";
 
   return (
     <View style={styles.container}>

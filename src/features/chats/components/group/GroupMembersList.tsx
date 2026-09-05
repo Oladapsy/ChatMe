@@ -4,13 +4,13 @@ import {
   View,
   TouchableOpacity,
   Image,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import SearchIcon from "@/assets/icons/shared/search.svg";
 import AddUserIcon from "@/assets/icons/shared/userPlus.svg";
 import { GroupMember } from "@/features/chats/types/chat";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   members: GroupMember[];
@@ -25,9 +25,8 @@ export function GroupMembersList({
   onAddMember,
   onMemberPress,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+   const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <View style={styles.container}>

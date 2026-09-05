@@ -4,12 +4,11 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Button } from "@/shared/components/Button";
-import { Colors } from "@/shared/constants/colors";
 import LockIcon from "@/assets/icons/security/lock-closed.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface PinPromptModalProps {
   visible: boolean;
@@ -22,9 +21,8 @@ export default function PinPromptModal({
   onAccept,
   onDecline,
 }: PinPromptModalProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <Modal visible={visible} transparent animationType="fade">

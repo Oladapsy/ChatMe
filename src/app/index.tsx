@@ -4,10 +4,12 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PhoneAuthScreen from "@/features/auth/screens/PhoneAuthScreen";
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function Index() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const { themeColors } = useAppTheme();
 
   useEffect(() => {
     checkOnboarding();
@@ -29,7 +31,7 @@ export default function Index() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.light.primary} />
+        <ActivityIndicator size="large" color={themeColors.primary} />
       </View>
     );
   }

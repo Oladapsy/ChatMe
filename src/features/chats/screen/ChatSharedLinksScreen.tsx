@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   Image,
   SectionList,
-  useColorScheme,
   Linking,
 } from "react-native";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
@@ -13,6 +12,7 @@ import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 import SearchIcon from "@/assets/icons/shared/search.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export interface SharedLinkItem {
   id: string;
@@ -39,9 +39,7 @@ export function ChatSharedLinksScreen({
   onSelectTab,
   onSearchPress,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+      const { isDark, themeColors } = useAppTheme();
 
   const [activeTab, setActiveTab] = useState<"Photo" | "Star" | "Links">(
     "Links",
@@ -63,7 +61,7 @@ export function ChatSharedLinksScreen({
       {/* 1. Top Safe Area for Status Bar + Header */}
       <MySafeAreaView
         edges={["top"]}
-        color={themeColors.headBg}
+        color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
         <SubScreenHeader

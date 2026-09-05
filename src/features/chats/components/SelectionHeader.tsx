@@ -3,7 +3,6 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
@@ -14,6 +13,7 @@ import PinIcon from "@/assets/icons/chat/pin.svg";
 import MuteIcon from "@/assets/icons/chat/mute.svg";
 import ArchiveIcon from "@/assets/icons/chat/archive.svg";
 import TrashIcon from "@/assets/icons/chat/trash.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface SelectionHeaderProps {
   selectedCount: number;
@@ -32,9 +32,8 @@ export function SelectionHeader({
   onArchive,
   onDelete,
 }: SelectionHeaderProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
+
 
   // header bg color
   const headerBgColor = isDark

@@ -5,7 +5,6 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  useColorScheme,
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -27,14 +26,14 @@ import UploadingBg from "@/assets/icons/auth/uploading.svg";
 import { uploadImage } from "@/services/cloudinary";
 import { useUpdateMe } from "@/features/auth/hooks/useUpdateMe";
 import { useMe } from "@/features/auth/hooks/useMe";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 type UploadStatus = "idle" | "uploading" | "success";
 
 export default function UploadPhotoScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+  const { isDark, themeColors } = useAppTheme();
+
 
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);

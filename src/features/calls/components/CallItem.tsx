@@ -4,7 +4,6 @@ import {
   View,
   Image,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
@@ -14,6 +13,7 @@ import IncomingCallIcon from "@/assets/icons/calls/incoming.svg";
 import OutgoingCallIcon from "@/assets/icons/calls/outgoing.svg";
 import MissedCallIcon from "@/assets/icons/calls/missed.svg";
 import InfoIcon from "@/assets/icons/shared/info.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export type CallType = "incoming" | "outgoing" | "missed";
 
@@ -38,9 +38,8 @@ export function CallItem({
   onInfoPress,
   showDivider = true,
 }: CallItemProps) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+   const { isDark, themeColors } = useAppTheme();
+
 
   const renderCallIcon = () => {
     switch (item.type) {

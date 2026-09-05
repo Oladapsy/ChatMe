@@ -6,7 +6,6 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  useColorScheme,
   TouchableOpacity,
 } from "react-native";
 import { SvgProps } from "react-native-svg";
@@ -15,7 +14,6 @@ import { useRouter } from "expo-router";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { Button } from "@/shared/components/Button";
-import { Colors } from "@/shared/constants/colors";
 import {
   ONBOARDING_SLIDES,
   OnboardingSlide,
@@ -28,14 +26,14 @@ import Onboarding3Light from "@/assets/icons/onboarding/onboarding3light.svg";
 import Onboarding3Dark from "@/assets/icons/onboarding/onboarding3dark.svg";
 import Logo from "@/assets/icons/shared/logo.svg";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 const { width } = Dimensions.get("window");
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList<OnboardingSlide>>(null);

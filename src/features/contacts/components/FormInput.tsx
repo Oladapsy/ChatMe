@@ -4,10 +4,10 @@ import {
   View,
   TextInput,
   TextInputProps,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props extends TextInputProps {
   label: string;
@@ -16,11 +16,10 @@ interface Props extends TextInputProps {
 }
 
 export function FormInput({ label, icon, focused, ...props }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
 
-  const borderColor = focused ? "#52C47C" : isDark ? "#6E8597" : "#EAEEF2";
+
+  const borderColor = focused ? themeColors.primary : isDark ? "#6E8597" : "#EAEEF2";
   const placeholderColor = isDark ? "#536878" : "#94A3B8";
 
   return (

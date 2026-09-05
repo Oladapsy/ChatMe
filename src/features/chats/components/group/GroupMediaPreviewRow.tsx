@@ -5,14 +5,13 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import PhotoIcon from "@/assets/icons/shared/allPhotos.svg";
 import StarIcon from "@/assets/icons/shared/star.svg";
 import LinkIcon from "@/assets/icons/shared/link.svg";
 import ChevronRight from "@/assets/icons/shared/chevron-right.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   photosCount: number;
@@ -33,9 +32,8 @@ export function GroupMediaPreviewRow({
   onPressStars,
   onPressLinks,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   return (
     <View style={styles.container}>

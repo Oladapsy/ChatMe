@@ -6,13 +6,14 @@ import { useRouter } from "expo-router";
 import BackIcon from "@/assets/icons/shared/chevron-left.svg";
 import FlashIcon from "@/assets/icons/chat/flash.svg";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function QRScannerScreen() {
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
   const [scanned, setScanned] = useState(false);
+  const { themeColors } = useAppTheme();
 
   if (!permission) return <View />;
 
@@ -22,7 +23,10 @@ export default function QRScannerScreen() {
         <Typography size={16} color="white" style={{ marginBottom: 16 }}>
           We need your permission to show the camera
         </Typography>
-        <TouchableOpacity style={styles.permBtn} onPress={requestPermission}>
+        <TouchableOpacity
+          style={[styles.permBtn, { backgroundColor: themeColors.primary }]}
+          onPress={requestPermission}
+        >
           <Typography size={15} weight="bold" color="white">
             Grant Permission
           </Typography>
@@ -45,24 +49,22 @@ export default function QRScannerScreen() {
       // 3. Sending data back to the contact route as search params
       router.replace({
         pathname: "/new-contact", // g to contact to populate
-        params: { 
-          scannedFirstName: firstName, 
-          scannedLastName: lastName, 
-          scannedPhone: phone 
+        params: {
+          scannedFirstName: firstName,
+          scannedLastName: lastName,
+          scannedPhone: phone,
         },
       });
-      
     } catch (error) {
       // Fallback: If it's not a JSON string, assume it's a raw phone number string
       console.log("Not a valid JSON payload, attempting raw phone parsing");
-      
+
       router.replace({
         pathname: "/new-contact",
         params: { scannedPhone: data.trim() },
       });
     }
   };
-
 
   return (
     <View style={styles.container}>
@@ -88,10 +90,34 @@ export default function QRScannerScreen() {
       <View style={styles.overlay}>
         <View style={styles.scannerBox}>
           {/* Green Corner Brackets */}
-          <View style={[styles.corner, styles.topLeft]} />
-          <View style={[styles.corner, styles.topRight]} />
-          <View style={[styles.corner, styles.bottomLeft]} />
-          <View style={[styles.corner, styles.bottomRight]} />
+          <View
+            style={[
+              styles.corner,
+              styles.topLeft,
+              { borderColor: themeColors.primary },
+            ]}
+          />
+          <View
+            style={[
+              styles.corner,
+              styles.topRight,
+              { borderColor: themeColors.primary },
+            ]}
+          />
+          <View
+            style={[
+              styles.corner,
+              styles.bottomLeft,
+              { borderColor: themeColors.primary },
+            ]}
+          />
+          <View
+            style={[
+              styles.corner,
+              styles.bottomRight,
+              { borderColor: themeColors.primary },
+            ]}
+          />
         </View>
       </View>
 
@@ -104,7 +130,7 @@ export default function QRScannerScreen() {
           <FlashIcon
             width={22}
             height={22}
-            color={torch ? "#52C47C" : "#FFFFFF"}
+            color={torch ? themeColors.primary : "#FFFFFF"}
           />
         </TouchableOpacity>
       </View>
@@ -125,7 +151,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   permBtn: {
-    backgroundColor: Colors.dark.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -158,7 +183,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 32,
     height: 32,
-    borderColor: Colors.dark.primary,
   },
   topLeft: {
     top: 0,

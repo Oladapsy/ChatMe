@@ -4,7 +4,6 @@ import {
   View,
   Image,
   TouchableOpacity,
-  useColorScheme,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
@@ -16,6 +15,7 @@ import LocationIcon from "@/assets/icons/chat/location.svg";
 import ContactIcon from "@/assets/icons/chat/contact2.svg";
 import PlayIcon from "@/assets/icons/chat/play.svg";
 import PauseIcon from "@/assets/icons/chat/pause.svg";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   message: Message;
@@ -28,9 +28,8 @@ export function MessageBubble({
   isGroup = false,
   searchQuery,
 }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === "dark";
-  const themeColors = Colors[isDark ? "dark" : "light"];
+    const { isDark, themeColors } = useAppTheme();
+
 
   const isMe = message.isMe;
 
