@@ -9,7 +9,6 @@ import {
   Platform,
 } from "react-native";
 
-import { Colors } from "@/shared/constants/colors";
 import { GroupStepIndicator } from "@/features/chats/components/GroupStepIndicator";
 import { NameGroupStep } from "@/features/chats/components/NameGroupStep";
 import { AddParticipantsStep } from "@/features/chats/components/AddParticipantsStep";
