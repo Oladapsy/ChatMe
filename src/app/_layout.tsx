@@ -66,12 +66,12 @@ export default function RootLayout() {
             <Stack.Screen name="index" />
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="(auth)/verify-otp" />
-            <Stack.Screen name="(auth)/setup-profile" />
-            <Stack.Screen name="(auth)/upload-photo" />
-            <Stack.Screen name="(auth)/setup-pin" />
           </Stack.Protected>
           <Stack.Protected guard={isAuthenticated}>
+            <Stack.Screen name="(auth)/setup-profile" />
+            <Stack.Screen name="(auth)/upload-photo" />
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)/setup-pin" />
           </Stack.Protected>
         </Stack>
       </GestureHandlerRootView>
