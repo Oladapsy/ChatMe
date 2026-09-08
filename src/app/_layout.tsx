@@ -81,11 +81,11 @@ export default function RootLayout() {
 
           <Stack.Protected guard={isAuthenticated}>
             <Stack.Screen name="(auth)/upload-photo" />
+            <Stack.Screen name="(auth)/setup-pin" />
           </Stack.Protected>
 
           <Stack.Protected guard={isAuthenticated && profileComplete}>
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="(auth)/setup-pin" />
           </Stack.Protected>
         </Stack>
       </GestureHandlerRootView>
