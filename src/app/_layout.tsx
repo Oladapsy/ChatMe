@@ -20,6 +20,12 @@ export default function RootLayout() {
 
   const { isInitializing } = useInitializeAuth();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const profileComplete = useAuthStore((state) => state.profileComplete);
+
+  // console.log("ROUTER AUTH:", {
+  //   isAuthenticated,
+  //   profileComplete,
+  // });
 
   // creating tanstack query client!
   // const [queryClient] = useState(
@@ -68,11 +74,17 @@ export default function RootLayout() {
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="(auth)/verify-otp" />
           </Stack.Protected>
-          <Stack.Protected guard={isAuthenticated}>
-            <Stack.Screen name="(auth)/setup-profile" />
-            <Stack.Screen name="(auth)/upload-photo" />
-            <Stack.Screen name="(tabs)" />
 
+          <Stack.Protected guard={isAuthenticated && !profileComplete}>
+            <Stack.Screen name="(auth)/setup-profile" />
+          </Stack.Protected>
+
+          <Stack.Protected guard={isAuthenticated}>
+            <Stack.Screen name="(auth)/upload-photo" />
+          </Stack.Protected>
+
+          <Stack.Protected guard={isAuthenticated && profileComplete}>
+            <Stack.Screen name="(tabs)" />
             <Stack.Screen name="(auth)/setup-pin" />
           </Stack.Protected>
         </Stack>

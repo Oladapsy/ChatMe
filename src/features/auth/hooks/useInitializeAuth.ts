@@ -33,6 +33,7 @@ export function useInitializeAuth() {
         queryClient.setQueryData(["me"], user);
         
         useAuthStore.getState().setAuthenticated(true);
+        useAuthStore.getState().setProfileComplete(user.profileComplete);
 
         console.log("AUTH INIT: authenticated = true");
       } catch (error) {
