@@ -4,7 +4,8 @@ import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 // tanstack
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/services/queryClient";
 
 // Prevent auto-hiding until fonts are fully loaded
 SplashScreen.preventAutoHideAsync();
@@ -21,12 +22,12 @@ export default function RootLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // creating tanstack query client!
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: { queries: { retry: 2 } },
-      }),
-  );
+  // const [queryClient] = useState(
+  //   () =>
+  //     new QueryClient({
+  //       defaultOptions: { queries: { retry: 2 } },
+  //     }),
+  // );
 
   // Load all font files from assets/fonts/
   const [loaded, error] = useFonts({
@@ -71,6 +72,7 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)/setup-profile" />
             <Stack.Screen name="(auth)/upload-photo" />
             <Stack.Screen name="(tabs)" />
+
             <Stack.Screen name="(auth)/setup-pin" />
           </Stack.Protected>
         </Stack>

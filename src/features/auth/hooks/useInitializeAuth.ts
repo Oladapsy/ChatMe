@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getRefreshToken } from "@/services/authStorage";
 import { getMe } from "@/features/auth/api/authApi";
 import { useAuthStore } from "@/store/authStore";
+import { queryClient } from "@/services/queryClient";
 
 export function useInitializeAuth() {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -29,6 +30,8 @@ export function useInitializeAuth() {
 
         console.log("AUTH INIT: /me successful", user);
 
+        queryClient.setQueryData(["me"], user);
+        
         useAuthStore.getState().setAuthenticated(true);
 
         console.log("AUTH INIT: authenticated = true");

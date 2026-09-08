@@ -123,7 +123,17 @@ export default function SettingsScreen() {
             </Typography>
           </View>
           <TouchableOpacity
-            onPress={() => router.push("/user-qr")}
+            onPress={() =>
+              router.push({
+                pathname: "/user-qr",
+                params: {
+                  name: profile.displayName,
+                  phone: profile.phoneNumber,
+                  avatarUri: profile.avatarUrl,
+                  qrValue: profile.phoneNumber, // Assuming the QR value is the phone number; i will adjust later
+                },
+              })
+            }
             style={styles.qrBtn}
           >
             <QrCodeIcon width={28} height={28} color={themeColors.primary} />
