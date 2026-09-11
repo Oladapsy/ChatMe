@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { StyleSheet, View, FlatList} from "react-native";
+import { StyleSheet, View, FlatList } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -16,10 +16,12 @@ import { FabMenuOverlay } from "@/features/chats/components/FabMenuOverlay";
 import { NewGroupModal } from "@/features/chats/components/NewGroupModal";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
+// test the list of conversations from the api
+import { useConversations } from "@/features/chats/hooks/useConversations";
+
 export default function HomeScreen() {
   const router = useRouter();
-      const { isDark, themeColors } = useAppTheme();
-
+  const { isDark, themeColors } = useAppTheme();
 
   // the top head color -> safe area side
   const topHeaderBg = isDark ? themeColors.onboardingTop : themeColors.primary;
@@ -148,6 +150,12 @@ export default function HomeScreen() {
     setChats((prev) => prev.filter((item) => !targetIds.includes(item.id)));
     setSelectedIds([]);
   };
+
+  const { data, isPending, isError, error } = useConversations();
+
+  console.log("CONVERSATIONS:", data);
+  console.log("LOADING:", isPending);
+  console.log("ERROR:", error, isError);
 
   return (
     <View

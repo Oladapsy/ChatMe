@@ -38,73 +38,71 @@ api.interceptors.response.use(
     return response;
   },
 
-async (error: AxiosError) => {
-  console.log("RESPONSE ERROR:", error.response?.status);
+  async (error: AxiosError) => {
+    console.log("RESPONSE ERROR:", error.response?.status);
 
-  const originalRequest =
-    error.config as InternalAxiosRequestConfig & {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
 
-  if (error.response?.status !== 401) {
-    return Promise.reject(error);
-  }
-
-  console.log("401 DETECTED — attempting refresh");
-
-  if (originalRequest._retry) {
-    console.log("Already retried — stopping");
-    return Promise.reject(error);
-  }
-
-  originalRequest._retry = true;
-
-  try {
-    const refreshToken = await getRefreshToken();
-
-    if (!refreshToken) {
-      console.log("NO REFRESH TOKEN");
-      await clearSession();
+    if (error.response?.status !== 401) {
       return Promise.reject(error);
     }
 
-    console.log("REFRESH TOKEN FOUND");
+    console.log("401 DETECTED — attempting refresh");
 
-    if (!refreshPromise) {
-      console.log("STARTING TOKEN REFRESH");
-
-      refreshPromise = refreshSession().then(() => {
-        console.log("TOKEN REFRESH SUCCESSFUL");
-        refreshPromise = null;
-      });
-    } else {
-      console.log("REFRESH ALREADY IN PROGRESS — WAITING");
+    if (originalRequest._retry) {
+      console.log("Already retried — stopping");
+      return Promise.reject(error);
     }
 
-    await refreshPromise;
+    originalRequest._retry = true;
 
-    const newAccessToken = await getAccessToken();
+    try {
+      const refreshToken = await getRefreshToken();
 
-    // console.log("NEW ACCESS TOKEN:", newAccessToken);
+      if (!refreshToken) {
+        console.log("NO REFRESH TOKEN");
+        await clearSession();
+        return Promise.reject(error);
+      }
 
-    if (!newAccessToken) {
-      throw new Error("Failed to get new access token");
+      console.log("REFRESH TOKEN FOUND");
+
+      if (!refreshPromise) {
+        console.log("STARTING TOKEN REFRESH");
+
+        refreshPromise = refreshSession().then(() => {
+          console.log("TOKEN REFRESH SUCCESSFUL");
+          refreshPromise = null;
+        });
+      } else {
+        console.log("REFRESH ALREADY IN PROGRESS — WAITING");
+      }
+
+      await refreshPromise;
+
+      const newAccessToken = await getAccessToken();
+
+      // console.log("NEW ACCESS TOKEN:", newAccessToken);
+
+      if (!newAccessToken) {
+        throw new Error("Failed to get new access token");
+      }
+
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+      console.log("RETRYING ORIGINAL REQUEST");
+
+      return api(originalRequest);
+    } catch (refreshError) {
+      console.log("TOKEN REFRESH FAILED:", refreshError);
+
+      refreshPromise = null;
+
+      await clearSession();
+
+      return Promise.reject(refreshError);
     }
-
-    originalRequest.headers.Authorization =
-      `Bearer ${newAccessToken}`;
-
-    console.log("RETRYING ORIGINAL REQUEST");
-
-    return api(originalRequest);
-  } catch (refreshError) {
-    console.log("TOKEN REFRESH FAILED:", refreshError);
-
-    refreshPromise = null;
-
-    await clearSession();
-
-    return Promise.reject(refreshError);
-  }
-}
+  },
 );

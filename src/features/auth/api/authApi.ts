@@ -53,7 +53,6 @@ export type MeUser = {
 
 export type UpdateMePayload = {
   displayName?: string;
-  avatarUrl?: string | null;
 };
 
 export type RefreshResponse = {
@@ -107,6 +106,25 @@ export async function updateMe(payload: UpdateMePayload): Promise<MeUser> {
   const response = await api.patch<MeUser>("/me", payload);
 
   return response.data;
+}
+
+// update avatar payload or type -> New
+export type UpdateAvatarPayload = {
+  mediaId: string;
+};
+
+// update profile picture -> New
+export async function updateAvatar(
+  payload: UpdateAvatarPayload,
+): Promise<MeUser> {
+  const response = await api.put<MeUser>("/me/avatar", payload);
+
+  return response.data;
+}
+
+// remove avatar -> New
+export async function removeAvatar(): Promise<void> {
+  await api.delete("/me/avatar");
 }
 
 

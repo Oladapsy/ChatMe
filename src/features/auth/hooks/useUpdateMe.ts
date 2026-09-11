@@ -8,11 +8,7 @@ export function useUpdateMe() {
   return useMutation({
     mutationFn: updateMe,
 
-    // onSuccess: async () => {
-    //    await queryClient.invalidateQueries({
-    //     queryKey: ["me"],
-    //   });
-    // },
+   
     onSuccess: (data) => {
       queryClient.setQueryData(["me"], data);
       useAuthStore.getState().setProfileComplete(data.profileComplete);
