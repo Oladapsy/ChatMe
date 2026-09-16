@@ -19,15 +19,36 @@ import { useAppTheme } from "@/shared/hooks/useAppTheme";
 // test the list of conversations from the api
 import { useConversations } from "@/features/chats/hooks/useConversations";
 
+// change the initial ui type to backend
+import { mapConversationToChat } from "@/features/chats/utils/mapConversationToChat";
+
+// the use conversation pin to pin conversations
+import { useConversationPin } from "@/features/chats/hooks/useConversationPin";
+
 export default function HomeScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
+
+  // the conversation list hook
+  const { data, isPending, isError, error } = useConversations();
+
+  console.log("CONVERSATIONS:", data);
+  console.log("LOADING:", isPending);
+  console.log("ERROR:", error, isError);
+
+  const chats = useMemo(() => {
+    return data?.items.map(mapConversationToChat) ?? [];
+  }, [data]);
+
+  // for pining and unpin
+  const { pin, unpin, isPending: isPinPending } = useConversationPin();
 
   // the top head color -> safe area side
   const topHeaderBg = isDark ? themeColors.onboardingTop : themeColors.primary;
 
   const [showPinModal, setShowPinModal] = useState(true);
-  const [chats, setChats] = useState<Chat[]>(MOCK_CHATS);
+  // const [chats, setChats] = useState<Chat[]>(MOCK_CHATS);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // group state
@@ -72,90 +93,93 @@ export default function HomeScreen() {
     );
   };
 
+  const handlePin = (chat: Chat) => {
+    if (isPinPending) return;
+
+    if (chat.isPinned) {
+      unpin(chat.id);
+    } else {
+      pin(chat.id);
+    }
+  };
   // Actions
-  const handlePin = (chatToPin?: Chat) => {
-    const targetIds = chatToPin ? [chatToPin.id] : selectedIds;
-    if (targetIds.length === 0) return;
+  // const handlePin = (chatToPin?: Chat) => {
+  //   const targetIds = chatToPin ? [chatToPin.id] : selectedIds;
+  //   if (targetIds.length === 0) return;
 
-    setChats((prev) => {
-      let updatedChats = [...prev];
+  //   setChats((prev) => {
+  //     let updatedChats = [...prev];
 
-      targetIds.forEach((id) => {
-        const targetIndex = updatedChats.findIndex((c) => c.id === id);
-        if (targetIndex === -1) return;
+  //     targetIds.forEach((id) => {
+  //       const targetIndex = updatedChats.findIndex((c) => c.id === id);
+  //       if (targetIndex === -1) return;
 
-        const isCurrentlyPinned = updatedChats[targetIndex].isPinned;
+  //       const isCurrentlyPinned = updatedChats[targetIndex].isPinned;
 
-        if (isCurrentlyPinned) {
-          // If already pinned, toggle it off (unpin)
-          updatedChats[targetIndex] = {
-            ...updatedChats[targetIndex],
-            isPinned: false,
-          };
-        } else {
-          // Find indices of all currently pinned chats
-          const pinnedIndices = updatedChats
-            .map((c, index) => (c.isPinned ? index : -1))
-            .filter((index) => index !== -1);
+  //       if (isCurrentlyPinned) {
+  //         // If already pinned, toggle it off (unpin)
+  //         updatedChats[targetIndex] = {
+  //           ...updatedChats[targetIndex],
+  //           isPinned: false,
+  //         };
+  //       } else {
+  //         // Find indices of all currently pinned chats
+  //         const pinnedIndices = updatedChats
+  //           .map((c, index) => (c.isPinned ? index : -1))
+  //           .filter((index) => index !== -1);
 
-          // If 3 chats are already pinned, unpin the top-most (first in list)
-          if (pinnedIndices.length >= 3) {
-            const topmostPinnedIndex = pinnedIndices[0];
-            updatedChats[topmostPinnedIndex] = {
-              ...updatedChats[topmostPinnedIndex],
-              isPinned: false,
-            };
-          }
+  //         // If 3 chats are already pinned, unpin the top-most (first in list)
+  //         if (pinnedIndices.length >= 3) {
+  //           const topmostPinnedIndex = pinnedIndices[0];
+  //           updatedChats[topmostPinnedIndex] = {
+  //             ...updatedChats[topmostPinnedIndex],
+  //             isPinned: false,
+  //           };
+  //         }
 
-          // Pin the selected chat
-          updatedChats[targetIndex] = {
-            ...updatedChats[targetIndex],
-            isPinned: true,
-          };
-        }
-      });
+  //         // Pin the selected chat
+  //         updatedChats[targetIndex] = {
+  //           ...updatedChats[targetIndex],
+  //           isPinned: true,
+  //         };
+  //       }
+  //     });
 
-      return updatedChats;
-    });
+  //     return updatedChats;
+  //   });
 
-    setSelectedIds([]);
-  };
+  //   setSelectedIds([]);
+  // };
 
-  const handleMute = (chatToMute?: Chat) => {
-    const targetIds = chatToMute ? [chatToMute.id] : selectedIds;
-    setChats((prev) =>
-      prev.map((item) =>
-        targetIds.includes(item.id)
-          ? { ...item, isMuted: !item.isMuted }
-          : item,
-      ),
-    );
-    setSelectedIds([]);
-  };
+  // const handleMute = (chatToMute?: Chat) => {
+  //   const targetIds = chatToMute ? [chatToMute.id] : selectedIds;
+  //   setChats((prev) =>
+  //     prev.map((item) =>
+  //       targetIds.includes(item.id)
+  //         ? { ...item, isMuted: !item.isMuted }
+  //         : item,
+  //     ),
+  //   );
+  //   setSelectedIds([]);
+  // };
 
-  const handleArchive = (chatToArchive?: Chat) => {
-    const targetIds = chatToArchive ? [chatToArchive.id] : selectedIds;
-    setChats((prev) =>
-      prev.map((item) =>
-        targetIds.includes(item.id)
-          ? { ...item, isArchived: !item.isArchived }
-          : item,
-      ),
-    );
-    setSelectedIds([]);
-  };
+  // const handleArchive = (chatToArchive?: Chat) => {
+  //   const targetIds = chatToArchive ? [chatToArchive.id] : selectedIds;
+  //   setChats((prev) =>
+  //     prev.map((item) =>
+  //       targetIds.includes(item.id)
+  //         ? { ...item, isArchived: !item.isArchived }
+  //         : item,
+  //     ),
+  //   );
+  //   setSelectedIds([]);
+  // };
 
-  const handleDelete = (chatToDelete?: Chat) => {
-    const targetIds = chatToDelete ? [chatToDelete.id] : selectedIds;
-    setChats((prev) => prev.filter((item) => !targetIds.includes(item.id)));
-    setSelectedIds([]);
-  };
-
-  const { data, isPending, isError, error } = useConversations();
-
-  console.log("CONVERSATIONS:", data);
-  console.log("LOADING:", isPending);
-  console.log("ERROR:", error, isError);
+  // const handleDelete = (chatToDelete?: Chat) => {
+  //   const targetIds = chatToDelete ? [chatToDelete.id] : selectedIds;
+  //   setChats((prev) => prev.filter((item) => !targetIds.includes(item.id)));
+  //   setSelectedIds([]);
+  // };
 
   return (
     <View
@@ -167,10 +191,10 @@ export default function HomeScreen() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onClearSelection={() => setSelectedIds([])}
-          onPin={() => handlePin()}
-          onMute={() => handleMute()}
-          onArchive={() => handleArchive()}
-          onDelete={() => handleDelete()}
+          onPin={() => console.log()}
+          onMute={() => console.log()}
+          onArchive={() => console.log()}
+          onDelete={() => console.log()}
         />
       </SafeAreaView>
 
@@ -216,9 +240,9 @@ export default function HomeScreen() {
                 }}
                 onLongPress={() => handleToggleSelect(item.id)}
                 onPin={handlePin}
-                onMute={handleMute}
-                onArchive={handleArchive}
-                onDelete={handleDelete}
+                onMute={() => console.log()}
+                onArchive={() => console.log()}
+                onDelete={() => console.log()}
               />
             );
           }}

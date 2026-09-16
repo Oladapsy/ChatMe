@@ -6,3 +6,18 @@ export const getConversations = async (): Promise<ConversationListResponse> => {
 
   return response.data;
 };
+
+
+// for pin and unpin
+export const pinConversation = async (
+  conversationId: string,
+): Promise<void> => {
+  await api.put(`/conversations/${conversationId}/pin`);
+};
+
+export const unpinConversation = async (
+  conversationId: string,
+): Promise<void> => {
+  await api.delete(`/conversations/${conversationId}/pin`);
+};
+
