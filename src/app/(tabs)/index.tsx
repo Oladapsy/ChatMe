@@ -8,7 +8,6 @@ import { SwipeableChatRow } from "@/features/chats/components/SwipeableChatRow";
 import { ArchivedHeaderRow } from "@/features/chats/components/ArchivedHeaderRow";
 import { EmptyChatState } from "@/features/chats/components/EmptyChatState";
 import PinPromptModal from "@/features/security/components/PinPromptModal";
-import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 import { Chat } from "@/features/chats/types/chat";
 
 // for the plus fab Menu
@@ -16,7 +15,7 @@ import { FabMenuOverlay } from "@/features/chats/components/FabMenuOverlay";
 import { NewGroupModal } from "@/features/chats/components/NewGroupModal";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
-// test the list of conversations from the api
+// list of conversations from the api
 import { useConversations } from "@/features/chats/hooks/useConversations";
 
 // change the initial ui type to backend
@@ -34,16 +33,17 @@ import { useConversationArchive } from "@/features/chats/hooks/useConversationAr
 // favourited
 import { useConversationFavorite } from "@/features/chats/hooks/useConversationFavorite";
 
+// for the archieve
+import { useArchivedConversations } from "@/features/chats/hooks/useArchivedConversations";
+
 export default function HomeScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
 
   // the conversation list hook
-  const { data, isPending, isError, error } = useConversations();
-
-  console.log("CONVERSATIONS:", data);
-  console.log("LOADING:", isPending);
-  console.log("ERROR:", error, isError);
+  const { data } = useConversations();
+  // archieve
+  const { data: archivedData } = useArchivedConversations();
 
   const chats = useMemo(() => {
     return data?.items.map(mapConversationToChat) ?? [];
@@ -82,8 +82,8 @@ export default function HomeScreen() {
 
   // Split chats into active vs. archived
   const archivedChats = useMemo(() => {
-    return chats.filter((c) => c.isArchived);
-  }, [chats]);
+    return archivedData?.items.map(mapConversationToChat) ?? [];
+  }, [archivedData]);
 
   const activeChats = useMemo(() => {
     return chats.filter((c) => !c.isArchived);
@@ -116,6 +116,7 @@ export default function HomeScreen() {
     );
   };
 
+  // handle pinning
   const handlePin = (chat: Chat) => {
     if (isPinPending) return;
 
@@ -223,6 +224,8 @@ export default function HomeScreen() {
                 onMute={handleMute}
                 onArchive={handleArchive}
                 onDelete={() => console.log()}
+                // use favourite for more for now
+                onMore={handleFavorite}
               />
             );
           }}

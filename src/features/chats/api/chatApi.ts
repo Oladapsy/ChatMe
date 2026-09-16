@@ -7,6 +7,15 @@ export const getConversations = async (): Promise<ConversationListResponse> => {
   return response.data;
 };
 
+// get archived chats
+export const getArchivedConversations =
+  async (): Promise<ConversationListResponse> => {
+    const response = await api.get<ConversationListResponse>(
+      "/conversations/archived",
+    );
+
+    return response.data;
+  };
 
 // for pin and unpin
 export const pinConversation = async (
@@ -21,12 +30,8 @@ export const unpinConversation = async (
   await api.delete(`/conversations/${conversationId}/pin`);
 };
 
-// mute and unmute conversations 
-export type MuteDuration =
-  | "8_hours"
-  | "24_hours"
-  | "7_days"
-  | "always";
+// mute and unmute conversations
+export type MuteDuration = "8_hours" | "24_hours" | "7_days" | "always";
 
 export const muteConversation = async (
   conversationId: string,
@@ -43,7 +48,7 @@ export const unmuteConversation = async (
   await api.delete(`/conversations/${conversationId}/mute`);
 };
 
-// archive and unarchieve 
+// archive and unarchieve
 export const archiveConversation = async (
   conversationId: string,
 ): Promise<void> => {

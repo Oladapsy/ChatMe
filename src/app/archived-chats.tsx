@@ -5,62 +5,42 @@ import { useRouter } from "expo-router";
 import { SwipeableChatRow } from "@/features/chats/components/SwipeableChatRow";
 import { EmptyChatState } from "@/features/chats/components/EmptyChatState";
 import { ArchivedHeader } from "@/features/chats/components/ArchivedHeader";
-import { MOCK_CHATS } from "@/features/chats/data/mockChats";
+// import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 import { Chat } from "@/features/chats/types/chat";
-import { Colors } from "@/shared/constants/colors";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+
+// the new archive
+import { useArchivedConversations } from "@/features/chats/hooks/useArchivedConversations";
+import { mapConversationToChat } from "@/features/chats/utils/mapConversationToChat";
+
+// archieve list
+import { useConversationArchive } from "@/features/chats/hooks/useConversationArchive";
 
 export default function ArchivedChatsScreen() {
   const router = useRouter();
-     const { isDark, themeColors } = useAppTheme();
+  const { themeColors } = useAppTheme();
 
+  const { data, isPending, isError, error } = useArchivedConversations();
 
-  // 1. Initialize local state with MOCK_CHATS
-  const [chats, setChats] = useState<Chat[]>(MOCK_CHATS);
-
-  // 2. Filter only archived chats
   const archivedChats = useMemo(() => {
-    return chats.filter((chat) => chat.isArchived);
-  }, [chats]);
+    return data?.items.map(mapConversationToChat) ?? [];
+  }, [data]);
+
+  // the archive action
+  const { unarchive, isPending: isArchivePending } = useConversationArchive();
 
   // 3. Define action handlers directly inside the screen
-  const handlePin = (chatToPin: Chat) => {
-    setChats((prev) =>
-      prev.map((item) =>
-        item.id === chatToPin.id
-          ? { ...item, isPinned: !item.isPinned }
-          : item
-      )
-    );
-  };
 
-  const handleMute = (chatToMute: Chat) => {
-    setChats((prev) =>
-      prev.map((item) =>
-        item.id === chatToMute.id
-          ? { ...item, isMuted: !item.isMuted }
-          : item
-      )
-    );
-  };
+  const handleUnarchive = (chat: Chat) => {
+    if (isArchivePending) return;
 
-  const handleArchive = (chatToArchive: Chat) => {
-    // Toggling isArchived back to false removes it from this screen
-    setChats((prev) =>
-      prev.map((item) =>
-        item.id === chatToArchive.id
-          ? { ...item, isArchived: !item.isArchived }
-          : item
-      )
-    );
-  };
-
-  const handleDelete = (chatToDelete: Chat) => {
-    setChats((prev) => prev.filter((item) => item.id !== chatToDelete.id));
+    unarchive(chat.id);
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: themeColors.background }]}
+    >
       <ArchivedHeader title="Archived Chat" />
 
       <View style={styles.content}>
@@ -95,10 +75,10 @@ export default function ArchivedChatsScreen() {
                   });
                 }}
                 onLongPress={() => {}}
-                onPin={handlePin}
-                onMute={handleMute}
-                onArchive={handleArchive}
-                onDelete={handleDelete}
+                onPin={() => {}}
+                onMute={() => {}}
+                onArchive={handleUnarchive}
+                onDelete={() => {}}
               />
             );
           }}

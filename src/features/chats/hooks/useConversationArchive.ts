@@ -14,6 +14,10 @@ export const useConversationArchive = () => {
       queryClient.invalidateQueries({
         queryKey: ["conversations"],
       });
+
+      queryClient.invalidateQueries({
+        queryKey: ["archived-conversations"],
+      });
     },
   });
 
@@ -24,13 +28,16 @@ export const useConversationArchive = () => {
       queryClient.invalidateQueries({
         queryKey: ["conversations"],
       });
+
+      queryClient.invalidateQueries({
+        queryKey: ["archived-conversations"],
+      });
     },
   });
 
   return {
     archive: archiveMutation.mutate,
     unarchive: unarchiveMutation.mutate,
-    isPending:
-      archiveMutation.isPending || unarchiveMutation.isPending,
+    isPending: archiveMutation.isPending || unarchiveMutation.isPending,
   };
 };
