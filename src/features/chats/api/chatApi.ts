@@ -55,3 +55,16 @@ export const unarchiveConversation = async (
 ): Promise<void> => {
   await api.delete(`/conversations/${conversationId}/archive`);
 };
+
+// favourite
+export const favoriteConversation = async (
+  conversationId: string,
+): Promise<void> => {
+  await api.put(`/conversations/${conversationId}/favorite`);
+};
+
+export const unfavoriteConversation = async (
+  conversationId: string,
+): Promise<void> => {
+  await api.delete(`/conversations/${conversationId}/favorite`);
+};

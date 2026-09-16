@@ -40,6 +40,7 @@ export interface Chat {
   name: string;
   avatar: string;
   lastMessage: string;
+  isFavorited?: boolean;
   time: string;
   unreadCount?: number;
   isPinned?: boolean;

@@ -31,6 +31,9 @@ import { useConversationMute } from "@/features/chats/hooks/useConversationMute"
 // the archieve conversation
 import { useConversationArchive } from "@/features/chats/hooks/useConversationArchive";
 
+// favourited
+import { useConversationFavorite } from "@/features/chats/hooks/useConversationFavorite";
+
 export default function HomeScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
@@ -56,6 +59,12 @@ export default function HomeScreen() {
     unarchive,
     isPending: isArchivePending,
   } = useConversationArchive();
+  // favourite
+  const {
+    favorite,
+    unfavorite,
+    isPending: isFavoritePending,
+  } = useConversationFavorite();
 
   // the top head color -> safe area side
   const topHeaderBg = isDark ? themeColors.onboardingTop : themeColors.primary;
@@ -141,85 +150,17 @@ export default function HomeScreen() {
       archive(chat.id);
     }
   };
-  // Actions
-  // const handlePin = (chatToPin?: Chat) => {
-  //   const targetIds = chatToPin ? [chatToPin.id] : selectedIds;
-  //   if (targetIds.length === 0) return;
 
-  //   setChats((prev) => {
-  //     let updatedChats = [...prev];
+  // favourited
+  const handleFavorite = (chat: Chat) => {
+    if (isFavoritePending) return;
 
-  //     targetIds.forEach((id) => {
-  //       const targetIndex = updatedChats.findIndex((c) => c.id === id);
-  //       if (targetIndex === -1) return;
-
-  //       const isCurrentlyPinned = updatedChats[targetIndex].isPinned;
-
-  //       if (isCurrentlyPinned) {
-  //         // If already pinned, toggle it off (unpin)
-  //         updatedChats[targetIndex] = {
-  //           ...updatedChats[targetIndex],
-  //           isPinned: false,
-  //         };
-  //       } else {
-  //         // Find indices of all currently pinned chats
-  //         const pinnedIndices = updatedChats
-  //           .map((c, index) => (c.isPinned ? index : -1))
-  //           .filter((index) => index !== -1);
-
-  //         // If 3 chats are already pinned, unpin the top-most (first in list)
-  //         if (pinnedIndices.length >= 3) {
-  //           const topmostPinnedIndex = pinnedIndices[0];
-  //           updatedChats[topmostPinnedIndex] = {
-  //             ...updatedChats[topmostPinnedIndex],
-  //             isPinned: false,
-  //           };
-  //         }
-
-  //         // Pin the selected chat
-  //         updatedChats[targetIndex] = {
-  //           ...updatedChats[targetIndex],
-  //           isPinned: true,
-  //         };
-  //       }
-  //     });
-
-  //     return updatedChats;
-  //   });
-
-  //   setSelectedIds([]);
-  // };
-
-  // const handleMute = (chatToMute?: Chat) => {
-  //   const targetIds = chatToMute ? [chatToMute.id] : selectedIds;
-  //   setChats((prev) =>
-  //     prev.map((item) =>
-  //       targetIds.includes(item.id)
-  //         ? { ...item, isMuted: !item.isMuted }
-  //         : item,
-  //     ),
-  //   );
-  //   setSelectedIds([]);
-  // };
-
-  // const handleArchive = (chatToArchive?: Chat) => {
-  //   const targetIds = chatToArchive ? [chatToArchive.id] : selectedIds;
-  //   setChats((prev) =>
-  //     prev.map((item) =>
-  //       targetIds.includes(item.id)
-  //         ? { ...item, isArchived: !item.isArchived }
-  //         : item,
-  //     ),
-  //   );
-  //   setSelectedIds([]);
-  // };
-
-  // const handleDelete = (chatToDelete?: Chat) => {
-  //   const targetIds = chatToDelete ? [chatToDelete.id] : selectedIds;
-  //   setChats((prev) => prev.filter((item) => !targetIds.includes(item.id)));
-  //   setSelectedIds([]);
-  // };
-
+    if (chat.isFavorited) {
+      unfavorite(chat.id);
+    } else {
+      favorite(chat.id);
+    }
+  };
   return (
     <View
       style={[styles.container, { backgroundColor: themeColors.background }]}
