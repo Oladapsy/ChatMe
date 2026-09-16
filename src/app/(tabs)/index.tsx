@@ -25,6 +25,9 @@ import { mapConversationToChat } from "@/features/chats/utils/mapConversationToC
 // the use conversation pin to pin conversations
 import { useConversationPin } from "@/features/chats/hooks/useConversationPin";
 
+// the mute hook
+import { useConversationMute } from "@/features/chats/hooks/useConversationMute";
+
 export default function HomeScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
@@ -42,6 +45,8 @@ export default function HomeScreen() {
 
   // for pining and unpin
   const { pin, unpin, isPending: isPinPending } = useConversationPin();
+  // mute
+  const { mute, unmute, isPending: isMutePending } = useConversationMute();
 
   // the top head color -> safe area side
   const topHeaderBg = isDark ? themeColors.onboardingTop : themeColors.primary;
@@ -102,6 +107,20 @@ export default function HomeScreen() {
       pin(chat.id);
     }
   };
+
+  // mute 
+  const handleMute = (chat: Chat) => {
+  if (isMutePending) return;
+
+  if (chat.isMuted) {
+    unmute(chat.id);
+  } else {
+    mute({
+      conversationId: chat.id,
+      duration: "8_hours",
+    });
+  }
+};
   // Actions
   // const handlePin = (chatToPin?: Chat) => {
   //   const targetIds = chatToPin ? [chatToPin.id] : selectedIds;
@@ -240,7 +259,7 @@ export default function HomeScreen() {
                 }}
                 onLongPress={() => handleToggleSelect(item.id)}
                 onPin={handlePin}
-                onMute={() => console.log()}
+                onMute={handleMute}
                 onArchive={() => console.log()}
                 onDelete={() => console.log()}
               />

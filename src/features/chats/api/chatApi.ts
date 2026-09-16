@@ -21,3 +21,24 @@ export const unpinConversation = async (
   await api.delete(`/conversations/${conversationId}/pin`);
 };
 
+// mute and unmute conversations 
+export type MuteDuration =
+  | "8_hours"
+  | "24_hours"
+  | "7_days"
+  | "always";
+
+export const muteConversation = async (
+  conversationId: string,
+  duration: MuteDuration,
+): Promise<void> => {
+  await api.put(`/conversations/${conversationId}/mute`, {
+    duration,
+  });
+};
+
+export const unmuteConversation = async (
+  conversationId: string,
+): Promise<void> => {
+  await api.delete(`/conversations/${conversationId}/mute`);
+};
