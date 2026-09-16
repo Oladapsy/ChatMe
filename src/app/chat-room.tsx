@@ -11,7 +11,6 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/EdgeMySafeAreaView";
-import { Colors } from "@/shared/constants/colors";
 import { ChatRoomHeader } from "@/features/chats/components/ChatRoomHeader";
 import { AttachmentModal } from "@/features/chats/components/AttachmentModal";
 import { useCameraHandler } from "@/features/chats/hooks/useCameraHandler";
@@ -28,9 +27,12 @@ import ChatBgIcon from "@/assets/icons/chat/ChatBg.svg";
 // Types & Data
 import { Message } from "@/features/chats/types/message";
 import { MessageBubble } from "@/features/chats/components/MessageBubble";
-import { MOCK_MESSAGES } from "@/features/chats/data/mockMessages";
+
 import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+
+// get msgs for a converstaion
+import { useMessages } from "@/features/chats/hooks/useMessages";
 
 export default function ChatRoomScreen() {
   const router = useRouter();
@@ -47,7 +49,13 @@ export default function ChatRoomScreen() {
     }>();
 
   const activeChatId = id || "1";
+  const {
+    data: messagesData,
+    isLoading: isMessagesLoading,
+    isError: isMessagesError,
+  } = useMessages(activeChatId);
 
+  console.log("MESSAGES DATA:", messagesData);
   // Search Mode States
   const [isSearching, setIsSearching] = useState(search === "true");
   const [searchQuery, setSearchQuery] = useState("");
@@ -70,8 +78,8 @@ export default function ChatRoomScreen() {
   const chatAvatar = currentChat?.avatar || avatar;
   const groupMembers = currentChat?.members;
 
-  const initialMessages = MOCK_MESSAGES[activeChatId] || [];
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const messages = [...(messagesData?.items ?? [])].reverse();
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
 
   const [messageText, setMessageText] = useState("");
   const [selectedImageUris, setSelectedImageUris] = useState<string[]>([]);
@@ -80,8 +88,10 @@ export default function ChatRoomScreen() {
   const { takePhoto, pickImages } = useCameraHandler();
   const flatListRef = useRef<FlatList>(null);
 
-  const processedMessages = messages.map((msg, index) => {
-    const nextMsg = messages[index + 1];
+  const allMessages = [...messages, ...localMessages];
+
+  const processedMessages = allMessages.map((msg, index) => {
+    const nextMsg = allMessages[index + 1];
     const isLastFromSender = !nextMsg || nextMsg.senderId !== msg.senderId;
     return {
       ...msg,
@@ -151,7 +161,7 @@ export default function ChatRoomScreen() {
       isMe: true,
     };
 
-    setMessages((prev) => [...prev, newMessage]);
+   setLocalMessages((prev) => [...prev, newMessage]);
     setMessageText("");
     setSelectedImageUris([]);
   };
@@ -172,7 +182,7 @@ export default function ChatRoomScreen() {
       isMe: true,
     };
 
-    setMessages((prev) => [...prev, audioMessage]);
+    setLocalMessages((prev) => [...prev, audioMessage]);
   };
 
   const handleCameraCapture = async () => {

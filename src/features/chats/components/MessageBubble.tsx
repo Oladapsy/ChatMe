@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import { Message } from "@/features/chats/types/message";
 
 // Icons
@@ -28,7 +27,7 @@ export function MessageBubble({
   isGroup = false,
   searchQuery,
 }: Props) {
-    const { isDark, themeColors } = useAppTheme();
+    const { themeColors } = useAppTheme();
 
 
   const isMe = message.isMe;
@@ -147,7 +146,7 @@ export function MessageBubble({
           )}
 
           {/* 1. Image Attachment */}
-          {message.imageUris && message.imageUris.length > 0 && (
+          {/* {message.imageUris && message.imageUris.length > 0 && (
             <View style={styles.imageGridContainer}>
               {message.imageUris.map((uri, idx) => (
                 <Image
@@ -157,10 +156,10 @@ export function MessageBubble({
                 />
               ))}
             </View>
-          )}
+          )} */}
 
           {/* 2. Audio / Voice Note Attachment */}
-          {message.type === "audio" && (
+          {/* {message.type === "audio" && (
             <View style={styles.audioContainer}>
               <TouchableOpacity
                 style={[
@@ -202,10 +201,10 @@ export function MessageBubble({
                 {formatAudioDuration(message.audioDuration)}
               </Typography>
             </View>
-          )}
+          )} */}
 
           {/* 3. Document Attachment */}
-          {message.document && (
+          {/* {message.document && (
             <View style={styles.attachmentCard}>
               <DocumentIcon
                 width={22}
@@ -230,10 +229,10 @@ export function MessageBubble({
                 </Typography>
               </View>
             </View>
-          )}
+          )} */}
 
           {/* 4. Location Attachment */}
-          {message.location && (
+          {/* {message.location && (
             <View style={[styles.attachmentCard, { paddingRight: 12 }]}>
               <LocationIcon
                 width={22}
@@ -249,10 +248,10 @@ export function MessageBubble({
                 {message.location.address || "Shared Location"}
               </Typography>
             </View>
-          )}
+          )} */}
 
           {/* 5. Contact Attachment */}
-          {message.contact && (
+          {/* {message.contact && (
             <View style={styles.attachmentCard}>
               {message.contact.avatar ? (
                 <Image
@@ -283,7 +282,7 @@ export function MessageBubble({
                 </Typography>
               </View>
             </View>
-          )}
+          )} */}
 
           {/* 6. Text Message */}
           {Boolean(message.text) &&

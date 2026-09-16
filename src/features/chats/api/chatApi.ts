@@ -1,5 +1,6 @@
 import { api } from "@/services/api";
 import type { ConversationListResponse } from "@/features/chats/types/chat";
+import type { MessageHistoryResponse, Message } from "@/features/chats/types/message";
 
 export const getConversations = async (): Promise<ConversationListResponse> => {
   const response = await api.get<ConversationListResponse>("/conversations");
@@ -72,4 +73,36 @@ export const unfavoriteConversation = async (
   conversationId: string,
 ): Promise<void> => {
   await api.delete(`/conversations/${conversationId}/favorite`);
+};
+
+// get messages for a conversation
+export const getMessages = async (
+  conversationId: string,
+): Promise<MessageHistoryResponse> => {
+  const response = await api.get<MessageHistoryResponse>(
+    `/conversations/${conversationId}/messages`,
+  );
+
+  return response.data;
+};
+
+// send messages to a conversation payload
+export interface SendMessagePayload {
+  clientMessageId: string;
+  replyToMessageId?: string;
+  text?: string;
+  attachmentMediaIds?: string[];
+}
+
+// send msgs to a convereation function
+export const sendMessage = async (
+  conversationId: string,
+  payload: SendMessagePayload,
+): Promise<Message> => {
+  const response = await api.post<Message>(
+    `/conversations/${conversationId}/messages`,
+    payload,
+  );
+
+  return response.data;
 };
