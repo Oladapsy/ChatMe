@@ -28,6 +28,9 @@ import { useConversationPin } from "@/features/chats/hooks/useConversationPin";
 // the mute hook
 import { useConversationMute } from "@/features/chats/hooks/useConversationMute";
 
+// the archieve conversation
+import { useConversationArchive } from "@/features/chats/hooks/useConversationArchive";
+
 export default function HomeScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
@@ -47,6 +50,12 @@ export default function HomeScreen() {
   const { pin, unpin, isPending: isPinPending } = useConversationPin();
   // mute
   const { mute, unmute, isPending: isMutePending } = useConversationMute();
+  // archieve
+  const {
+    archive,
+    unarchive,
+    isPending: isArchivePending,
+  } = useConversationArchive();
 
   // the top head color -> safe area side
   const topHeaderBg = isDark ? themeColors.onboardingTop : themeColors.primary;
@@ -108,19 +117,30 @@ export default function HomeScreen() {
     }
   };
 
-  // mute 
+  // mute
   const handleMute = (chat: Chat) => {
-  if (isMutePending) return;
+    if (isMutePending) return;
 
-  if (chat.isMuted) {
-    unmute(chat.id);
-  } else {
-    mute({
-      conversationId: chat.id,
-      duration: "8_hours",
-    });
-  }
-};
+    if (chat.isMuted) {
+      unmute(chat.id);
+    } else {
+      mute({
+        conversationId: chat.id,
+        duration: "8_hours",
+      });
+    }
+  };
+
+  // archieve
+  const handleArchive = (chat: Chat) => {
+    if (isArchivePending) return;
+
+    if (chat.isArchived) {
+      unarchive(chat.id);
+    } else {
+      archive(chat.id);
+    }
+  };
   // Actions
   // const handlePin = (chatToPin?: Chat) => {
   //   const targetIds = chatToPin ? [chatToPin.id] : selectedIds;
@@ -260,7 +280,7 @@ export default function HomeScreen() {
                 onLongPress={() => handleToggleSelect(item.id)}
                 onPin={handlePin}
                 onMute={handleMute}
-                onArchive={() => console.log()}
+                onArchive={handleArchive}
                 onDelete={() => console.log()}
               />
             );

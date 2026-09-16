@@ -42,3 +42,16 @@ export const unmuteConversation = async (
 ): Promise<void> => {
   await api.delete(`/conversations/${conversationId}/mute`);
 };
+
+// archive and unarchieve 
+export const archiveConversation = async (
+  conversationId: string,
+): Promise<void> => {
+  await api.put(`/conversations/${conversationId}/archive`);
+};
+
+export const unarchiveConversation = async (
+  conversationId: string,
+): Promise<void> => {
+  await api.delete(`/conversations/${conversationId}/archive`);
+};
