@@ -8,6 +8,7 @@ import { Typography } from "@/shared/components/Typography";
 import { Chat } from "@/features/chats/types/chat";
 import ArchiveIcon from "@/assets/icons/chat/archive.svg";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import { formatChatTime } from "@/features/chats/utils/formatChatTime";
 
 interface ArchivedHeaderRowProps {
   archivedChats: Chat[];
@@ -49,7 +50,7 @@ export function ArchivedHeaderRow({
             Archived Chat
           </Typography>
           <Typography size={14} color={themeColors.textSecondary}>
-            {latestTime}
+              {formatChatTime(latestTime)}
           </Typography>
         </View>
 

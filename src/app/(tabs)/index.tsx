@@ -70,7 +70,6 @@ export default function HomeScreen() {
   const topHeaderBg = isDark ? themeColors.onboardingTop : themeColors.primary;
 
   const [showPinModal, setShowPinModal] = useState(true);
-  // const [chats, setChats] = useState<Chat[]>(MOCK_CHATS);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -85,9 +84,7 @@ export default function HomeScreen() {
     return archivedData?.items.map(mapConversationToChat) ?? [];
   }, [archivedData]);
 
-  const activeChats = useMemo(() => {
-    return chats.filter((c) => !c.isArchived);
-  }, [chats]);
+  const activeChats = chats;
 
   // Filter & sort active chats (Pinned on top)
   const filteredChats = useMemo(() => {
@@ -104,8 +101,16 @@ export default function HomeScreen() {
       : activeChats;
 
     return [...filtered].sort((a, b) => {
-      if (a.isPinned === b.isPinned) return 0;
-      return a.isPinned ? -1 : 1;
+      // Pinned chats always come first
+      if (a.isPinned !== b.isPinned) {
+        return a.isPinned ? -1 : 1;
+      }
+
+      // Within the same group, newest activity comes first
+      return (
+        new Date(b.lastActivityAt).getTime() -
+        new Date(a.lastActivityAt).getTime()
+      );
     });
   }, [activeChats, searchQuery]);
 
@@ -194,10 +199,9 @@ export default function HomeScreen() {
           renderItem={({ item }) => {
             const isSelected = selectedIds.includes(item.id);
 
-            // Safe formatting for members text if item is a group
-            const groupMembersText = Array.isArray((item as any).members)
-              ? (item as any).members.join(", ")
-              : ((item as any).membersText ?? "");
+            const groupMembersText = item.isGroup
+              ? (item.members?.map((member) => member.name).join(", ") ?? "")
+              : "";
 
             return (
               <SwipeableChatRow
@@ -213,7 +217,7 @@ export default function HomeScreen() {
                         id: item.id,
                         name: item.name,
                         avatar: item.avatar ?? "",
-                        isGroup: (item as any).isGroup ? "true" : "false",
+                        isGroup: item.isGroup ? "true" : "false",
                         membersText: groupMembersText,
                       },
                     });

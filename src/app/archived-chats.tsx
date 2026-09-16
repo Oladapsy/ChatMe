@@ -20,7 +20,7 @@ export default function ArchivedChatsScreen() {
   const router = useRouter();
   const { themeColors } = useAppTheme();
 
-  const { data, isPending, isError, error } = useArchivedConversations();
+  const { data } = useArchivedConversations();
 
   const archivedChats = useMemo(() => {
     return data?.items.map(mapConversationToChat) ?? [];

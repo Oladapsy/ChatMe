@@ -53,6 +53,7 @@ export interface Chat {
   // added group details
   // maybe i will add the user details here later
   groupDetails?: GroupDetails;
+  lastActivityAt: string;
 }
 
 

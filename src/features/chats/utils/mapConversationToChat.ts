@@ -1,6 +1,5 @@
 import type {
   Conversation,
-  GroupConversation,
 } from "@/features/chats/types/chat";
 import type { Chat } from "@/features/chats/types/chat";
 
@@ -19,6 +18,7 @@ export const mapConversationToChat = (conversation: Conversation): Chat => {
       isArchived: conversation.settings.archived,
       isGroup: false,
       isFavorited: conversation.settings.favorited,
+      lastActivityAt: conversation.lastActivityAt,
     };
   }
 
@@ -34,6 +34,7 @@ export const mapConversationToChat = (conversation: Conversation): Chat => {
     isMuted: conversation.settings.muted,
     isArchived: conversation.settings.archived,
     isGroup: true,
+    lastActivityAt: conversation.lastActivityAt,
     members: conversation.participants.map((participant) => ({
       id: participant.id,
       name: participant.displayName ?? "Unknown",

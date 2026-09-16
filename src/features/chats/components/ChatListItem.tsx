@@ -1,13 +1,15 @@
 import React from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import { Chat } from "@/features/chats/types/chat";
 import PinIcon from "@/assets/icons/shared/pin.svg";
 import GroupIcon from "@/assets/icons/chat/user-group.svg";
 import MutedIcon from "@/assets/icons/chat/mute.svg";
 import UserIcon from "@/assets/icons/shared/user.svg";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+
+// format the time
+import { formatChatTime } from "@/features/chats/utils/formatChatTime";
 
 interface ChatListItemProps {
   chat: Chat;
@@ -46,7 +48,11 @@ export function ChatListItem({
               { backgroundColor: themeColors.avatarBg },
             ]}
           >
-            <UserIcon width={24} height={24} color="white" />
+            {chat.isGroup ? (
+              <GroupIcon width={24} height={24} color="white" />
+            ) : (
+              <UserIcon width={24} height={24} color="white" />
+            )}
           </View>
         )}
 
@@ -85,7 +91,7 @@ export function ChatListItem({
               chat.unreadCount ? themeColors.primary : themeColors.textSecondary
             }
           >
-            {chat.time}
+            {formatChatTime(chat.time)}
           </Typography>
         </View>
 
@@ -100,17 +106,25 @@ export function ChatListItem({
           </Typography>
 
           {/* Badges: Unread Counter or Pin Icon */}
-          {chat.unreadCount ? (
-            <View
-              style={[styles.badge, { backgroundColor: themeColors.primary }]}
-            >
-              <Typography size={13} weight="bold" color="white">
-                {chat.unreadCount}
-              </Typography>
-            </View>
-          ) : chat.isPinned ? (
-            <PinIcon width={16} height={16} color={themeColors.textSecondary} />
-          ) : null}
+          <View style={styles.badgesContainer}>
+            {chat.isPinned && (
+              <PinIcon
+                width={16}
+                height={16}
+                color={themeColors.textSecondary}
+              />
+            )}
+
+            {chat.unreadCount ? (
+              <View
+                style={[styles.badge, { backgroundColor: themeColors.primary }]}
+              >
+                <Typography size={13} weight="bold" color="white">
+                  {chat.unreadCount}
+                </Typography>
+              </View>
+            ) : null}
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -182,4 +196,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  badgesContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 6,
+},
 });
