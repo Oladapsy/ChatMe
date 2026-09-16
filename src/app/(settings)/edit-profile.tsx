@@ -9,10 +9,12 @@ import {
 import { useRouter } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
-import { Colors } from "@/shared/constants/colors";
 import { BackButton } from "@/shared/components/BackButton";
 
-import { AvatarPicker } from "@/features/contacts/components/AvatarPicker";
+import {
+  AvatarPicker,
+  type SelectedImage,
+} from "@/features/contacts/components/AvatarPicker";
 import { FormInput } from "@/features/contacts/components/FormInput";
 import { CountryPhoneInput } from "@/features/contacts/components/CountryPhoneInput";
 
@@ -21,8 +23,11 @@ import { Button } from "@/shared/components/Button";
 
 import { useMe } from "@/features/auth/hooks/useMe";
 import { useUpdateMe } from "@/features/auth/hooks/useUpdateMe";
-import { uploadImage } from "@/services/cloudinary";
+import { uploadMedia } from "@/services/mediaUpload";
+import { useUpdateAvatar } from "@/features/auth/hooks/useUpdateAvatar";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+
+import { useRemoveAvatar } from "@/features/auth/hooks/useRemoveAvatar";
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -34,18 +39,28 @@ export default function EditProfileScreen() {
 
   // Update profile mutation
   const updateMeMutation = useUpdateMe();
+  // update avatar
+  const updateAvatarMutation = useUpdateAvatar();
+  const removeAvatarMutation = useRemoveAvatar();
 
   // Form state
   const [avatarUri, setAvatarUri] = useState<string | undefined>();
+  const [selectedAvatar, setSelectedAvatar] = useState<
+    SelectedImage | undefined
+  >();
+  const [avatarRemoved, setAvatarRemoved] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
 
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // Populate form when user data arrives
   useEffect(() => {
     if (user) {
       setAvatarUri(user.avatarUrl ?? undefined);
+      setSelectedAvatar(undefined);
+      setAvatarRemoved(false);
       setName(user.displayName ?? "");
 
       const phoneNumber = user.phoneNumber ?? "";
@@ -81,44 +96,62 @@ export default function EditProfileScreen() {
     phone.trim().length > 5 &&
     phone.trim().length < 15;
 
-  const handleSave = async () => {
-    if (!isValid || updateMeMutation.isPending) {
-      return;
-    }
+ const handleSave = async () => {
+  if (saving) return;
 
-    try {
-      let finalAvatarUrl = user.avatarUrl;
+  setSaving(true);
 
-      if (avatarUri && avatarUri !== user.avatarUrl) {
-        console.log("Uploading new avatar...");
+  try {
+    console.log("1. SAVE STARTED");
+    console.log("2. selectedAvatar:", selectedAvatar);
 
-        const uploadResult = await uploadImage(avatarUri);
+    if (avatarRemoved && user.avatarUrl) {
+      console.log("3. REMOVING AVATAR");
 
-        console.log("Cloudinary upload result:", uploadResult);
+      await removeAvatarMutation.mutateAsync();
 
-        finalAvatarUrl = uploadResult.secure_url;
+      console.log("4. AVATAR REMOVED");
+    } else if (selectedAvatar) {
+      console.log("3. STARTING MEDIA UPLOAD");
 
-        console.log("Final avatar URL:", finalAvatarUrl);
-      }
-
-      await updateMeMutation.mutateAsync({
-        displayName: name.trim(),
-        avatarUrl: finalAvatarUrl ?? null,
+      const media = await uploadMedia({
+        uri: selectedAvatar.uri,
+        purpose: "profile_avatar",
+        contentType: selectedAvatar.mimeType,
+        sizeBytes: selectedAvatar.fileSize,
+        originalFilename: selectedAvatar.fileName,
       });
 
-      router.back();
-    } catch (error: any) {
-      console.log("UPDATE PROFILE ERROR");
-      console.log("STATUS:", error.response?.status);
-      console.log("DATA:", error.response?.data);
+      console.log("4. MEDIA UPLOAD SUCCESS:", media);
 
-      Alert.alert(
-        "Error",
-        error.response?.data?.message ||
-          "Could not update your profile. Please try again.",
-      );
+      console.log("5. CONNECTING AVATAR:", media.id);
+
+      await updateAvatarMutation.mutateAsync({
+        mediaId: media.id,
+      });
+
+      console.log("6. AVATAR CONNECTED");
     }
-  };
+
+    console.log("7. UPDATING NAME");
+
+    await updateMeMutation.mutateAsync({
+      displayName: name.trim(),
+    });
+
+    console.log("8. PROFILE UPDATE SUCCESS");
+
+    router.back();
+  } catch (error: any) {
+    console.log("========== UPDATE PROFILE ERROR ==========");
+    console.log("ERROR OBJECT:", error);
+    console.log("ERROR MESSAGE:", error?.message);
+    console.log("ERROR RESPONSE:", error?.response);
+    console.log("ERROR STACK:", error?.stack);
+  } finally {
+    setSaving(false);
+  }
+};
 
   return (
     <MySafeAreaView
@@ -149,7 +182,14 @@ export default function EditProfileScreen() {
 
         {/* AVATAR */}
         <View style={styles.avatarAbsoluteWrapper}>
-          <AvatarPicker uri={avatarUri} onSelectImage={setAvatarUri} />
+          <AvatarPicker
+            uri={avatarUri}
+            onSelectImage={(image) => {
+              setSelectedAvatar(image);
+              setAvatarUri(image?.uri);
+              setAvatarRemoved(!image);
+            }}
+          />
         </View>
 
         {/* FORM */}
@@ -189,8 +229,8 @@ export default function EditProfileScreen() {
           <View style={styles.footer}>
             <Button
               title="Save"
-              loading={updateMeMutation.isPending}
-              disabled={!isValid || updateMeMutation.isPending}
+              loading={saving}
+              disabled={!isValid || saving}
               onPress={handleSave}
               textWeight="bold"
             />

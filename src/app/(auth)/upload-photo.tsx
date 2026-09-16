@@ -14,7 +14,6 @@ import { Typography } from "@/shared/components/Typography";
 import { Button } from "@/shared/components/Button";
 import { BackButton } from "@/shared/components/BackButton";
 import { PhotoPickerModal } from "@/shared/components/PhotoPickerModal";
-import { Colors } from "@/shared/constants/colors";
 
 // Icons
 import CheckCircleIcon from "@/assets/icons/auth/checkIcon.svg";
@@ -22,24 +21,31 @@ import PlaceholderGraphic from "@/assets/icons/auth/Placeholder.svg";
 import AddPhotoIcon from "@/assets/icons/auth/add-a-photo.svg";
 import UploadingBg from "@/assets/icons/auth/uploading.svg";
 
-//test cloudinary
-import { uploadImage } from "@/services/cloudinary";
-import { useUpdateMe } from "@/features/auth/hooks/useUpdateMe";
 import { useMe } from "@/features/auth/hooks/useMe";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
+import { uploadMedia } from "@/services/mediaUpload";
+import { useUpdateAvatar } from "@/features/auth/hooks/useUpdateAvatar";
+import { useRemoveAvatar } from "@/features/auth/hooks/useRemoveAvatar";
+
 type UploadStatus = "idle" | "uploading" | "success";
 
+type SelectedImage = {
+  uri: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+};
 export default function UploadPhotoScreen() {
   const router = useRouter();
-  const { isDark, themeColors } = useAppTheme();
-
+  const { themeColors } = useAppTheme();
 
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<UploadStatus>("idle");
   const [showPickerModal, setShowPickerModal] = useState(false);
-  const updateMeMutation = useUpdateMe();
+  const updateAvatarMutation = useUpdateAvatar();
+  const removeAvatarMutation = useRemoveAvatar();
   const { data: user } = useMe();
 
   useEffect(() => {
@@ -65,7 +71,14 @@ export default function UploadPhotoScreen() {
     });
 
     if (!result.canceled && result.assets[0].uri) {
-      processImageUpload(result.assets[0].uri);
+      const asset = result.assets[0];
+
+      processImageUpload({
+        uri: asset.uri,
+        fileName: asset.fileName ?? "profile-photo.jpg",
+        fileSize: asset.fileSize ?? 0,
+        mimeType: asset.mimeType ?? "image/jpeg",
+      });
     }
   };
 
@@ -87,32 +100,52 @@ export default function UploadPhotoScreen() {
     });
 
     if (!result.canceled && result.assets[0].uri) {
-      processImageUpload(result.assets[0].uri);
+      const asset = result.assets[0];
+
+      processImageUpload({
+        uri: asset.uri,
+        fileName: asset.fileName ?? "profile-photo.jpg",
+        fileSize: asset.fileSize ?? 0,
+        mimeType: asset.mimeType ?? "image/jpeg",
+      });
     }
   };
 
   const handleSelectRecentPhoto = (uri: string) => {
     setShowPickerModal(false);
-    processImageUpload(uri);
+
+    console.log("Recent photo selected:", uri);
   };
 
-  const processImageUpload = async (uri: string) => {
+  const processImageUpload = async (image: SelectedImage) => {
+    const { uri, fileName, fileSize, mimeType } = image;
+
+    console.log("Selected image:", {
+      uri,
+      fileName,
+      fileSize,
+      mimeType,
+    });
+
     try {
       setImageUri(uri);
       setStatus("uploading");
 
-      const result = await uploadImage(uri);
-
-      const imageUrl = result.secure_url;
-
-      console.log("Cloudinary upload successful");
-      console.log("Image URL:", imageUrl);
-
-      setUploadedImageUrl(imageUrl);
-
-      await updateMeMutation.mutateAsync({
-        avatarUrl: imageUrl,
+      const media = await uploadMedia({
+        uri,
+        purpose: "profile_avatar",
+        contentType: mimeType,
+        sizeBytes: fileSize,
+        originalFilename: fileName,
       });
+
+      console.log("Media upload successful:", media);
+
+      await updateAvatarMutation.mutateAsync({
+        mediaId: media.id,
+      });
+
+      setUploadedImageUrl(media.secureUrl);
 
       setStatus("success");
     } catch (error) {
@@ -121,11 +154,9 @@ export default function UploadPhotoScreen() {
     }
   };
 
- const handleRemovePhoto = async () => {
+  const handleRemovePhoto = async () => {
   try {
-    await updateMeMutation.mutateAsync({
-      avatarUrl: null,
-    });
+    await removeAvatarMutation.mutateAsync();
 
     setImageUri(null);
     setUploadedImageUrl(null);

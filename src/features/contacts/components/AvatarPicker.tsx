@@ -12,12 +12,18 @@ import * as ImagePicker from "expo-image-picker";
 
 import CameraPlusIcon from "@/assets/icons/shared/cameraPlus.svg";
 import UserIcon from "@/assets/icons/shared/user.svg";
-import { Colors } from "@/shared/constants/colors";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+
+export type SelectedImage = {
+  uri: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+};
 
 interface Props {
   uri?: string;
-  onSelectImage?: (uri: string | undefined) => void;
+  onSelectImage?: (image: SelectedImage | undefined) => void;
 }
 
 export function AvatarPicker({ uri, onSelectImage }: Props) {
@@ -39,8 +45,15 @@ export function AvatarPicker({ uri, onSelectImage }: Props) {
     });
 
     if (!result.canceled && result.assets[0]?.uri) {
+      const asset = result.assets[0];
+
       if (onSelectImage) {
-        onSelectImage(result.assets[0].uri);
+        onSelectImage({
+          uri: asset.uri,
+          fileName: asset.fileName ?? "profile-photo.jpg",
+          fileSize: asset.fileSize ?? 0,
+          mimeType: asset.mimeType ?? "image/jpeg",
+        });
       }
     }
   };

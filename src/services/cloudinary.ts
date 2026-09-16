@@ -1,29 +1,55 @@
-import axios from "axios";
+import { File } from "expo-file-system";
 
-const CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
+export type CloudinaryUploadParams = {
+  uri: string;
+  uploadUrl: string;
+  fields: Record<string, string>;
+  contentType: string;
+  filename: string;
+};
 
-const UPLOAD_PRESET = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-export async function uploadImage(uri: string) {
+export async function uploadToCloudinary({
+  uri,
+  uploadUrl,
+  fields,
+  contentType,
+  filename,
+}: CloudinaryUploadParams) {
   const formData = new FormData();
 
-  formData.append("file", {
-    uri,
-    type: "image/jpeg",
-    name: "profile-photo.jpg",
-  } as any);
+  Object.entries(fields).forEach(([key, value]) => {
+    formData.append(key, value);
+  });
 
-  formData.append("upload_preset", UPLOAD_PRESET!);
+  const file = new File(uri);
 
-  const response = await axios.post(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    },
+  if (!file.exists) {
+    throw new Error("Selected image file does not exist");
+  }
+
+  const base64 = await file.base64();
+
+  const blob = await fetch(`data:${contentType};base64,${base64}`).then(
+    (response) => response.blob(),
   );
 
-  return response.data;
+  formData.append("file", blob, filename);
+
+  const response = await fetch(uploadUrl, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+
+    console.log("Cloudinary upload failed:", {
+      status: response.status,
+      body: errorText,
+    });
+
+    throw new Error("Cloudinary upload failed");
+  }
+
+  return response.json();
 }

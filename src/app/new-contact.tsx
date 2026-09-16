@@ -111,7 +111,7 @@ export default function NewContactScreen() {
         <View style={styles.avatarAbsoluteWrapper}>
           <AvatarPicker
             uri={avatarUri}
-            onSelectImage={(uri) => setAvatarUri(uri)}
+            onSelectImage={(image) => setAvatarUri(image?.uri)}
           />
         </View>
 
