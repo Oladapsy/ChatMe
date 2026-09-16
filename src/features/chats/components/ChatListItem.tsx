@@ -85,14 +85,18 @@ export function ChatListItem({
               <MutedIcon width={18} height={18} color={themeColors.mute} />
             )}
           </View>
-          <Typography
-            size={14}
-            color={
-              chat.unreadCount ? themeColors.primary : themeColors.textSecondary
-            }
-          >
-            {formatChatTime(chat.time)}
-          </Typography>
+          <View style={styles.timeWrapper}>
+            <Typography
+              size={14}
+              color={
+                chat.unreadCount
+                  ? themeColors.primary
+                  : themeColors.textSecondary
+              }
+            >
+              {formatChatTime(chat.time)}
+            </Typography>
+          </View>
         </View>
 
         <View style={styles.bottomRow}>
@@ -164,7 +168,6 @@ const styles = StyleSheet.create({
   },
   topRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 4,
   },
@@ -197,8 +200,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   badgesContainer: {
-  flexDirection: "row",
-  alignItems: "center",
-  gap: 6,
-},
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  timeWrapper: {
+    marginLeft: 8,
+  },
 });
