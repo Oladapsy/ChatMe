@@ -98,7 +98,7 @@ export interface Message {
   // UI-specific fields
   senderName?: string;
   senderAvatar?: string;
-  isMe: boolean;
+  isMe?: boolean;
   showAvatar?: boolean;
   isStarred?: boolean;
 }

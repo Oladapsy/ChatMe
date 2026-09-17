@@ -9,6 +9,7 @@ import {
   Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Crypto from "expo-crypto";
 
 import MySafeAreaView from "@/shared/components/EdgeMySafeAreaView";
 import { ChatRoomHeader } from "@/features/chats/components/ChatRoomHeader";
@@ -16,6 +17,7 @@ import { AttachmentModal } from "@/features/chats/components/AttachmentModal";
 import { useCameraHandler } from "@/features/chats/hooks/useCameraHandler";
 import { ChatInputBar } from "@/features/chats/components/ChatInputBar";
 
+import type { Message } from "@/features/chats/types/message";
 // Search Feature Components
 import { ChatSearchHeader } from "@/features/chats/components/ChatSearchHeader";
 import { ChatSearchControlBar } from "@/features/chats/components/ChatSearchControlBar";
@@ -25,7 +27,6 @@ import CloseIcon from "@/assets/icons/shared/close.svg";
 import ChatBgIcon from "@/assets/icons/chat/ChatBg.svg";
 
 // Types & Data
-import { Message } from "@/features/chats/types/message";
 import { MessageBubble } from "@/features/chats/components/MessageBubble";
 
 import { MOCK_CHATS } from "@/features/chats/data/mockChats";
@@ -33,6 +34,14 @@ import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 // get msgs for a converstaion
 import { useMessages } from "@/features/chats/hooks/useMessages";
+// send msgs
+import { useSendMessage } from "@/features/chats/hooks/useSendMessage";
+// get current user
+import { useMe } from "@/features/auth/hooks/useMe";
+
+// format the chat date
+import { formatMessageDate } from "@/features/chats/utils/messageDate";
+import { MessageDateSeparator } from "@/features/chats/components/MessageDateSeparator";
 
 export default function ChatRoomScreen() {
   const router = useRouter();
@@ -48,14 +57,16 @@ export default function ChatRoomScreen() {
       search?: string;
     }>();
 
-  const activeChatId = id || "1";
-  const {
-    data: messagesData,
-    isLoading: isMessagesLoading,
-    isError: isMessagesError,
-  } = useMessages(activeChatId);
+  const { data: currentUser } = useMe();
 
-  console.log("MESSAGES DATA:", messagesData);
+  const activeChatId = id || "1";
+
+  const { send: sendMessage, isPending: isSendingMessage } =
+    useSendMessage(activeChatId);
+
+  const { data: messagesData } = useMessages(activeChatId);
+
+  // console.log("MESSAGES DATA:", messagesData);
   // Search Mode States
   const [isSearching, setIsSearching] = useState(search === "true");
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,7 +90,6 @@ export default function ChatRoomScreen() {
   const groupMembers = currentChat?.members;
 
   const messages = [...(messagesData?.items ?? [])].reverse();
-  const [localMessages, setLocalMessages] = useState<Message[]>([]);
 
   const [messageText, setMessageText] = useState("");
   const [selectedImageUris, setSelectedImageUris] = useState<string[]>([]);
@@ -87,17 +97,49 @@ export default function ChatRoomScreen() {
 
   const { takePhoto, pickImages } = useCameraHandler();
   const flatListRef = useRef<FlatList>(null);
+  type ProcessedMessage =
+    | {
+        type: "date";
+        id: string;
+        label: string;
+      }
+    | (Message & {
+        type: "message";
+      });
 
-  const allMessages = [...messages, ...localMessages];
+  const processedMessages = useMemo(() => {
+    return messages.flatMap((msg, index) => {
+      const previousMsg = messages[index - 1];
 
-  const processedMessages = allMessages.map((msg, index) => {
-    const nextMsg = allMessages[index + 1];
-    const isLastFromSender = !nextMsg || nextMsg.senderId !== msg.senderId;
-    return {
-      ...msg,
-      showAvatar: isLastFromSender,
-    };
-  });
+      const isNewDate =
+        !previousMsg ||
+        new Date(previousMsg.createdAt).toDateString() !==
+          new Date(msg.createdAt).toDateString();
+
+      const nextMsg = messages[index + 1];
+
+      const isLastFromSender = !nextMsg || nextMsg.senderId !== msg.senderId;
+
+      const items: ProcessedMessage[] = [];
+
+      if (isNewDate) {
+        items.push({
+          type: "date",
+          id: `date-${msg.createdAt}`,
+          label: formatMessageDate(msg.createdAt),
+        });
+      }
+
+      items.push({
+        type: "message",
+        ...msg,
+        isMe: msg.senderId === currentUser?.id,
+        showAvatar: isLastFromSender,
+      });
+
+      return items;
+    });
+  }, [messages, currentUser?.id]);
 
   // Calculate indices of messages that match current search query
   const matchingIndices = useMemo(() => {
@@ -105,8 +147,12 @@ export default function ChatRoomScreen() {
 
     const query = searchQuery.toLowerCase();
     return processedMessages
-      .map((msg, index) =>
-        msg.text && msg.text.toLowerCase().includes(query) ? index : -1,
+      .map((item, index) =>
+        item.type === "message" &&
+        item.text &&
+        item.text.toLowerCase().includes(query)
+          ? index
+          : -1,
       )
       .filter((idx) => idx !== -1);
   }, [searchQuery, processedMessages]);
@@ -144,45 +190,19 @@ export default function ChatRoomScreen() {
   };
 
   const handleSendText = () => {
-    if (!messageText.trim() && selectedImageUris.length === 0) return;
+    const text = messageText.trim();
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      chatId: activeChatId,
-      senderId: "user_me",
-      type: selectedImageUris.length > 0 ? "image" : "text",
-      text: messageText.trim() || undefined,
-      imageUris: selectedImageUris.length > 0 ? selectedImageUris : undefined,
-      createdAt: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-      isMe: true,
-    };
+    if (!text) return;
 
-   setLocalMessages((prev) => [...prev, newMessage]);
+    sendMessage({
+      clientMessageId: Crypto.randomUUID(),
+      text,
+    });
+
     setMessageText("");
-    setSelectedImageUris([]);
   };
-
   const handleSendAudio = (uri: string, durationSec: number) => {
-    const audioMessage: Message = {
-      id: Date.now().toString(),
-      chatId: activeChatId,
-      senderId: "user_me",
-      type: "audio",
-      audioUri: uri,
-      audioDuration: durationSec,
-      createdAt: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-      isMe: true,
-    };
-
-    setLocalMessages((prev) => [...prev, audioMessage]);
+    console.log("Audio selected:", uri, durationSec);
   };
 
   const handleCameraCapture = async () => {
@@ -290,13 +310,19 @@ export default function ChatRoomScreen() {
                 animated: true,
               });
             }}
-            renderItem={({ item }) => (
-              <MessageBubble
-                message={item}
-                isGroup={isGroupChat}
-                searchQuery={isSearching ? searchQuery : undefined}
-              />
-            )}
+            renderItem={({ item }) => {
+              if (item.type === "date") {
+                return <MessageDateSeparator label={item.label} />;
+              }
+
+              return (
+                <MessageBubble
+                  message={item}
+                  isGroup={isGroupChat}
+                  searchQuery={isSearching ? searchQuery : undefined}
+                />
+              );
+            }}
             contentContainerStyle={{
               paddingVertical: 10,
               flexGrow: 1,

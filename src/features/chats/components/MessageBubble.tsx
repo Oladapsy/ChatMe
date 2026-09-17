@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  StyleSheet,
-  View,
-  Image,
-  TouchableOpacity,
-} from "react-native";
+import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Message } from "@/features/chats/types/message";
 
@@ -16,6 +11,9 @@ import PlayIcon from "@/assets/icons/chat/play.svg";
 import PauseIcon from "@/assets/icons/chat/pause.svg";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
+import { formatMessageTime } from "@/features/chats/utils/formatMsgTime";
+import UserPlaceholderIcon from "@/assets/icons/shared/user.svg";
+import { background } from "@expo/ui/jetpack-compose/modifiers";
 interface Props {
   message: Message;
   isGroup?: boolean;
@@ -27,8 +25,7 @@ export function MessageBubble({
   isGroup = false,
   searchQuery,
 }: Props) {
-    const { themeColors } = useAppTheme();
-
+  const { themeColors } = useAppTheme();
 
   const isMe = message.isMe;
 
@@ -100,17 +97,22 @@ export function MessageBubble({
       {/* Group Chat Avatar */}
       {!isMe && isGroup && (
         <View style={styles.avatarContainer}>
-          {message.showAvatar && message.senderAvatar ? (
-            <Image
-              source={{ uri: message.senderAvatar }}
-              style={styles.avatar}
-            />
+          {message.showAvatar ? (
+            message.senderAvatar ? (
+              <Image
+                source={{ uri: message.senderAvatar }}
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={[styles.avatar, styles.placeholderAvatar, {backgroundColor: themeColors.primary}]}>
+                <UserPlaceholderIcon width={20} height={20} color="white" />
+              </View>
+            )
           ) : (
             <View style={styles.avatarPlaceholder} />
           )}
         </View>
       )}
-
       {/* Message Row Layout */}
       <View
         style={[
@@ -121,7 +123,7 @@ export function MessageBubble({
         {/* Timestamp on LEFT for Sent Messages */}
         {isMe && (
           <Typography size={14} color={timeColor} style={styles.timeTextLeft}>
-            {message.createdAt}
+            {formatMessageTime(message.createdAt)}
           </Typography>
         )}
 
@@ -292,7 +294,7 @@ export function MessageBubble({
         {/* Timestamp on RIGHT for Received Messages */}
         {!isMe && (
           <Typography size={14} color={timeColor} style={styles.timeTextRight}>
-            {message.createdAt}
+            {formatMessageTime(message.createdAt)}
           </Typography>
         )}
       </View>
@@ -327,6 +329,11 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     width: 40,
     height: 40,
+  },
+  placeholderAvatar: {
+    // backgroundColor: "",
+    justifyContent: "center",
+    alignItems: "center",
   },
   bubbleWrapper: {
     flexDirection: "row",
