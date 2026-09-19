@@ -45,6 +45,8 @@ import {
 } from "@/features/chats/utils/processMessages";
 import { MessageDateSeparator } from "@/features/chats/components/MessageDateSeparator";
 
+import { findMatchingMessageIndices } from "@/features/chats/utils/searchMessages";
+
 export default function ChatRoomScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
@@ -106,18 +108,8 @@ export default function ChatRoomScreen() {
 
   // Calculate indices of messages that match current search query
   const matchingIndices = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-
-    const query = searchQuery.toLowerCase();
-
-    return processedMessages.reduce<number[]>((matches, item, index) => {
-      if (item.type === "message" && item.text?.toLowerCase().includes(query)) {
-        matches.push(index);
-      }
-
-      return matches;
-    }, []);
-  }, [searchQuery, processedMessages]);
+    return findMatchingMessageIndices(processedMessages, searchQuery);
+  }, [processedMessages, searchQuery]);
 
   // Scroll to targeted matching item when match index changes
   useEffect(() => {

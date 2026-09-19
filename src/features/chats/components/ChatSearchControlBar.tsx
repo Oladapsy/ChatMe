@@ -3,7 +3,6 @@ import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import ChevronUpIcon from "@/assets/icons/chat/chevronUp.svg";
 import ChevronDownIcon from "@/assets/icons/chat/chevronDown.svg";
-import { Colors } from "@/shared/constants/colors";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
@@ -21,8 +20,9 @@ export function ChatSearchControlBar({
   onPrev,
   isDark,
 }: Props) {
-  if (totalCount === 0) return null;
   const { themeColors } = useAppTheme();
+
+  if (totalCount === 0) return null;
 
   return (
     <View
