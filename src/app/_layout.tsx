@@ -21,6 +21,7 @@ export default function RootLayout() {
   const { isInitializing } = useInitializeAuth();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const profileComplete = useAuthStore((state) => state.profileComplete);
+  const avatarUrl = useAuthStore((state) => state.avatarUrl);
 
   // console.log("ROUTER AUTH:", {
   //   isAuthenticated,
@@ -79,10 +80,15 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)/setup-profile" />
           </Stack.Protected>
 
-          <Stack.Protected guard={isAuthenticated}>
+          <Stack.Protected
+            guard={isAuthenticated && profileComplete && !avatarUrl}
+          >
             <Stack.Screen name="(auth)/upload-photo" />
-            <Stack.Screen name="(auth)/setup-pin" />
           </Stack.Protected>
+
+          {/* <Stack.Protected guard={isAuthenticated}>
+            <Stack.Screen name="(auth)/setup-pin" />
+          </Stack.Protected> */}
 
           <Stack.Protected guard={isAuthenticated && profileComplete}>
             <Stack.Screen name="(tabs)" />

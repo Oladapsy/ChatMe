@@ -34,6 +34,7 @@ export function useInitializeAuth() {
         
         useAuthStore.getState().setAuthenticated(true);
         useAuthStore.getState().setProfileComplete(user.profileComplete);
+        useAuthStore.getState().setAvatarUrl(user.avatarUrl);
 
         console.log("AUTH INIT: authenticated = true");
       } catch (error) {

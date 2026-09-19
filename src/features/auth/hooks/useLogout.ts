@@ -29,6 +29,8 @@ export function useLogout() {
       queryClient.clear();
       useAuthStore.getState().setAuthenticated(false);
       useAuthStore.getState().setProfileComplete(false);
+      // doing this 
+      useAuthStore.getState().setAvatarUrl(null)
 
       console.log("LOGOUT: complete");
     },
