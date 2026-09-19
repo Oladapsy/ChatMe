@@ -28,6 +28,8 @@ import { uploadMedia } from "@/services/mediaUpload";
 import { useUpdateAvatar } from "@/features/auth/hooks/useUpdateAvatar";
 import { useRemoveAvatar } from "@/features/auth/hooks/useRemoveAvatar";
 
+import { File } from "expo-file-system";
+
 type UploadStatus = "idle" | "uploading" | "success";
 
 type SelectedImage = {
@@ -111,10 +113,30 @@ export default function UploadPhotoScreen() {
     }
   };
 
-  const handleSelectRecentPhoto = (uri: string) => {
+  const handleSelectRecentPhoto = async (uri: string) => {
     setShowPickerModal(false);
 
-    console.log("Recent photo selected:", uri);
+    try {
+      const file = new File(uri);
+
+      const extension = file.name.split(".").pop()?.toLowerCase();
+
+      const mimeType =
+        extension === "webp"
+          ? "image/webp"
+          : extension === "png"
+            ? "image/png"
+            : "image/jpeg";
+
+      processImageUpload({
+        uri,
+        fileName: file.name || "profile-photo.jpg",
+        fileSize: file.size ?? 0,
+        mimeType,
+      });
+    } catch (error) {
+      console.error("Failed to read recent photo:", error);
+    }
   };
 
   const processImageUpload = async (image: SelectedImage) => {
@@ -155,16 +177,16 @@ export default function UploadPhotoScreen() {
   };
 
   const handleRemovePhoto = async () => {
-  try {
-    await removeAvatarMutation.mutateAsync();
+    try {
+      await removeAvatarMutation.mutateAsync();
 
-    setImageUri(null);
-    setUploadedImageUrl(null);
-    setStatus("idle");
-  } catch (error) {
-    console.error("Failed to remove photo:", error);
-  }
-};
+      setImageUri(null);
+      setUploadedImageUrl(null);
+      setStatus("idle");
+    } catch (error) {
+      console.error("Failed to remove photo:", error);
+    }
+  };
 
   const handleNext = () => {
     router.replace("/(tabs)");

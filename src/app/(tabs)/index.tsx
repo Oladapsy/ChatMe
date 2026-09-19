@@ -227,7 +227,7 @@ export default function HomeScreen() {
                 onPin={handlePin}
                 onMute={handleMute}
                 onArchive={handleArchive}
-                onDelete={() => console.log()}
+                onDelete={() => console.log("Delete is Pressed")}
                 // use favourite for more for now
                 onMore={handleFavorite}
               />

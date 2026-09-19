@@ -7,7 +7,6 @@ import {
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import SearchIcon from "@/assets/icons/chat/search.svg";
-import { Colors } from "@/shared/constants/colors";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {

@@ -34,12 +34,12 @@ export function MessageBubble({
   const receivedTextColor = themeColors.text;
   const timeColor = themeColors.textSecondary;
 
-  const formatAudioDuration = (sec?: number) => {
-    if (!sec) return "0:00";
-    const mins = Math.floor(sec / 60);
-    const secs = sec % 60;
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-  };
+  // const formatAudioDuration = (sec?: number) => {
+  //   if (!sec) return "0:00";
+  //   const mins = Math.floor(sec / 60);
+  //   const secs = sec % 60;
+  //   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  // };
 
   // Render text with highlighted search query substrings
   const renderHighlightedText = (text: string, query?: string) => {

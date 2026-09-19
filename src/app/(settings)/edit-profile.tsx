@@ -96,62 +96,62 @@ export default function EditProfileScreen() {
     phone.trim().length > 5 &&
     phone.trim().length < 15;
 
- const handleSave = async () => {
-  if (saving) return;
+  const handleSave = async () => {
+    if (saving) return;
 
-  setSaving(true);
+    setSaving(true);
 
-  try {
-    console.log("1. SAVE STARTED");
-    console.log("2. selectedAvatar:", selectedAvatar);
+    try {
+      console.log("1. SAVE STARTED");
+      console.log("2. selectedAvatar:", selectedAvatar);
 
-    if (avatarRemoved && user.avatarUrl) {
-      console.log("3. REMOVING AVATAR");
+      if (avatarRemoved && user.avatarUrl) {
+        console.log("3. REMOVING AVATAR");
 
-      await removeAvatarMutation.mutateAsync();
+        await removeAvatarMutation.mutateAsync();
 
-      console.log("4. AVATAR REMOVED");
-    } else if (selectedAvatar) {
-      console.log("3. STARTING MEDIA UPLOAD");
+        console.log("4. AVATAR REMOVED");
+      } else if (selectedAvatar) {
+        console.log("3. STARTING MEDIA UPLOAD");
 
-      const media = await uploadMedia({
-        uri: selectedAvatar.uri,
-        purpose: "profile_avatar",
-        contentType: selectedAvatar.mimeType,
-        sizeBytes: selectedAvatar.fileSize,
-        originalFilename: selectedAvatar.fileName,
+        const media = await uploadMedia({
+          uri: selectedAvatar.uri,
+          purpose: "profile_avatar",
+          contentType: selectedAvatar.mimeType,
+          sizeBytes: selectedAvatar.fileSize,
+          originalFilename: selectedAvatar.fileName,
+        });
+
+        console.log("4. MEDIA UPLOAD SUCCESS:", media);
+
+        console.log("5. CONNECTING AVATAR:", media.id);
+
+        await updateAvatarMutation.mutateAsync({
+          mediaId: media.id,
+        });
+
+        console.log("6. AVATAR CONNECTED");
+      }
+
+      console.log("7. UPDATING NAME");
+
+      await updateMeMutation.mutateAsync({
+        displayName: name.trim(),
       });
 
-      console.log("4. MEDIA UPLOAD SUCCESS:", media);
+      console.log("8. PROFILE UPDATE SUCCESS");
 
-      console.log("5. CONNECTING AVATAR:", media.id);
-
-      await updateAvatarMutation.mutateAsync({
-        mediaId: media.id,
-      });
-
-      console.log("6. AVATAR CONNECTED");
+      router.back();
+    } catch (error: any) {
+      console.log("========== UPDATE PROFILE ERROR ==========");
+      console.log("ERROR OBJECT:", error);
+      console.log("ERROR MESSAGE:", error?.message);
+      console.log("ERROR RESPONSE:", error?.response);
+      console.log("ERROR STACK:", error?.stack);
+    } finally {
+      setSaving(false);
     }
-
-    console.log("7. UPDATING NAME");
-
-    await updateMeMutation.mutateAsync({
-      displayName: name.trim(),
-    });
-
-    console.log("8. PROFILE UPDATE SUCCESS");
-
-    router.back();
-  } catch (error: any) {
-    console.log("========== UPDATE PROFILE ERROR ==========");
-    console.log("ERROR OBJECT:", error);
-    console.log("ERROR MESSAGE:", error?.message);
-    console.log("ERROR RESPONSE:", error?.response);
-    console.log("ERROR STACK:", error?.stack);
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   return (
     <MySafeAreaView

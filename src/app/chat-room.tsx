@@ -146,15 +146,14 @@ export default function ChatRoomScreen() {
     if (!searchQuery.trim()) return [];
 
     const query = searchQuery.toLowerCase();
-    return processedMessages
-      .map((item, index) =>
-        item.type === "message" &&
-        item.text &&
-        item.text.toLowerCase().includes(query)
-          ? index
-          : -1,
-      )
-      .filter((idx) => idx !== -1);
+
+    return processedMessages.reduce<number[]>((matches, item, index) => {
+      if (item.type === "message" && item.text?.toLowerCase().includes(query)) {
+        matches.push(index);
+      }
+
+      return matches;
+    }, []);
   }, [searchQuery, processedMessages]);
 
   // Scroll to targeted matching item when match index changes
