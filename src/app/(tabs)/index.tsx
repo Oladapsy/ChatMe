@@ -36,6 +36,9 @@ import { useConversationFavorite } from "@/features/chats/hooks/useConversationF
 // for the archieve
 import { useArchivedConversations } from "@/features/chats/hooks/useArchivedConversations";
 
+// Favourite conversation list:
+import { useFavoriteConversations } from "@/features/chats/hooks/useFavoriteConversations";
+
 export default function HomeScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
@@ -44,6 +47,14 @@ export default function HomeScreen() {
   const { data } = useConversations();
   // archieve
   const { data: archivedData } = useArchivedConversations();
+
+  // favourite conversation hook list
+  const { data: favoriteData } = useFavoriteConversations();
+
+  // mapped favourite chats mapper!!!
+  const favoriteChats = useMemo(() => {
+    return favoriteData?.items.map(mapConversationToChat) ?? [];
+  }, [favoriteData]);
 
   const chats = useMemo(() => {
     return data?.items.map(mapConversationToChat) ?? [];
