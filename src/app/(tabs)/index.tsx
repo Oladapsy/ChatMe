@@ -39,6 +39,9 @@ import { useArchivedConversations } from "@/features/chats/hooks/useArchivedConv
 // Favourite conversation list:
 import { useFavoriteConversations } from "@/features/chats/hooks/useFavoriteConversations";
 
+// import thr tabs for all and fav
+import { ChatListFilter } from "@/features/chats/components/ChatListFilter";
+
 export default function HomeScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
@@ -200,6 +203,10 @@ export default function HomeScreen() {
       </SafeAreaView>
 
       <View style={styles.content}>
+        <ChatListFilter
+          activeFilter={activeFilter}
+          onChange={setActiveFilter}
+        />
         <FlatList
           data={filteredChats}
           keyExtractor={(item) => item.id}

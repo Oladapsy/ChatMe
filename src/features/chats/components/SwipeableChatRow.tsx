@@ -103,7 +103,7 @@ export function SwipeableChatRow({
         onPress={() => handleAction(onArchive)}
       />
       <SwipeActionButton
-        label={chat.isFavorited ? "Fav" : "Unfav"}
+        label={chat.isFavorited ? "Unfav" : "Fav"}
         icon={FavIcon}
         backgroundColor={isDark ? "#163043" : "#DDE2E8"}
         textColor={themeColors.text}
