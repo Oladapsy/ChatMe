@@ -106,3 +106,13 @@ export const sendMessage = async (
 
   return response.data;
 };
+
+// get favourites
+export const getFavoriteConversations =
+  async (): Promise<ConversationListResponse> => {
+    const response = await api.get<ConversationListResponse>(
+      "/conversations/favorites",
+    );
+
+    return response.data;
+  };
