@@ -11,9 +11,8 @@ export const useConversationFavorite = () => {
     mutationFn: favoriteConversation,
 
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["conversations"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
     },
   });
 
@@ -21,17 +20,14 @@ export const useConversationFavorite = () => {
     mutationFn: unfavoriteConversation,
 
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["conversations"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
     },
   });
 
   return {
     favorite: favoriteMutation.mutate,
     unfavorite: unfavoriteMutation.mutate,
-    isPending:
-      favoriteMutation.isPending ||
-      unfavoriteMutation.isPending,
+    isPending: favoriteMutation.isPending || unfavoriteMutation.isPending,
   };
 };
