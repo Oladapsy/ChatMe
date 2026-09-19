@@ -11,7 +11,8 @@ import { Chat } from "@/features/chats/types/chat";
 
 // SVG Icons
 import ArchiveIcon from "@/assets/icons/chat/archive.svg";
-import MoreIcon from "@/assets/icons/chat/more.svg";
+import FavIcon from "@/assets/icons/chat/favourite.svg";
+
 import MuteIcon from "@/assets/icons/chat/mute.svg";
 import PinIcon from "@/assets/icons/chat/pin.svg";
 import TrashIcon from "@/assets/icons/chat/trash.svg";
@@ -26,7 +27,7 @@ interface SwipeableChatRowProps {
   onMute: (chat: Chat) => void;
   onArchive: (chat: Chat) => void;
   onDelete: (chat: Chat) => void;
-  onMore?: (chat: Chat) => void;
+  onFav?: (chat: Chat) => void;
 }
 
 export function SwipeableChatRow({
@@ -38,7 +39,7 @@ export function SwipeableChatRow({
   onMute,
   onArchive,
   onDelete,
-  onMore,
+  onFav,
 }: SwipeableChatRowProps) {
   const swipeableRef = useRef<SwipeableMethods>(null);
   const [isSwiped, setIsSwiped] = useState(false);
@@ -102,12 +103,12 @@ export function SwipeableChatRow({
         onPress={() => handleAction(onArchive)}
       />
       <SwipeActionButton
-        label="More"
-        icon={MoreIcon}
+        label={chat.isFavorited ? "Fav" : "Unfav"}
+        icon={FavIcon}
         backgroundColor={isDark ? "#163043" : "#DDE2E8"}
         textColor={themeColors.text}
         isCompact={chat.isArchived}
-        onPress={() => handleAction(onMore)}
+        onPress={() => handleAction(onFav)}
       />
     </View>
   );

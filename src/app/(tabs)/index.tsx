@@ -228,8 +228,8 @@ export default function HomeScreen() {
                 onMute={handleMute}
                 onArchive={handleArchive}
                 onDelete={() => console.log("Delete is Pressed")}
-                // use favourite for more for now
-                onMore={handleFavorite}
+                // more is now fav
+                onFav={handleFavorite}
               />
             );
           }}
