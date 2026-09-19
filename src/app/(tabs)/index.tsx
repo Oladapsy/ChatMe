@@ -84,6 +84,10 @@ export default function HomeScreen() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // for favourite and all
+  const [activeFilter, setActiveFilter] = useState<"all" | "favorites">("all");
+
   // group state
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
 
@@ -95,7 +99,7 @@ export default function HomeScreen() {
     return archivedData?.items.map(mapConversationToChat) ?? [];
   }, [archivedData]);
 
-  const activeChats = chats;
+  const activeChats = activeFilter === "all" ? chats : favoriteChats;
 
   // Filter & sort active chats (Pinned on top)
   const filteredChats = useMemo(() => {
