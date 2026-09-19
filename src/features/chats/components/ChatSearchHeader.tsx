@@ -22,7 +22,7 @@ export function ChatSearchHeader({
   onCancel,
   backgroundColor,
 }: Props) {
-    const { isDark, themeColors } = useAppTheme();
+    const { themeColors } = useAppTheme();
 
   const inputRef = useRef<TextInput>(null);
 

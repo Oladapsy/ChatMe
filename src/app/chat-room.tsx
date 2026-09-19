@@ -17,7 +17,6 @@ import { AttachmentModal } from "@/features/chats/components/AttachmentModal";
 import { useCameraHandler } from "@/features/chats/hooks/useCameraHandler";
 import { ChatInputBar } from "@/features/chats/components/ChatInputBar";
 
-import type { Message } from "@/features/chats/types/message";
 // Search Feature Components
 import { ChatSearchHeader } from "@/features/chats/components/ChatSearchHeader";
 import { ChatSearchControlBar } from "@/features/chats/components/ChatSearchControlBar";
@@ -40,7 +39,10 @@ import { useSendMessage } from "@/features/chats/hooks/useSendMessage";
 import { useMe } from "@/features/auth/hooks/useMe";
 
 // format the chat date
-import { formatMessageDate } from "@/features/chats/utils/messageDate";
+import {
+  processMessages,
+  type ProcessedMessage,
+} from "@/features/chats/utils/processMessages";
 import { MessageDateSeparator } from "@/features/chats/components/MessageDateSeparator";
 
 export default function ChatRoomScreen() {
@@ -97,48 +99,9 @@ export default function ChatRoomScreen() {
 
   const { takePhoto, pickImages } = useCameraHandler();
   const flatListRef = useRef<FlatList>(null);
-  type ProcessedMessage =
-    | {
-        type: "date";
-        id: string;
-        label: string;
-      }
-    | (Message & {
-        type: "message";
-      });
 
   const processedMessages = useMemo(() => {
-    return messages.flatMap((msg, index) => {
-      const previousMsg = messages[index - 1];
-
-      const isNewDate =
-        !previousMsg ||
-        new Date(previousMsg.createdAt).toDateString() !==
-          new Date(msg.createdAt).toDateString();
-
-      const nextMsg = messages[index + 1];
-
-      const isLastFromSender = !nextMsg || nextMsg.senderId !== msg.senderId;
-
-      const items: ProcessedMessage[] = [];
-
-      if (isNewDate) {
-        items.push({
-          type: "date",
-          id: `date-${msg.createdAt}`,
-          label: formatMessageDate(msg.createdAt),
-        });
-      }
-
-      items.push({
-        type: "message",
-        ...msg,
-        isMe: msg.senderId === currentUser?.id,
-        showAvatar: isLastFromSender,
-      });
-
-      return items;
-    });
+    return processMessages(messages, currentUser?.id);
   }, [messages, currentUser?.id]);
 
   // Calculate indices of messages that match current search query
