@@ -8,7 +8,6 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 
 // Icons
 import CameraIcon from "@/assets/icons/shared/camera.svg";

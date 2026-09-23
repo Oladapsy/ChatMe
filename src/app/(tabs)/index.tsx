@@ -211,6 +211,7 @@ export default function HomeScreen() {
           data={filteredChats}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
+          
           ListHeaderComponent={
             <ArchivedHeaderRow
               archivedChats={archivedChats}
@@ -250,7 +251,6 @@ export default function HomeScreen() {
                 onMute={handleMute}
                 onArchive={handleArchive}
                 onDelete={() => console.log("Delete is Pressed")}
-                // more is now fav
                 onFav={handleFavorite}
               />
             );

@@ -13,7 +13,6 @@ import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 import { formatMessageTime } from "@/features/chats/utils/formatMsgTime";
 import UserPlaceholderIcon from "@/assets/icons/shared/user.svg";
-import { background } from "@expo/ui/jetpack-compose/modifiers";
 interface Props {
   message: Message;
   isGroup?: boolean;
@@ -104,7 +103,13 @@ export function MessageBubble({
                 style={styles.avatar}
               />
             ) : (
-              <View style={[styles.avatar, styles.placeholderAvatar, {backgroundColor: themeColors.primary}]}>
+              <View
+                style={[
+                  styles.avatar,
+                  styles.placeholderAvatar,
+                  { backgroundColor: themeColors.primary },
+                ]}
+              >
                 <UserPlaceholderIcon width={20} height={20} color="white" />
               </View>
             )
@@ -120,13 +125,6 @@ export function MessageBubble({
           isMe ? styles.wrapperMe : styles.wrapperOther,
         ]}
       >
-        {/* Timestamp on LEFT for Sent Messages */}
-        {isMe && (
-          <Typography size={14} color={timeColor} style={styles.timeTextLeft}>
-            {formatMessageTime(message.createdAt)}
-          </Typography>
-        )}
-
         {/* Message Content Box */}
         <View
           style={[
@@ -287,16 +285,22 @@ export function MessageBubble({
           )} */}
 
           {/* 6. Text Message */}
-          {Boolean(message.text) &&
-            renderHighlightedText(message.text!, searchQuery)}
+          <View style={styles.messageBody}>
+            {Boolean(message.text) &&
+              renderHighlightedText(message.text!, searchQuery)}
+
+            <View style={styles.messageMeta}>
+              <Typography
+                size={10}
+                color={isMe ? "rgba(255,255,255,0.75)" : timeColor}
+              >
+                {formatMessageTime(message.createdAt)}
+              </Typography>
+            </View>
+          </View>
         </View>
 
         {/* Timestamp on RIGHT for Received Messages */}
-        {!isMe && (
-          <Typography size={14} color={timeColor} style={styles.timeTextRight}>
-            {formatMessageTime(message.createdAt)}
-          </Typography>
-        )}
       </View>
     </View>
   );
@@ -369,14 +373,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
     overflow: "hidden",
   },
-  timeTextLeft: {
-    marginRight: 8,
-    marginBottom: 2,
-  },
-  timeTextRight: {
-    marginLeft: 8,
-    marginBottom: 2,
-  },
   imageGridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -429,5 +425,13 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
+  },
+  messageBody: {
+    flexShrink: 1,
+  },
+
+  messageMeta: {
+    alignItems: "flex-end",
+    marginTop: 2,
   },
 });

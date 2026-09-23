@@ -9,7 +9,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
 
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 
 import PaperclipIcon from "@/assets/icons/chat/paperClip.svg";
 import SendIcon from "@/assets/icons/chat/send.svg";
