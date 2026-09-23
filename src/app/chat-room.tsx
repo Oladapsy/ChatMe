@@ -146,17 +146,26 @@ export default function ChatRoomScreen() {
     setCurrentMatchIndex(0);
   };
 
-  const handleSendText = () => {
+  // changed send text to handle send for all
+  const handleSend = async () => {
     const text = messageText.trim();
 
-    if (!text) return;
+    if (text) {
+      sendMessage({
+        clientMessageId: Crypto.randomUUID(),
+        text,
+      });
 
-    sendMessage({
-      clientMessageId: Crypto.randomUUID(),
-      text,
-    });
+      setMessageText("");
+    }
 
-    setMessageText("");
+    if (selectedImageUris.length > 0) {
+      for (const uri of selectedImageUris) {
+        await handleSendImage(uri);
+      }
+
+      setSelectedImageUris([]);
+    }
   };
 
   // to send image
@@ -187,6 +196,11 @@ export default function ChatRoomScreen() {
         contentType: mimeType,
         sizeBytes: file.size,
         originalFilename: file.name,
+      });
+
+      sendMessage({
+        clientMessageId: Crypto.randomUUID(),
+        attachmentMediaIds: [media.id],
       });
 
       console.log("IMAGE UPLOAD COMPLETE:", media);
@@ -372,7 +386,7 @@ export default function ChatRoomScreen() {
           <ChatInputBar
             text={messageText}
             onChangeText={setMessageText}
-            onSendText={handleSendText}
+            onSendText={handleSend}
             onSendAudio={handleSendAudio}
             onOpenAttachment={() => setAttachmentVisible(true)}
             hasAttachments={selectedImageUris.length > 0}
