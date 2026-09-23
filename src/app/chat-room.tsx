@@ -180,6 +180,16 @@ export default function ChatRoomScreen() {
         size: file.size,
         mimeType,
       });
+
+      const media = await uploadMedia({
+        uri,
+        purpose: "message_attachment",
+        contentType: mimeType,
+        sizeBytes: file.size,
+        originalFilename: file.name,
+      });
+
+      console.log("IMAGE UPLOAD COMPLETE:", media);
     } catch (error) {
       console.error("IMAGE SEND: failed", error);
     }
