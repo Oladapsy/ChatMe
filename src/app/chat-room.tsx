@@ -150,63 +150,53 @@ export default function ChatRoomScreen() {
   const handleSend = async () => {
     const text = messageText.trim();
 
-    if (text) {
+    if (!text && selectedImageUris.length === 0) {
+      return;
+    }
+
+    try {
+      const attachmentMediaIds: string[] = [];
+
+      for (const uri of selectedImageUris) {
+        const mediaId = await handleSendImage(uri);
+        attachmentMediaIds.push(mediaId);
+      }
+
       sendMessage({
         clientMessageId: Crypto.randomUUID(),
-        text,
+        ...(text ? { text } : {}),
+        ...(attachmentMediaIds.length > 0 ? { attachmentMediaIds } : {}),
       });
 
       setMessageText("");
-    }
-
-    if (selectedImageUris.length > 0) {
-      for (const uri of selectedImageUris) {
-        await handleSendImage(uri);
-      }
-
       setSelectedImageUris([]);
+    } catch (error) {
+      console.error("SEND MESSAGE: failed", error);
     }
   };
 
   // to send image
   const handleSendImage = async (uri: string) => {
-    try {
-      console.log("IMAGE SEND: starting...", uri);
+    const file = new File(uri);
 
-      const file = new File(uri);
+    const extension = file.name.split(".").pop()?.toLowerCase();
 
-      const extension = file.name.split(".").pop()?.toLowerCase();
+    const mimeType =
+      extension === "webp"
+        ? "image/webp"
+        : extension === "png"
+          ? "image/png"
+          : "image/jpeg";
 
-      const mimeType =
-        extension === "webp"
-          ? "image/webp"
-          : extension === "png"
-            ? "image/png"
-            : "image/jpeg";
+    const media = await uploadMedia({
+      uri,
+      purpose: "message_attachment",
+      contentType: mimeType,
+      sizeBytes: file.size,
+      originalFilename: file.name,
+    });
 
-      console.log("IMAGE FILE:", {
-        name: file.name,
-        size: file.size,
-        mimeType,
-      });
-
-      const media = await uploadMedia({
-        uri,
-        purpose: "message_attachment",
-        contentType: mimeType,
-        sizeBytes: file.size,
-        originalFilename: file.name,
-      });
-
-      sendMessage({
-        clientMessageId: Crypto.randomUUID(),
-        attachmentMediaIds: [media.id],
-      });
-
-      console.log("IMAGE UPLOAD COMPLETE:", media);
-    } catch (error) {
-      console.error("IMAGE SEND: failed", error);
-    }
+    return media.id;
   };
 
   const handleSendAudio = (uri: string, durationSec: number) => {

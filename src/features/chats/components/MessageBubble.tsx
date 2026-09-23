@@ -286,6 +286,19 @@ export function MessageBubble({
 
           {/* 6. Text Message */}
           <View style={styles.messageBody}>
+            {message.kind === "image" &&
+              message.attachments.map((attachment) => {
+                if (attachment.type !== "image") return null;
+
+                return (
+                  <Image
+                    key={attachment.mediaId}
+                    source={{ uri: attachment.url }}
+                    style={styles.messageImage}
+                  />
+                );
+              })}
+
             {Boolean(message.text) &&
               renderHighlightedText(message.text!, searchQuery)}
 
