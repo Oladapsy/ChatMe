@@ -46,6 +46,8 @@ import {
 import { MessageDateSeparator } from "@/features/chats/components/MessageDateSeparator";
 
 import { findMatchingMessageIndices } from "@/features/chats/utils/searchMessages";
+// to upload media aside text
+import { uploadMedia } from "@/services/mediaUpload";
 
 export default function ChatRoomScreen() {
   const router = useRouter();
@@ -155,6 +157,18 @@ export default function ChatRoomScreen() {
 
     setMessageText("");
   };
+
+  // to send image
+  const handleSendImage = async (uri: string) => {
+    try {
+      console.log("IMAGE SEND: starting...", uri);
+
+      // We'll get the file details here next.
+    } catch (error) {
+      console.error("IMAGE SEND: failed", error);
+    }
+  };
+
   const handleSendAudio = (uri: string, durationSec: number) => {
     console.log("Audio selected:", uri, durationSec);
   };
