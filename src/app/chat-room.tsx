@@ -48,6 +48,7 @@ import { MessageDateSeparator } from "@/features/chats/components/MessageDateSep
 import { findMatchingMessageIndices } from "@/features/chats/utils/searchMessages";
 // to upload media aside text
 import { uploadMedia } from "@/services/mediaUpload";
+import { File } from "expo-file-system"; // to get the file data for media upload
 
 export default function ChatRoomScreen() {
   const router = useRouter();
@@ -163,7 +164,22 @@ export default function ChatRoomScreen() {
     try {
       console.log("IMAGE SEND: starting...", uri);
 
-      // We'll get the file details here next.
+      const file = new File(uri);
+
+      const extension = file.name.split(".").pop()?.toLowerCase();
+
+      const mimeType =
+        extension === "webp"
+          ? "image/webp"
+          : extension === "png"
+            ? "image/png"
+            : "image/jpeg";
+
+      console.log("IMAGE FILE:", {
+        name: file.name,
+        size: file.size,
+        mimeType,
+      });
     } catch (error) {
       console.error("IMAGE SEND: failed", error);
     }
