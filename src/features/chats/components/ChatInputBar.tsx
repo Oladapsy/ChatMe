@@ -30,7 +30,7 @@ export function ChatInputBar({
   hasAttachments = false,
   isSending = false,
 }: Props) {
-  const { isDark, themeColors } = useAppTheme();
+  const { themeColors } = useAppTheme();
 
   const insets = useSafeAreaInsets();
 

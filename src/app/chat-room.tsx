@@ -205,7 +205,14 @@ export default function ChatRoomScreen() {
   };
 
   const handleSendAudio = (uri: string, durationSec: number) => {
-    console.log("Audio selected:", uri, durationSec);
+    const file = new File(uri);
+
+    console.log("AUDIO FILE:", {
+      uri,
+      name: file.name,
+      size: file.size,
+      durationSec,
+    });
   };
 
   const handleCameraCapture = async () => {
