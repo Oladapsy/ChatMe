@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  StyleSheet,
-  View,
-  TextInput,
-  TouchableOpacity,
-} from "react-native";
+import { StyleSheet, View, TextInput, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
 
@@ -23,6 +18,7 @@ interface Props {
   onSendAudio: (audioUri: string, durationSec: number) => void;
   onOpenAttachment: () => void;
   hasAttachments?: boolean;
+  isSending?: boolean;
 }
 
 export function ChatInputBar({
@@ -32,8 +28,9 @@ export function ChatInputBar({
   onSendAudio,
   onOpenAttachment,
   hasAttachments = false,
+  isSending = false,
 }: Props) {
-    const { isDark, themeColors } = useAppTheme();
+  const { isDark, themeColors } = useAppTheme();
 
   const insets = useSafeAreaInsets();
 
@@ -43,7 +40,7 @@ export function ChatInputBar({
     typeof setInterval
   > | null>(null);
 
-  const canSend = text.trim().length > 0 || hasAttachments;
+  const canSend = (text.trim().length > 0 || hasAttachments) && !isSending;
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 

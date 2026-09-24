@@ -53,6 +53,7 @@ import { File } from "expo-file-system"; // to get the file data for media uploa
 export default function ChatRoomScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
+  const [isSending, setIsSending] = useState(false);
 
   const { id, name, avatar, isGroup, membersText, search } =
     useLocalSearchParams<{
@@ -154,6 +155,8 @@ export default function ChatRoomScreen() {
       return;
     }
 
+    setIsSending(true);
+
     try {
       const attachmentMediaIds: string[] = [];
 
@@ -162,7 +165,7 @@ export default function ChatRoomScreen() {
         attachmentMediaIds.push(mediaId);
       }
 
-      sendMessage({
+      await sendMessage({
         clientMessageId: Crypto.randomUUID(),
         ...(text ? { text } : {}),
         ...(attachmentMediaIds.length > 0 ? { attachmentMediaIds } : {}),
@@ -172,6 +175,8 @@ export default function ChatRoomScreen() {
       setSelectedImageUris([]);
     } catch (error) {
       console.error("SEND MESSAGE: failed", error);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -380,6 +385,7 @@ export default function ChatRoomScreen() {
             onSendAudio={handleSendAudio}
             onOpenAttachment={() => setAttachmentVisible(true)}
             hasAttachments={selectedImageUris.length > 0}
+            isSending={isSending}
           />
         )}
       </KeyboardAvoidingView>

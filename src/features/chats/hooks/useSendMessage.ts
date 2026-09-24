@@ -19,7 +19,7 @@ export const useSendMessage = (conversationId: string) => {
   });
 
   return {
-    send: mutation.mutate,
+    send: mutation.mutateAsync,
     isPending: mutation.isPending,
     isError: mutation.isError,
     error: mutation.error,
