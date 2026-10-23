@@ -7,12 +7,14 @@ import { Typography } from "@/shared/components/Typography";
 import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 import { PrivacyRowItem } from "@/features/settings/components/PrivacyRowItem";
-
-import { BLOCKED_CONTACTS } from "@/features/settings/data/blockedContacts";
+import { useBlockedUsers } from "@/features/contacts/hooks/useBlockedUsers";
 
 export default function PrivacyScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
+  // the blocked list count 
+  const { data, isLoading, isError } = useBlockedUsers();
+  const blockedCount = data?.items.length ?? 0;
 
   return (
     <View style={styles.container}>
@@ -83,7 +85,15 @@ export default function PrivacyScreen() {
           />
           <PrivacyRowItem
             label="Blocked Contact"
-            value={`${BLOCKED_CONTACTS.length} ${BLOCKED_CONTACTS.length === 1 ? "Contact" : "Contacts"}`}
+            value={
+              isLoading
+                ? "Loading..."
+                : isError
+                  ? "Unavailable"
+                  : `${blockedCount} ${
+                      blockedCount === 1 ? "Contact" : "Contacts"
+                    }`
+            }
             onPress={() => router.push("/(settings)/privacy/blocked-contacts")}
             isDark={isDark}
             themeColors={themeColors}
