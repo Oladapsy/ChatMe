@@ -1,7 +1,12 @@
+import { useEffect } from "react";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import PauseIcon from "@/assets/icons/chat/pause.svg";
 import PlayIcon from "@/assets/icons/chat/play.svg";
+import {
+  playExclusiveAudio,
+  releaseAudioPlayer,
+} from "@/features/chats/utils/audioPlaybackController";
 
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
@@ -19,6 +24,13 @@ export default function AudioMessagePlayer({
 
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
+
+  useEffect(() => {
+    return () => {
+      player.pause();
+      releaseAudioPlayer(player);
+    };
+  }, [player]);
 
   const isPlaying = status.playing;
   const currentTimeMs = (status.currentTime ?? 0) * 1000;
@@ -41,7 +53,7 @@ export default function AudioMessagePlayer({
       player.seekTo(0);
     }
 
-    player.play();
+   playExclusiveAudio(player);
   };
 
   const progress =
@@ -57,9 +69,9 @@ export default function AudioMessagePlayer({
       >
         <Text style={styles.playIcon}>
           {isPlaying ? (
-            <PauseIcon width={20} height={20} color={"white"}/>
+            <PauseIcon width={20} height={20} color={"white"} />
           ) : (
-            <PlayIcon width={20} height={20} color={"white"}/>
+            <PlayIcon width={20} height={20} color={"white"} />
           )}
         </Text>
       </Pressable>
