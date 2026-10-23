@@ -1,5 +1,11 @@
 import React, { useState, useMemo } from "react";
-import { StyleSheet, View, FlatList } from "react-native";
+import {
+  StyleSheet,
+  View,
+  FlatList,
+  ActivityIndicator,
+  Pressable,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -9,6 +15,7 @@ import { ArchivedHeaderRow } from "@/features/chats/components/ArchivedHeaderRow
 import { EmptyChatState } from "@/features/chats/components/EmptyChatState";
 import PinPromptModal from "@/features/security/components/PinPromptModal";
 import { Chat } from "@/features/chats/types/chat";
+import { Typography } from "@/shared/components/Typography";
 
 // for the plus fab Menu
 import { FabMenuOverlay } from "@/features/chats/components/FabMenuOverlay";
@@ -41,6 +48,10 @@ import { useFavoriteConversations } from "@/features/chats/hooks/useFavoriteConv
 
 // import thr tabs for all and fav
 import { ChatListFilter } from "@/features/chats/components/ChatListFilter";
+
+// for searching existing users!!!
+import { useSearchUsers } from "@/features/contacts/hooks/useSearchUsers";
+import { useStartDirectConversation } from "@/features/chats/hooks/useStartDirectConversation";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -88,6 +99,9 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Track which person is currently creating/opening a conversation
+  const [startingPersonId, setStartingPersonId] = useState<string | null>(null);
+
   // for favourite and all
   const [activeFilter, setActiveFilter] = useState<"all" | "favorites">("all");
 
@@ -119,18 +133,25 @@ export default function HomeScreen() {
       : activeChats;
 
     return [...filtered].sort((a, b) => {
-      // Pinned chats always come first
       if (a.isPinned !== b.isPinned) {
         return a.isPinned ? -1 : 1;
       }
 
-      // Within the same group, newest activity comes first
       return (
         new Date(b.lastActivityAt).getTime() -
         new Date(a.lastActivityAt).getTime()
       );
     });
   }, [activeChats, searchQuery]);
+
+  // search existing users hook
+  const {
+    data: userSearchData,
+    isLoading: isSearchingUsers,
+    isError: userSearchError,
+  } = useSearchUsers(searchQuery);
+
+  const { mutateAsync: startConversation } = useStartDirectConversation();
 
   // Selection toggle logic
   const handleToggleSelect = (id: string) => {
@@ -185,6 +206,7 @@ export default function HomeScreen() {
       favorite(chat.id);
     }
   };
+
   return (
     <View
       style={[styles.container, { backgroundColor: themeColors.background }]}
@@ -207,16 +229,133 @@ export default function HomeScreen() {
           activeFilter={activeFilter}
           onChange={setActiveFilter}
         />
+
         <FlatList
           data={filteredChats}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
-          
           ListHeaderComponent={
-            <ArchivedHeaderRow
-              archivedChats={archivedChats}
-              onPress={() => router.push("/archived-chats")}
-            />
+            <View>
+              {/* 1. PEOPLE SEARCH SECTION (Only visible when typing 2+ chars) */}
+              {searchQuery.trim().length >= 2 && (
+                <View style={styles.peopleSection}>
+                  <Typography
+                    size={14}
+                    weight="bold"
+                    color={themeColors.textSecondary}
+                    style={styles.sectionHeader}
+                  >
+                    PEOPLE
+                  </Typography>
+
+                  {isSearchingUsers && (
+                    <ActivityIndicator
+                      size="small"
+                      color={themeColors.primary}
+                      style={styles.loader}
+                    />
+                  )}
+
+                  {userSearchError && (
+                    <Typography
+                      size={14}
+                      color={themeColors.textSecondary}
+                      style={styles.statusText}
+                    >
+                      Couldn't search for people. Please try again.
+                    </Typography>
+                  )}
+
+                  {!isSearchingUsers &&
+                    !userSearchError &&
+                    userSearchData?.items.length === 0 && (
+                      <Typography
+                        size={14}
+                        color={themeColors.textSecondary}
+                        style={styles.statusText}
+                      >
+                        No people found.
+                      </Typography>
+                    )}
+
+                  {userSearchData?.items.map((person) => {
+                    const isStarting = startingPersonId === person.id;
+
+                    return (
+                      <Pressable
+                        key={person.id}
+                        disabled={isStarting}
+                        style={({ pressed }) => [
+                          styles.personRow,
+                          {
+                            backgroundColor: pressed
+                              ? themeColors.cardBackground
+                              : "transparent",
+                          },
+                        ]}
+                        onPress={async () => {
+                          try {
+                            setStartingPersonId(person.id);
+                            const conversation = await startConversation(
+                              person.id,
+                            );
+
+                            router.push({
+                              pathname: "/chat-room",
+                              params: {
+                                id: conversation.id,
+                                name: person.displayName,
+                                avatar: person.avatarUrl ?? "",
+                                isGroup: "false",
+                              },
+                            });
+                          } catch (error) {
+                            console.error(
+                              "FAILED TO START CONVERSATION:",
+                              error,
+                            );
+                          } finally {
+                            setStartingPersonId(null);
+                          }
+                        }}
+                      >
+                        <View style={styles.personInfo}>
+                          <Typography
+                            size={16}
+                            weight="medium"
+                            color={themeColors.text}
+                          >
+                            {person.displayName}
+                          </Typography>
+                        </View>
+
+                        {isStarting && (
+                          <ActivityIndicator
+                            size="small"
+                            color={themeColors.primary}
+                          />
+                        )}
+                      </Pressable>
+                    );
+                  })}
+
+                  <Typography
+                    size={14}
+                    weight="bold"
+                    color={themeColors.textSecondary}
+                    style={[styles.sectionHeader, { marginTop: 16 }]}
+                  >
+                    CONVERSATIONS
+                  </Typography>
+                </View>
+              )}
+
+              {/* 2. ARCHIVED CHATS ROW HEADER */}
+              <ArchivedHeaderRow
+                archivedChats={archivedChats}
+                onPress={() => router.push("/archived-chats")}
+              />
+            </View>
           }
           ListEmptyComponent={EmptyChatState}
           renderItem={({ item }) => {
@@ -300,5 +439,30 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     flexGrow: 1,
     gap: 4,
+  },
+  peopleSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  sectionHeader: {
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  statusText: {
+    paddingVertical: 8,
+  },
+  loader: {
+    marginVertical: 8,
+  },
+  personRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
+  personInfo: {
+    flex: 1,
   },
 });
