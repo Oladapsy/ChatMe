@@ -51,8 +51,8 @@ import { uploadMedia } from "@/services/mediaUpload";
 import { File } from "expo-file-system"; // to get the file data for media upload
 
 // abstract the image upload
-import { uploadChatImage } from "@/features/chats/utils/uploadChatImage";
-import { uploadChatAudio } from "@/features/chats/utils/uploadChatImage";
+import { uploadChatImage } from "@/features/chats/utils/uploadChatMedia";
+import { uploadChatAudio } from "@/features/chats/utils/uploadChatMedia";
 
 export default function ChatRoomScreen() {
   const router = useRouter();
