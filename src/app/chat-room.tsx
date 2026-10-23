@@ -51,6 +51,9 @@ import { findMatchingMessageIndices } from "@/features/chats/utils/searchMessage
 import { uploadChatImage } from "@/features/chats/utils/uploadChatMedia";
 import { uploadChatAudio } from "@/features/chats/utils/uploadChatMedia";
 
+//socket
+import { useChatSocket } from "@/features/chats/hooks/useChatSocket";
+
 export default function ChatRoomScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
@@ -69,6 +72,7 @@ export default function ChatRoomScreen() {
   const { data: currentUser } = useMe();
 
   const activeChatId = id || "1";
+  useChatSocket(activeChatId);
 
   const { send: sendMessage, isPending: isSendingMessage } =
     useSendMessage(activeChatId);

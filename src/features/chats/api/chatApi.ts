@@ -1,6 +1,9 @@
 import { api } from "@/services/api";
 import type { ConversationListResponse } from "@/features/chats/types/chat";
-import type { MessageHistoryResponse, Message } from "@/features/chats/types/message";
+import type {
+  MessageHistoryResponse,
+  Message,
+} from "@/features/chats/types/message";
 
 export const getConversations = async (): Promise<ConversationListResponse> => {
   const response = await api.get<ConversationListResponse>("/conversations");
@@ -116,3 +119,25 @@ export const getFavoriteConversations =
 
     return response.data;
   };
+
+// direct message for sending new msgs
+export interface DirectConversationResponse {
+  id: string;
+  type: "direct";
+  otherParticipant: {
+    id: string;
+    displayName: string;
+    avatarUrl: string | null;
+  };
+}
+
+export const startDirectConversation = async (
+  participantId: string,
+): Promise<DirectConversationResponse> => {
+  const response = await api.post<DirectConversationResponse>(
+    "/conversations/direct",
+    { participantId },
+  );
+
+  return response.data;
+};

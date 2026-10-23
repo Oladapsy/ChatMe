@@ -13,6 +13,7 @@ import {
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import { useStartDirectConversation } from "@/features/chats/hooks/useStartDirectConversation";
 
 export default function ContactsScreen() {
   const router = useRouter();
@@ -20,6 +21,8 @@ export default function ContactsScreen() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const { contacts, loading } = useContacts();
+
+  const { mutateAsync: startConversation } = useStartDirectConversation();
 
   // Dynamic top background color
   // green for light and dark for dark
@@ -58,15 +61,29 @@ export default function ContactsScreen() {
     }));
   }, [contacts, searchQuery]);
 
-  const handleSelectContact = (contact: ContactItem) => {
-    router.push({
-      pathname: "/chat-room",
-      params: {
-        id: contact.id,
-        name: contact.name,
-        avatar: contact.avatar ?? "",
-      },
-    });
+  const handleSelectContact = async (contact: ContactItem) => {
+    if (!contact.userId) {
+      // This person is not a matched ChatMe user.
+      // Show an invite option here instead of opening a chat.
+      console.log("Contact is not registered on ChatMe");
+      return;
+    }
+
+    try {
+      const conversation = await startConversation(contact.userId);
+
+      router.push({
+        pathname: "/chat-room",
+        params: {
+          id: conversation.id,
+          name: contact.name,
+          avatar: contact.avatar ?? "",
+          isGroup: "false",
+        },
+      });
+    } catch (error) {
+      console.error("FAILED TO START CONVERSATION:", error);
+    }
   };
 
   return (
