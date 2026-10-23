@@ -33,6 +33,7 @@ export default function AudioMessagePlayer({
   }, [player]);
 
   const isPlaying = status.playing;
+  const hasFinished = status.didJustFinish;
   const currentTimeMs = (status.currentTime ?? 0) * 1000;
 
   const formatTime = (milliseconds: number) => {
@@ -49,11 +50,11 @@ export default function AudioMessagePlayer({
       return;
     }
 
-    if (status.didJustFinish) {
+    if (hasFinished) {
       player.seekTo(0);
     }
 
-   playExclusiveAudio(player);
+    playExclusiveAudio(player);
   };
 
   const progress =
