@@ -26,11 +26,10 @@ export default function AudioMessagePlayer({
   const status = useAudioPlayerStatus(player);
 
   useEffect(() => {
-    return () => {
-      player.pause();
-      releaseAudioPlayer(player);
-    };
-  }, [player]);
+  return () => {
+    releaseAudioPlayer(player);
+  };
+}, [player]);
 
   const isPlaying = status.playing;
   const hasFinished = status.didJustFinish;
@@ -46,18 +45,22 @@ export default function AudioMessagePlayer({
     return `${minutes}:${String(seconds).padStart(2, "0")}`;
   };
 
-  const handlePlayback = () => {
+  const handlePlayback = async () => {
+  try {
     if (isPlaying) {
       player.pause();
       return;
     }
 
-    if (hasFinished) {
-      player.seekTo(0);
+    if (status.didJustFinish) {
+      await player.seekTo(0);
     }
 
     playExclusiveAudio(player);
-  };
+  } catch (error) {
+    console.error("Audio playback failed:", error);
+  }
+};
 
   const progress =
     durationMs > 0 ? Math.min((currentTimeMs / durationMs) * 100, 100) : 0;

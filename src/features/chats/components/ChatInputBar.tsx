@@ -10,6 +10,7 @@ import SendIcon from "@/assets/icons/chat/send.svg";
 import MicIcon from "@/assets/icons/chat/mic.svg";
 import TrashIcon from "@/assets/icons/chat/trash.svg";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import { stopActiveAudio } from "@/features/chats/utils/audioPlaybackController";
 
 import { File } from "expo-file-system"; // to get the file data for media upload
 interface Props {
@@ -53,6 +54,8 @@ export function ChatInputBar({
 
   const startRecording = async () => {
     try {
+      stopActiveAudio();
+
       const status = await AudioModule.requestRecordingPermissionsAsync();
       if (!status.granted) return;
 
