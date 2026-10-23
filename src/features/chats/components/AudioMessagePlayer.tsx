@@ -35,8 +35,8 @@ export default function AudioMessagePlayer({
   const isPlaying = status.playing;
   const hasFinished = status.didJustFinish;
   const currentTimeMs = status.didJustFinish
-  ? 0
-  : (status.currentTime ?? 0) * 1000;
+    ? 0
+    : (status.currentTime ?? 0) * 1000;
 
   const formatTime = (milliseconds: number) => {
     const totalSeconds = Math.floor(milliseconds / 1000);
