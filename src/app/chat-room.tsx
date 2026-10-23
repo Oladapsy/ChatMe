@@ -105,6 +105,7 @@ export default function ChatRoomScreen() {
 
   const { takePhoto, pickImages } = useCameraHandler();
   const flatListRef = useRef<FlatList>(null);
+  const sendInFlightRef = useRef(false);
 
   const processedMessages = useMemo(() => {
     return processMessages(messages, currentUser?.id);
@@ -149,12 +150,17 @@ export default function ChatRoomScreen() {
 
   // changed send text to handle send for all
   const handleSend = async () => {
+    if (sendInFlightRef.current) {
+      return;
+    }
+
     const text = messageText.trim();
 
     if (!text && selectedImageUris.length === 0) {
       return;
     }
 
+    sendInFlightRef.current = true;
     setIsSending(true);
 
     try {
@@ -176,6 +182,7 @@ export default function ChatRoomScreen() {
     } catch (error) {
       console.error("SEND MESSAGE: failed", error);
     } finally {
+      sendInFlightRef.current = false;
       setIsSending(false);
     }
   };
@@ -204,57 +211,50 @@ export default function ChatRoomScreen() {
     return media.id;
   };
 
- const handleSendAudio = async (
-  uri: string,
-  durationSec: number,
-) => {
-  try {
-    const file = new File(uri);
+  const handleSendAudio = async (uri: string, durationSec: number) => {
+    try {
+      const file = new File(uri);
 
-    const base64 = await file.base64();
+      const base64 = await file.base64();
 
-    const sizeBytes = Math.floor((base64.length * 3) / 4);
+      const sizeBytes = Math.floor((base64.length * 3) / 4);
 
-    console.log("AUDIO FILE:", {
-      name: file.name,
-      sizeBytes,
-      durationSec,
-    });
+      console.log("AUDIO FILE:", {
+        name: file.name,
+        sizeBytes,
+        durationSec,
+      });
 
-    const media = await uploadMedia({
-      uri,
-      purpose: "message_attachment",
-      contentType: "audio/m4a",
-      sizeBytes,
-      originalFilename: file.name,
-    });
+      const media = await uploadMedia({
+        uri,
+        purpose: "message_attachment",
+        contentType: "audio/m4a",
+        sizeBytes,
+        originalFilename: file.name,
+      });
 
-    console.log("AUDIO MEDIA:", {
-      media,
-      durationSec,
-    });
-  } catch (error) {
-    console.error("AUDIO UPLOAD FAILED:", error);
+      console.log("AUDIO MEDIA:", {
+        media,
+        durationSec,
+      });
+    } catch (error) {
+      console.error("AUDIO UPLOAD FAILED:", error);
 
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "response" in error
-    ) {
-      const axiosError = error as {
-        response?: {
-          status?: number;
-          data?: unknown;
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const axiosError = error as {
+          response?: {
+            status?: number;
+            data?: unknown;
+          };
         };
-      };
 
-      console.error(
-        "AUDIO UPLOAD RESPONSE:",
-        JSON.stringify(axiosError.response?.data, null, 2),
-      );
+        console.error(
+          "AUDIO UPLOAD RESPONSE:",
+          JSON.stringify(axiosError.response?.data, null, 2),
+        );
+      }
     }
-  }
-};
+  };
 
   const handleCameraCapture = async () => {
     const photoUri = await takePhoto();
