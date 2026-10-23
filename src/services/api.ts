@@ -23,7 +23,6 @@ let refreshPromise: Promise<void> | null = null;
 // Add access token to every request
 api.interceptors.request.use(async (config) => {
   const accessToken = await getAccessToken();
-  // const accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NmQ5YmZmYS0wZTdhLTQzN2MtYWZiNy03ZDA0ZjVjNjA3ZGYiLCJzaWQiOiIwOGUxYzE5My02NTcxLTQxMmMtOWVmNy02OGQ0ZmFmNTRjMmYiLCJwcm9maWxlQ29tcGxldGUiOmZhbHNlLCJpYXQiOjE3ODg1OTEzOTAsImV4cCI6MTc4ODU5MjI5MCwiYXVkIjoiY2hhdGVvLW1vYmlsZSIsImlzcyI6ImNoYXRlby1hcGkifQ.nnj1IVS0FPSalPwyiATcx7G31dPhXsfGVb3w2cJK1UE"
 
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
