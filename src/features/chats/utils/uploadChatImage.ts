@@ -23,3 +23,25 @@ export async function uploadChatImage(uri: string): Promise<string> {
 
   return media.id;
 }
+
+
+// for the audio
+
+export async function uploadChatAudio(
+  uri: string,
+  durationSec: number
+): Promise<string> {
+  const file = new File(uri);
+  const base64 = await file.base64();
+  const sizeBytes = Math.floor((base64.length * 3) / 4);
+
+  const media = await uploadMedia({
+    uri,
+    purpose: "message_attachment",
+    contentType: "audio/m4a",
+    sizeBytes,
+    originalFilename: file.name,
+  });
+
+  return media.id;
+}
