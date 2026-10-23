@@ -204,16 +204,57 @@ export default function ChatRoomScreen() {
     return media.id;
   };
 
-  const handleSendAudio = (uri: string, durationSec: number) => {
+ const handleSendAudio = async (
+  uri: string,
+  durationSec: number,
+) => {
+  try {
     const file = new File(uri);
 
+    const base64 = await file.base64();
+
+    const sizeBytes = Math.floor((base64.length * 3) / 4);
+
     console.log("AUDIO FILE:", {
-      uri,
       name: file.name,
-      size: file.size,
+      sizeBytes,
       durationSec,
     });
-  };
+
+    const media = await uploadMedia({
+      uri,
+      purpose: "message_attachment",
+      contentType: "audio/m4a",
+      sizeBytes,
+      originalFilename: file.name,
+    });
+
+    console.log("AUDIO MEDIA:", {
+      media,
+      durationSec,
+    });
+  } catch (error) {
+    console.error("AUDIO UPLOAD FAILED:", error);
+
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "response" in error
+    ) {
+      const axiosError = error as {
+        response?: {
+          status?: number;
+          data?: unknown;
+        };
+      };
+
+      console.error(
+        "AUDIO UPLOAD RESPONSE:",
+        JSON.stringify(axiosError.response?.data, null, 2),
+      );
+    }
+  }
+};
 
   const handleCameraCapture = async () => {
     const photoUri = await takePhoto();

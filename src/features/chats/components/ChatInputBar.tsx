@@ -11,6 +11,7 @@ import MicIcon from "@/assets/icons/chat/mic.svg";
 import TrashIcon from "@/assets/icons/chat/trash.svg";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
+import { File } from "expo-file-system"; // to get the file data for media upload
 interface Props {
   text: string;
   onChangeText: (val: string) => void;
@@ -75,15 +76,35 @@ export function ChatInputBar({
 
   const stopAndSendRecording = async () => {
     if (timerInterval) clearInterval(timerInterval);
+    setTimerInterval(null);
     setIsRecordingState(false);
 
     try {
       await audioRecorder.stop();
-      await AudioModule.setAudioModeAsync({ allowsRecording: false });
+      await AudioModule.setAudioModeAsync({
+        allowsRecording: false,
+      });
 
       const uri = audioRecorder.uri;
+
+      console.log("RECORDER RESULT:", {
+        uri,
+        duration: recordDuration,
+      });
+
       if (uri) {
-        onSendAudio(uri, recordDuration);
+        const recordedFile = new File(uri);
+
+        console.log("RECORDED FILE CHECK:", {
+          exists: recordedFile.exists,
+          name: recordedFile.name,
+        });
+
+        if (recordedFile.exists) {
+          onSendAudio(uri, recordDuration);
+        } else {
+          console.error("RECORDED AUDIO FILE DOES NOT EXIST");
+        }
       }
     } catch (err) {
       console.warn("Failed to stop recording:", err);

@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 

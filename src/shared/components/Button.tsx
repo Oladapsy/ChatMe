@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   ViewStyle,
 } from "react-native";
-import { Colors } from "@/shared/constants/colors";
 import { Typography, TypographyWeight } from "@/shared/components/Typography";
 import { useAppTheme } from "../hooks/useAppTheme";
 

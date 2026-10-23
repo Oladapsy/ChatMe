@@ -4,9 +4,9 @@ import {
   Text as RNText,
   TextProps as RNTextProps,
 } from "react-native";
-import { Colors } from "@/shared/constants/colors";
 import { Fonts } from "@/shared/constants/fonts";
-import { useAppTheme } from "../hooks/useAppTheme";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
+
 
 export type TypographyVariant =
   | "h1"
@@ -42,7 +42,7 @@ export function Typography({
   children,
   ...props
 }: TypographyProps) {
-  const { isDark, themeColors } = useAppTheme();
+  const { themeColors } = useAppTheme();
 
 
   const defaultTextColor = secondary

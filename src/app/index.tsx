@@ -3,7 +3,6 @@ import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PhoneAuthScreen from "@/features/auth/screens/PhoneAuthScreen";
-import { Colors } from "@/shared/constants/colors";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export default function Index() {

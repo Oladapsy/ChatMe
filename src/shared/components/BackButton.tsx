@@ -16,7 +16,7 @@ export function BackButton({
   Iconcolor,
 }: BackButtonProps) {
   const router = useRouter();
-      const { isDark, themeColors } = useAppTheme();
+      const { themeColors } = useAppTheme();
 
 
   const activeIconColor = Iconcolor || themeColors.text;

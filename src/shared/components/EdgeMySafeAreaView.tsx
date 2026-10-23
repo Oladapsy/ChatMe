@@ -4,7 +4,6 @@ import {
   ViewStyle,
   StyleProp,
   StatusBar,
-  View,
 } from "react-native";
 import {
   SafeAreaView,

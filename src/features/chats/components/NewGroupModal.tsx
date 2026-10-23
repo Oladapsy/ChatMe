@@ -14,7 +14,7 @@ import { NameGroupStep } from "@/features/chats/components/NameGroupStep";
 import { AddParticipantsStep } from "@/features/chats/components/AddParticipantsStep";
 import { Contact } from "@/features/contacts/data/mockContacts";
 import { Typography } from "@/shared/components/Typography";
-import BackIcon from "@/assets/icons/shared/chevron-left.svg"; // Adjust path if needed
+import BackIcon from "@/assets/icons/shared/chevron-left.svg";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
