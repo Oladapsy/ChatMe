@@ -154,7 +154,8 @@ export default function ChatRoomScreen() {
       return;
     }
 
-    const text = messageText.trim();
+    const draftTextAtSubmit = messageText;
+    const text = draftTextAtSubmit.trim();
 
     if (!text && selectedImageUris.length === 0) {
       return;
@@ -177,8 +178,12 @@ export default function ChatRoomScreen() {
         ...(attachmentMediaIds.length > 0 ? { attachmentMediaIds } : {}),
       });
 
-      setMessageText("");
-      setSelectedImageUris([]);
+      setMessageText((currentText) =>
+        currentText === draftTextAtSubmit ? "" : currentText,
+      );
+      setSelectedImageUris((currentUris) =>
+        currentUris.filter((uri) => !selectedImageUris.includes(uri)),
+      );
     } catch (error) {
       console.error("SEND MESSAGE: failed", error);
     } finally {
