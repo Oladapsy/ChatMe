@@ -50,6 +50,9 @@ import { findMatchingMessageIndices } from "@/features/chats/utils/searchMessage
 import { uploadMedia } from "@/services/mediaUpload";
 import { File } from "expo-file-system"; // to get the file data for media upload
 
+// abstract the image upload
+import { uploadChatImage } from "@/features/chats/utils/uploadChatImage";
+
 export default function ChatRoomScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
@@ -168,7 +171,7 @@ export default function ChatRoomScreen() {
       const attachmentMediaIds: string[] = [];
 
       for (const uri of selectedImageUris) {
-        const mediaId = await handleSendImage(uri);
+        const mediaId = await uploadChatImage(uri);
         attachmentMediaIds.push(mediaId);
       }
 
@@ -192,29 +195,7 @@ export default function ChatRoomScreen() {
     }
   };
 
-  // to send image
-  const handleSendImage = async (uri: string) => {
-    const file = new File(uri);
-
-    const extension = file.name.split(".").pop()?.toLowerCase();
-
-    const mimeType =
-      extension === "webp"
-        ? "image/webp"
-        : extension === "png"
-          ? "image/png"
-          : "image/jpeg";
-
-    const media = await uploadMedia({
-      uri,
-      purpose: "message_attachment",
-      contentType: mimeType,
-      sizeBytes: file.size,
-      originalFilename: file.name,
-    });
-
-    return media.id;
-  };
+  // removed handle send image as it has been abstracted out...
 
   const handleSendAudio = async (uri: string, durationSec: number) => {
     try {
