@@ -1,15 +1,16 @@
 import React from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
+
 import { Typography } from "@/shared/components/Typography";
-import ChevronRightIcon from "@/assets/icons/shared/chevron-right.svg";
 
 interface BlockedContactItemProps {
   name: string;
-  phone: string;
-  avatarUrl: string;
+  phone?: string;
+  avatarUrl?: string | null;
   onPress: () => void;
   isDark?: boolean;
   themeColors: any;
+  isUnblocking?: boolean;
 }
 
 export function BlockedContactItem({
@@ -19,30 +20,54 @@ export function BlockedContactItem({
   onPress,
   isDark,
   themeColors,
+  isUnblocking = false,
 }: BlockedContactItemProps) {
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+    <View style={styles.container}>
+      {avatarUrl ? (
+        <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+      ) : (
+        <View
+          style={[
+            styles.avatar,
+            styles.avatarFallback,
+            { backgroundColor: isDark ? "#30343B" : "#E8EEF3" },
+          ]}
+        >
+          <Typography size={20} weight="bold" color={themeColors.text}>
+            {name.trim().charAt(0).toUpperCase() || "?"}
+          </Typography>
+        </View>
+      )}
 
       <View style={styles.info}>
         <Typography size={16} weight="bold" color={themeColors.text}>
           {name}
         </Typography>
-        <Typography size={14} color={themeColors.textSecondary}>
-          {phone}
-        </Typography>
+
+        {!!phone && (
+          <Typography size={14} color={themeColors.textSecondary}>
+            {phone}
+          </Typography>
+        )}
       </View>
 
-      <ChevronRightIcon
-        width={16}
-        height={16}
-        color={isDark ? themeColors.descText : "#8EA3B3"}
-      />
-    </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.unblockButton,
+          {
+            borderColor: isDark ? "#505761" : "#D8E1E8",
+          },
+        ]}
+        onPress={onPress}
+        disabled={isUnblocking}
+        activeOpacity={0.7}
+      >
+        <Typography size={13} weight="bold" color={themeColors.primary}>
+          {isUnblocking ? "Unblocking..." : "Unblock"}
+        </Typography>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -54,13 +79,24 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   avatar: {
-    width: 56,
-    height: 56,
+    width: 52,
+    height: 52,
     borderRadius: 26,
     marginRight: 14,
+  },
+  avatarFallback: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   info: {
     flex: 1,
     gap: 2,
+    marginRight: 10,
+  },
+  unblockButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderRadius: 8,
   },
 });
