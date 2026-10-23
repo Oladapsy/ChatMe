@@ -1,11 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  StyleSheet,
-  View,
-  FlatList,
-  ActivityIndicator,
-  Pressable,
-} from "react-native";
+import { StyleSheet, View, FlatList, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -52,6 +46,8 @@ import { ChatListFilter } from "@/features/chats/components/ChatListFilter";
 // for searching existing users!!!
 import { useSearchUsers } from "@/features/contacts/hooks/useSearchUsers";
 import { useStartDirectConversation } from "@/features/chats/hooks/useStartDirectConversation";
+
+import { SearchUserRow } from "@/features/chats/components/SearchUserRow";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -236,11 +232,11 @@ export default function HomeScreen() {
           contentContainerStyle={styles.listContent}
           ListHeaderComponent={
             <View>
-              {/* 1. PEOPLE SEARCH SECTION (Only visible when typing 2+ chars) */}
+              {/* 1. PEOPLE SEARCH SECTION (Visible when typing 2+ characters) */}
               {searchQuery.trim().length >= 2 && (
                 <View style={styles.peopleSection}>
                   <Typography
-                    size={14}
+                    size={13}
                     weight="bold"
                     color={themeColors.textSecondary}
                     style={styles.sectionHeader}
@@ -278,69 +274,38 @@ export default function HomeScreen() {
                       </Typography>
                     )}
 
-                  {userSearchData?.items.map((person) => {
-                    const isStarting = startingPersonId === person.id;
+                  {userSearchData?.items.map((person) => (
+                    <SearchUserRow
+                      key={person.id}
+                      person={person}
+                      isLoading={startingPersonId === person.id}
+                      onPress={async () => {
+                        try {
+                          setStartingPersonId(person.id);
+                          const conversation = await startConversation(
+                            person.id,
+                          );
 
-                    return (
-                      <Pressable
-                        key={person.id}
-                        disabled={isStarting}
-                        style={({ pressed }) => [
-                          styles.personRow,
-                          {
-                            backgroundColor: pressed
-                              ? themeColors.cardBackground
-                              : "transparent",
-                          },
-                        ]}
-                        onPress={async () => {
-                          try {
-                            setStartingPersonId(person.id);
-                            const conversation = await startConversation(
-                              person.id,
-                            );
-
-                            router.push({
-                              pathname: "/chat-room",
-                              params: {
-                                id: conversation.id,
-                                name: person.displayName,
-                                avatar: person.avatarUrl ?? "",
-                                isGroup: "false",
-                              },
-                            });
-                          } catch (error) {
-                            console.error(
-                              "FAILED TO START CONVERSATION:",
-                              error,
-                            );
-                          } finally {
-                            setStartingPersonId(null);
-                          }
-                        }}
-                      >
-                        <View style={styles.personInfo}>
-                          <Typography
-                            size={16}
-                            weight="medium"
-                            color={themeColors.text}
-                          >
-                            {person.displayName}
-                          </Typography>
-                        </View>
-
-                        {isStarting && (
-                          <ActivityIndicator
-                            size="small"
-                            color={themeColors.primary}
-                          />
-                        )}
-                      </Pressable>
-                    );
-                  })}
+                          router.push({
+                            pathname: "/chat-room",
+                            params: {
+                              id: conversation.id,
+                              name: person.displayName,
+                              avatar: person.avatarUrl ?? "",
+                              isGroup: "false",
+                            },
+                          });
+                        } catch (error) {
+                          console.error("FAILED TO START CONVERSATION:", error);
+                        } finally {
+                          setStartingPersonId(null);
+                        }
+                      }}
+                    />
+                  ))}
 
                   <Typography
-                    size={14}
+                    size={13}
                     weight="bold"
                     color={themeColors.textSecondary}
                     style={[styles.sectionHeader, { marginTop: 16 }]}
@@ -357,7 +322,14 @@ export default function HomeScreen() {
               />
             </View>
           }
-          ListEmptyComponent={EmptyChatState}
+          ListEmptyComponent={
+            searchQuery.trim().length >= 2 &&
+            (userSearchData?.items.length ?? 0) > 0 ? (
+              <View />
+            ) : (
+              <EmptyChatState />
+            )
+          }
           renderItem={({ item }) => {
             const isSelected = selectedIds.includes(item.id);
 
@@ -370,6 +342,7 @@ export default function HomeScreen() {
                 chat={item}
                 isSelected={isSelected}
                 onPress={() => {
+                  if (startingPersonId !== null) return;
                   if (selectedIds.length > 0) {
                     handleToggleSelect(item.id);
                   } else {
@@ -453,16 +426,5 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginVertical: 8,
-  },
-  personRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-  },
-  personInfo: {
-    flex: 1,
   },
 });
