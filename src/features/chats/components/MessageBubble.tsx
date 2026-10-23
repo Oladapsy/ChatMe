@@ -11,6 +11,8 @@ import PlayIcon from "@/assets/icons/chat/play.svg";
 import PauseIcon from "@/assets/icons/chat/pause.svg";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
+import AudioMessagePlayer from "@/features/chats/components/AudioMessagePlayer";
+
 import { formatMessageTime } from "@/features/chats/utils/formatMsgTime";
 import UserPlaceholderIcon from "@/assets/icons/shared/user.svg";
 interface Props {
@@ -144,7 +146,6 @@ export function MessageBubble({
               {message.senderName}
             </Typography>
           )}
-
           {/* 1. Image Attachment */}
           {/* {message.imageUris && message.imageUris.length > 0 && (
             <View style={styles.imageGridContainer}>
@@ -157,7 +158,6 @@ export function MessageBubble({
               ))}
             </View>
           )} */}
-
           {/* 2. Audio / Voice Note Attachment */}
           {/* {message.type === "audio" && (
             <View style={styles.audioContainer}>
@@ -202,7 +202,6 @@ export function MessageBubble({
               </Typography>
             </View>
           )} */}
-
           {/* 3. Document Attachment */}
           {/* {message.document && (
             <View style={styles.attachmentCard}>
@@ -230,7 +229,6 @@ export function MessageBubble({
               </View>
             </View>
           )} */}
-
           {/* 4. Location Attachment */}
           {/* {message.location && (
             <View style={[styles.attachmentCard, { paddingRight: 12 }]}>
@@ -249,7 +247,6 @@ export function MessageBubble({
               </Typography>
             </View>
           )} */}
-
           {/* 5. Contact Attachment */}
           {/* {message.contact && (
             <View style={styles.attachmentCard}>
@@ -283,7 +280,6 @@ export function MessageBubble({
               </View>
             </View>
           )} */}
-
           {/* 6. Text Message */}
           <View style={styles.messageBody}>
             {message.kind === "image" &&
@@ -311,6 +307,19 @@ export function MessageBubble({
               </Typography>
             </View>
           </View>
+          {/* attachment back */}
+          {message.kind === "audio" &&
+            message.attachments.map((attachment) => {
+              if (attachment.type !== "audio") return null;
+
+              return (
+                <AudioMessagePlayer
+                  key={attachment.mediaId}
+                  uri={attachment.url}
+                  durationMs={attachment.durationMs}
+                />
+              );
+            })}
         </View>
 
         {/* Timestamp on RIGHT for Received Messages */}

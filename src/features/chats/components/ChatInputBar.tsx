@@ -61,6 +61,7 @@ export function ChatInputBar({
         playsInSilentMode: true,
       });
 
+      await audioRecorder.prepareToRecordAsync();
       audioRecorder.record();
       setIsRecordingState(true);
       setRecordDuration(0);
@@ -81,11 +82,12 @@ export function ChatInputBar({
 
     try {
       await audioRecorder.stop();
+
+      const uri = audioRecorder.uri;
+      console.log("FINALIZED RECORDING URI:", uri);
       await AudioModule.setAudioModeAsync({
         allowsRecording: false,
       });
-
-      const uri = audioRecorder.uri;
 
       console.log("RECORDER RESULT:", {
         uri,
@@ -119,6 +121,9 @@ export function ChatInputBar({
 
     try {
       await audioRecorder.stop();
+
+      const uri = audioRecorder.uri;
+      console.log("FINALIZED RECORDING URI:", uri);
       await AudioModule.setAudioModeAsync({ allowsRecording: false });
     } catch (err) {
       console.warn("Failed to cancel recording:", err);

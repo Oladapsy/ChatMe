@@ -46,9 +46,6 @@ import {
 import { MessageDateSeparator } from "@/features/chats/components/MessageDateSeparator";
 
 import { findMatchingMessageIndices } from "@/features/chats/utils/searchMessages";
-// to upload media aside text
-import { uploadMedia } from "@/services/mediaUpload";
-import { File } from "expo-file-system"; // to get the file data for media upload
 
 // abstract the image upload
 import { uploadChatImage } from "@/features/chats/utils/uploadChatMedia";
@@ -202,9 +199,14 @@ export default function ChatRoomScreen() {
     try {
       const mediaId = await uploadChatAudio(uri, durationSec);
 
-      console.log("AUDIO UPLOADED:", { mediaId, durationSec });
+      const sentMessage = await sendMessage({
+        clientMessageId: Crypto.randomUUID(),
+        attachmentMediaIds: [mediaId],
+      });
+
+      console.log("AUDIO MESSAGE SENT:", sentMessage);
     } catch (error) {
-      console.error("AUDIO UPLOAD FAILED:", error);
+      console.error("AUDIO MESSAGE FAILED:", error);
     }
   };
 
