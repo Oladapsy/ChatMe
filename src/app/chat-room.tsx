@@ -52,6 +52,7 @@ import { File } from "expo-file-system"; // to get the file data for media uploa
 
 // abstract the image upload
 import { uploadChatImage } from "@/features/chats/utils/uploadChatImage";
+import { uploadChatAudio } from "@/features/chats/utils/uploadChatImage";
 
 export default function ChatRoomScreen() {
   const router = useRouter();
@@ -199,46 +200,11 @@ export default function ChatRoomScreen() {
 
   const handleSendAudio = async (uri: string, durationSec: number) => {
     try {
-      const file = new File(uri);
+      const mediaId = await uploadChatAudio(uri, durationSec);
 
-      const base64 = await file.base64();
-
-      const sizeBytes = Math.floor((base64.length * 3) / 4);
-
-      console.log("AUDIO FILE:", {
-        name: file.name,
-        sizeBytes,
-        durationSec,
-      });
-
-      const media = await uploadMedia({
-        uri,
-        purpose: "message_attachment",
-        contentType: "audio/m4a",
-        sizeBytes,
-        originalFilename: file.name,
-      });
-
-      console.log("AUDIO MEDIA:", {
-        media,
-        durationSec,
-      });
+      console.log("AUDIO UPLOADED:", { mediaId, durationSec });
     } catch (error) {
       console.error("AUDIO UPLOAD FAILED:", error);
-
-      if (typeof error === "object" && error !== null && "response" in error) {
-        const axiosError = error as {
-          response?: {
-            status?: number;
-            data?: unknown;
-          };
-        };
-
-        console.error(
-          "AUDIO UPLOAD RESPONSE:",
-          JSON.stringify(axiosError.response?.data, null, 2),
-        );
-      }
     }
   };
 
