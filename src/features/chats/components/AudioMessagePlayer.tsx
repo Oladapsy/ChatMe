@@ -85,9 +85,7 @@ export default function AudioMessagePlayer({
         </View>
 
         <Text style={styles.time}>
-          {formatTime(
-            isPlaying || currentTimeMs > 0 ? currentTimeMs : durationMs,
-          )}
+          {formatTime(currentTimeMs > 0 ? currentTimeMs : durationMs)}
         </Text>
       </View>
     </View>
