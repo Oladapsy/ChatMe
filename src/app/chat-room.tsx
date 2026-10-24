@@ -53,6 +53,7 @@ import { uploadChatAudio } from "@/features/chats/utils/uploadChatMedia";
 
 //socket
 import { useChatSocket } from "@/features/chats/hooks/useChatSocket";
+import { useConversations } from "@/features/chats/hooks/useConversations";
 
 export default function ChatRoomScreen() {
   const router = useRouter();
@@ -78,8 +79,17 @@ export default function ChatRoomScreen() {
     useSendMessage(activeChatId);
 
   const { data: messagesData } = useMessages(activeChatId);
+  const { data: conversationsData } = useConversations();
 
-  // console.log("MESSAGES DATA:", messagesData);
+  const currentConversation = conversationsData?.items.find(
+    (conversation) => conversation.id === activeChatId,
+  );
+
+  const otherParticipant =
+    currentConversation?.type === "direct"
+      ? currentConversation.otherParticipant
+      : undefined;
+
   // Search Mode States
   const [isSearching, setIsSearching] = useState(search === "true");
   const [searchQuery, setSearchQuery] = useState("");
@@ -197,8 +207,6 @@ export default function ChatRoomScreen() {
     }
   };
 
-  // removed handle send image as it has been abstracted out...
-
   const handleSendAudio = async (uri: string, durationSec: number) => {
     try {
       const mediaId = await uploadChatAudio(uri, durationSec);
@@ -244,12 +252,23 @@ export default function ChatRoomScreen() {
         pathname: "/group-details",
         params: { id: activeChatId },
       });
-    } else {
-      router.push({
-        pathname: "/user-details",
-        params: { id: activeChatId },
-      });
+      return;
     }
+
+    if (!otherParticipant?.id) {
+      console.warn("Unable to find the other participant's user ID.");
+      return;
+    }
+
+    router.push({
+      pathname: "/user-details",
+      params: {
+        id: otherParticipant.id,
+        conversationId: activeChatId,
+        name: otherParticipant.displayName || chatName || "",
+        avatar: otherParticipant.avatarUrl || chatAvatar || "",
+      },
+    });
   };
 
   return (

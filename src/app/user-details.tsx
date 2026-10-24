@@ -11,6 +11,7 @@ export default function UserDetailsRoute() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     id?: string;
+    conversationId?: string;
     name?: string;
     avatar?: string;
   }>();
@@ -25,6 +26,7 @@ export default function UserDetailsRoute() {
   return (
     <UserInfoFlowContainer
       profile={profile}
+      conversationId={params.conversationId}
       starredMessages={MOCK_STARRED_MESSAGES}
       sharedLinkSections={MOCK_SHARED_LINK_SECTIONS}
       onBack={() => router.back()}

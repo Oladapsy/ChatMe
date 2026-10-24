@@ -1,21 +1,17 @@
 import React from "react";
-import {
-  StyleSheet,
-  View,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
+import { StyleSheet, View, ScrollView, TouchableOpacity } from "react-native";
 import { UserProfile } from "@/features/chats/types/chat";
 import { UserHeaderHero } from "@/features/chats/components/user/UserHeaderHero";
 import { UserInfoSectionCard } from "@/features/chats/components/user/UserInfoSectionCard";
 import { UserAboutMediaSection } from "@/features/chats/components/user/UserAboutMediaSection";
 import { Typography } from "@/shared/components/Typography";
 import BlockIcon from "@/assets/icons/shared/Block.svg";
-import { Colors } from "@/shared/constants/colors";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   profile: UserProfile;
+  isBlocked: boolean;
+  isBlockActionPending: boolean;
   onBack: () => void;
   onSearchPress: () => void;
   onQrPress: () => void;
@@ -29,6 +25,8 @@ interface Props {
 
 export function UserProfileDetailScreen({
   profile,
+  isBlocked,
+  isBlockActionPending,
   onBack,
   onSearchPress,
   onQrPress,
@@ -40,7 +38,6 @@ export function UserProfileDetailScreen({
   onBlockPress,
 }: Props) {
   const { isDark, themeColors } = useAppTheme();
-
 
   return (
     <View style={styles.container}>
@@ -95,16 +92,18 @@ export function UserProfileDetailScreen({
 
         {/* 4. Block Action Button */}
         <TouchableOpacity
-          style={[
-            styles.blockRow,
-            { backgroundColor: themeColors.background},
-          ]}
+          style={[styles.blockRow, { backgroundColor: themeColors.background }]}
           activeOpacity={0.7}
+          disabled={isBlockActionPending}
           onPress={onBlockPress}
         >
           <BlockIcon width={22} height={22} color="#DD524C" />
           <Typography size={15} weight="bold" color="#DD524C">
-            Block contact
+            {isBlockActionPending
+              ? "Please wait..."
+              : isBlocked
+                ? "Unblock contact"
+                : "Block contact"}
           </Typography>
         </TouchableOpacity>
       </ScrollView>
