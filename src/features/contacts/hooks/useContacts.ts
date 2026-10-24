@@ -21,13 +21,10 @@ const FIELDS = [
 
 /**
  * Normalize Nigerian phone numbers to E.164 format.
- *
- * Examples:
- * 08012345678    -> +2348012345678
- * 2348012345678  -> +2348012345678
- * +2348012345678 -> +2348012345678
- *
- * Returns null when the number cannot safely be normalized.
+ * Handles:
+ * - Full international: +2348012345678 -> +2348012345678
+ * - Local with leading zero: 08012345678 -> +2348012345678
+ * - Local 10-digit (missing leading zero): 9028193903 -> +2349028193903
  */
 function toE164Nigeria(phone: string): string | null {
   const trimmed = phone.trim();
@@ -43,8 +40,10 @@ function toE164Nigeria(phone: string): string | null {
     internationalDigits = digits;
   } else if (digits.startsWith("0") && digits.length === 11) {
     internationalDigits = `234${digits.slice(1)}`;
+  } else if (digits.length === 10 && /^[789]/.test(digits)) {
+    // Handle 10-digit local numbers missing the leading '0' (e.g., 9028193903)
+    internationalDigits = `234${digits}`;
   } else {
-    // Don't guess the country code for an ambiguous number.
     return null;
   }
 
@@ -57,8 +56,7 @@ function toE164Nigeria(phone: string): string | null {
     return null;
   }
 
-  // Nigerian numbers in this implementation must have 13 digits
-  // after removing the leading "+".
+  // Nigerian numbers must have exactly 13 digits after the country code block
   if (
     internationalDigits.startsWith("234") &&
     internationalDigits.length !== 13
