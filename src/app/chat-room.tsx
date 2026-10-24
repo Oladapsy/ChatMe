@@ -143,8 +143,8 @@ export default function ChatRoomScreen() {
     data: serverSearchData,
     isFetching: isServerSearching,
     isError: isServerSearchError,
+    refetch: refetchSearchMessages,
   } = useSearchMessages(activeChatId, isSearching ? debouncedSearchQuery : "");
-
   // Sync state if navigation parameter changes dynamically
   useEffect(() => {
     if (search === "true") {
