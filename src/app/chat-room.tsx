@@ -147,8 +147,24 @@ export default function ChatRoomScreen() {
   const isGroupChat = currentChat
     ? Boolean(currentChat.isGroup)
     : isGroup === "true";
-  const chatName = currentChat?.name || name;
-  const chatAvatar = currentChat?.avatar || avatar;
+  const chatName =
+    currentChat?.name ||
+    (currentConversation?.type === "direct"
+      ? currentConversation.otherParticipant.displayName
+      : currentConversation?.type === "group"
+        ? currentConversation.name
+        : undefined) ||
+    name ||
+    "Unknown contact";
+
+  const chatAvatar =
+    currentChat?.avatar ||
+    (currentConversation?.type === "direct"
+      ? currentConversation.otherParticipant.avatarUrl
+      : currentConversation?.type === "group"
+        ? currentConversation.avatarUrl
+        : undefined) ||
+    avatar;
   const groupMembers = currentChat?.members;
 
   const messages = [...(messagesData?.items ?? [])].reverse();
