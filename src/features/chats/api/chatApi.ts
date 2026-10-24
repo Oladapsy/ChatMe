@@ -141,3 +141,30 @@ export const startDirectConversation = async (
 
   return response.data;
 };
+
+
+// for the search match with backend 
+
+export interface SearchMessagesParams {
+  q: string;
+  limit?: number;
+  cursor?: string;
+}
+
+export const searchMessages = async (
+  conversationId: string,
+  params: SearchMessagesParams,
+): Promise<MessageHistoryResponse> => {
+  const response = await api.get<MessageHistoryResponse>(
+    `/conversations/${conversationId}/messages/search`,
+    {
+      params: {
+        q: params.q,
+        limit: params.limit ?? 50,
+        ...(params.cursor ? { cursor: params.cursor } : {}),
+      },
+    },
+  );
+
+  return response.data;
+};
