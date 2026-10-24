@@ -258,6 +258,30 @@ export default function ChatRoomScreen() {
     serverSearchData,
   ]);
 
+  //These conditions distinguish a search that is still running from a completed search with no matches or a failed request.
+  const normalizedSearchQuery = searchQuery.trim();
+
+  const isSearchDebouncing = normalizedSearchQuery !== debouncedSearchQuery;
+
+  const isSearchLoading =
+    isSearching &&
+    normalizedSearchQuery.length > 0 &&
+    (isSearchDebouncing || isServerSearching);
+
+  const showSearchError =
+    isSearching &&
+    normalizedSearchQuery.length > 0 &&
+    !isSearchDebouncing &&
+    isServerSearchError;
+
+  const showNoSearchResults =
+    isSearching &&
+    normalizedSearchQuery.length > 0 &&
+    !isSearchDebouncing &&
+    !isServerSearching &&
+    !isServerSearchError &&
+    matchingIndices.length === 0;
+
   // Scroll to targeted matching item when match index changes
   useEffect(() => {
     if (isSearching && matchingIndices.length > 0) {
