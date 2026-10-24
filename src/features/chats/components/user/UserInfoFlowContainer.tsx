@@ -13,8 +13,8 @@ import { useRouter } from "expo-router";
 
 // Block hooks
 import { useBlockedUsers } from "@/features/contacts/hooks/useBlockedUsers";
-import { useBlockUser } from "@/features/contacts/api/useBlockUser";
-import { useUnblockUser } from "@/features/contacts/api/useUnblockUser";
+import { useBlockUser } from "@/features/contacts/hooks/useBlockUser";
+import { useUnblockUser } from "@/features/contacts/hooks/useUnblockUser";
 
 type ActiveTab = "Main" | "Photo" | "Star" | "Links";
 

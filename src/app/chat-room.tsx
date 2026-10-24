@@ -7,15 +7,18 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Crypto from "expo-crypto";
+import axios from "axios";
 
 import MySafeAreaView from "@/shared/components/EdgeMySafeAreaView";
 import { ChatRoomHeader } from "@/features/chats/components/ChatRoomHeader";
 import { AttachmentModal } from "@/features/chats/components/AttachmentModal";
 import { useCameraHandler } from "@/features/chats/hooks/useCameraHandler";
 import { ChatInputBar } from "@/features/chats/components/ChatInputBar";
+import { Typography } from "@/shared/components/Typography";
 
 // Search Feature Components
 import { ChatSearchHeader } from "@/features/chats/components/ChatSearchHeader";
@@ -27,16 +30,19 @@ import ChatBgIcon from "@/assets/icons/chat/ChatBg.svg";
 
 // Types & Data
 import { MessageBubble } from "@/features/chats/components/MessageBubble";
-
 import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
-// get msgs for a converstaion
+// get msgs for a conversation
 import { useMessages } from "@/features/chats/hooks/useMessages";
 // send msgs
 import { useSendMessage } from "@/features/chats/hooks/useSendMessage";
 // get current user
 import { useMe } from "@/features/auth/hooks/useMe";
+
+// block hooks
+import { useBlockedUsers } from "@/features/contacts/hooks/useBlockedUsers";
+import { useUnblockUser } from "@/features/contacts/hooks/useUnblockUser";
 
 // format the chat date
 import {
@@ -81,6 +87,10 @@ export default function ChatRoomScreen() {
   const { data: messagesData } = useMessages(activeChatId);
   const { data: conversationsData } = useConversations();
 
+  // Block status hooks
+  const { data: blockedData, isLoading: isLoadingBlocks } = useBlockedUsers();
+  const unblockMutation = useUnblockUser();
+
   const currentConversation = conversationsData?.items.find(
     (conversation) => conversation.id === activeChatId,
   );
@@ -89,6 +99,14 @@ export default function ChatRoomScreen() {
     currentConversation?.type === "direct"
       ? currentConversation.otherParticipant
       : undefined;
+
+  // Check if contact is blocked by the current user
+  const isContactBlocked =
+    currentConversation?.type === "direct" && otherParticipant?.id
+      ? (blockedData?.items.some(
+          (item) => item.user.id === otherParticipant.id,
+        ) ?? false)
+      : false;
 
   // Search Mode States
   const [isSearching, setIsSearching] = useState(search === "true");
@@ -163,9 +181,23 @@ export default function ChatRoomScreen() {
     setCurrentMatchIndex(0);
   };
 
-  // changed send text to handle send for all
+  // Unblock handler directly from the notice bar
+  const handleUnblockFromBanner = () => {
+    if (!otherParticipant?.id || unblockMutation.isPending) return;
+
+    unblockMutation.mutate(otherParticipant.id, {
+      onSuccess: () =>
+        Alert.alert(
+          "Success",
+          `${otherParticipant.displayName} has been unblocked.`,
+        ),
+      onError: () => Alert.alert("Error", "Unable to unblock this contact."),
+    });
+  };
+
+  // changed send text to handle send for all with 404/error safeguard
   const handleSend = async () => {
-    if (sendInFlightRef.current) {
+    if (sendInFlightRef.current || isContactBlocked) {
       return;
     }
 
@@ -201,6 +233,22 @@ export default function ChatRoomScreen() {
       );
     } catch (error) {
       console.error("SEND MESSAGE: failed", error);
+
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        if (status === 404) {
+          Alert.alert(
+            "Message not sent",
+            "This conversation may no longer be available. Check the contact's block status and try again.",
+          );
+          return;
+        }
+      }
+
+      Alert.alert(
+        "Message not sent",
+        "Something went wrong. Please try again.",
+      );
     } finally {
       sendInFlightRef.current = false;
       setIsSending(false);
@@ -208,6 +256,8 @@ export default function ChatRoomScreen() {
   };
 
   const handleSendAudio = async (uri: string, durationSec: number) => {
+    if (isContactBlocked) return;
+
     try {
       const mediaId = await uploadChatAudio(uri, durationSec);
 
@@ -393,7 +443,7 @@ export default function ChatRoomScreen() {
           </View>
         )}
 
-        {/* Bottom Bar View Switching */}
+        {/* Bottom Bar / Blocked Notice Switching */}
         {isSearching ? (
           <ChatSearchControlBar
             currentIndex={currentMatchIndex}
@@ -402,6 +452,34 @@ export default function ChatRoomScreen() {
             onPrev={handlePrevMatch}
             isDark={isDark}
           />
+        ) : isContactBlocked ? (
+          <View
+            style={[
+              styles.blockedNoticeContainer,
+              {
+                backgroundColor: isDark
+                  ? themeColors.cardBackground
+                  : "#FFFFFF",
+                borderTopColor: isDark ? "#163043" : "#EAEEF2",
+              },
+            ]}
+          >
+            <Typography
+              size={14}
+              color={themeColors.textSecondary}
+              style={styles.blockedText}
+            >
+              You blocked this contact. Unblock them to send messages.
+            </Typography>
+            <TouchableOpacity
+              onPress={handleUnblockFromBanner}
+              activeOpacity={0.7}
+            >
+              <Typography size={14} weight="bold" color={themeColors.primary}>
+                {unblockMutation.isPending ? "Unblocking..." : "Unblock"}
+              </Typography>
+            </TouchableOpacity>
+          </View>
         ) : (
           <ChatInputBar
             text={messageText}
@@ -463,5 +541,18 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.7)",
     borderRadius: 10,
     padding: 4,
+  },
+  blockedNoticeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingBottom: 30,
+    borderTopWidth: 1,
+  },
+  blockedText: {
+    flex: 1,
+    marginRight: 12,
   },
 });

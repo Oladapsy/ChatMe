@@ -16,11 +16,15 @@ export default function UserDetailsRoute() {
     avatar?: string;
   }>();
 
+  if (!params.id) {
+    return null;
+  }
+
   const profile = {
     ...MOCK_USER_PROFILE,
-    id: params.id || MOCK_USER_PROFILE.id,
-    name: params.name || MOCK_USER_PROFILE.name,
-    avatarUri: params.avatar || MOCK_USER_PROFILE.avatarUri,
+    id: params.id,
+    name: params.name || "ChatMe user",
+    avatarUri: params.avatar || undefined,
   };
 
   return (

@@ -15,7 +15,7 @@ import { SubScreenHeader } from "@/shared/components/SubScreenHeader";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 import { BlockedContactItem } from "@/features/settings/components/BlockedContactItem";
 import { useBlockedUsers } from "@/features/contacts/hooks/useBlockedUsers";
-import { useUnblockUser } from "@/features/contacts/api/useUnblockUser";
+import { useUnblockUser } from "@/features/contacts/hooks/useUnblockUser";
 
 export default function BlockedContactsScreen() {
   const router = useRouter();
