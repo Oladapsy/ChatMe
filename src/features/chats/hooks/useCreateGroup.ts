@@ -4,6 +4,10 @@ import {
   getConversationById,
   type CreateGroupPayload,
 } from "@/features/chats/api/chatApi";
+import {
+  updateGroup,
+  type UpdateGroupPayload,
+} from "@/features/chats/api/chatApi";
 
 export const useCreateGroup = () => {
   const queryClient = useQueryClient();
@@ -19,7 +23,6 @@ export const useCreateGroup = () => {
   });
 };
 
-
 // group details fetch hook
 
 export function useGroupDetails(conversationId: string) {
@@ -27,5 +30,32 @@ export function useGroupDetails(conversationId: string) {
     queryKey: ["conversation", conversationId],
     queryFn: () => getConversationById(conversationId),
     enabled: Boolean(conversationId),
+  });
+}
+
+// update group details hook
+
+interface UpdateGroupVariables {
+  conversationId: string;
+  payload: UpdateGroupPayload;
+}
+
+export function useUpdateGroup() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ conversationId, payload }: UpdateGroupVariables) =>
+      updateGroup(conversationId, payload),
+
+    onSuccess: async (_data, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["conversation", variables.conversationId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["conversations"],
+        }),
+      ]);
+    },
   });
 }
