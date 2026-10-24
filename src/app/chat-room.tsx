@@ -144,7 +144,11 @@ export default function ChatRoomScreen() {
     isFetching: isServerSearching,
     isError: isServerSearchError,
     refetch: refetchSearchMessages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useSearchMessages(activeChatId, isSearching ? debouncedSearchQuery : "");
+
   // Sync state if navigation parameter changes dynamically
   useEffect(() => {
     if (search === "true") {
@@ -187,12 +191,14 @@ export default function ChatRoomScreen() {
 
   const messages = useMemo(() => {
     const historyMessages = messagesData?.items ?? [];
-    const query = searchQuery.trim();
 
-    const searchMessages =
-      isSearching && query.length > 0 && debouncedSearchQuery === query
-        ? (serverSearchData?.items ?? [])
-        : [];
+    const query = searchQuery.trim();
+    const searchPagesMatchCurrentQuery =
+      isSearching && query.length > 0 && query === debouncedSearchQuery;
+
+    const searchMessages = searchPagesMatchCurrentQuery
+      ? (serverSearchData?.pages.flatMap((page) => page.items) ?? [])
+      : [];
 
     const uniqueMessages = new Map(
       [...historyMessages, ...searchMessages].map((message) => [
@@ -207,7 +213,7 @@ export default function ChatRoomScreen() {
     );
   }, [
     messagesData?.items,
-    serverSearchData?.items,
+    serverSearchData?.pages,
     isSearching,
     searchQuery,
     debouncedSearchQuery,
@@ -229,34 +235,24 @@ export default function ChatRoomScreen() {
   const matchingIndices = useMemo(() => {
     const query = searchQuery.trim();
 
-    if (!query) {
+    if (!query || query !== debouncedSearchQuery || !serverSearchData) {
       return [];
     }
 
-    // Use backend results once they correspond to the current query.
-    if (isSearching && debouncedSearchQuery === query && serverSearchData) {
-      const matchingMessageIds = new Set(
-        serverSearchData.items.map((message) => message.id),
-      );
+    const matchingMessageIds = new Set(
+      serverSearchData.pages.flatMap((page) =>
+        page.items.map((message) => message.id),
+      ),
+    );
 
-      return processedMessages.reduce<number[]>((matches, item, index) => {
-        if (item.type === "message" && matchingMessageIds.has(item.id)) {
-          matches.push(index);
-        }
+    return processedMessages.reduce<number[]>((matches, item, index) => {
+      if (item.type === "message" && matchingMessageIds.has(item.id)) {
+        matches.push(index);
+      }
 
-        return matches;
-      }, []);
-    }
-
-    // Keep local matching available while the backend request is pending.
-    return findMatchingMessageIndices(processedMessages, query);
-  }, [
-    processedMessages,
-    searchQuery,
-    isSearching,
-    debouncedSearchQuery,
-    serverSearchData,
-  ]);
+      return matches;
+    }, []);
+  }, [processedMessages, searchQuery, debouncedSearchQuery, serverSearchData]);
 
   //These conditions distinguish a search that is still running from a completed search with no matches or a failed request.
   const normalizedSearchQuery = searchQuery.trim();
@@ -296,15 +292,55 @@ export default function ChatRoomScreen() {
     }
   }, [currentMatchIndex, matchingIndices, isSearching]);
 
-  const handleNextMatch = () => {
+  const handleNextMatch = async () => {
     if (matchingIndices.length === 0) return;
-    setCurrentMatchIndex((prev) => (prev + 1) % matchingIndices.length);
+
+    const isAtLastLoadedMatch =
+      currentMatchIndex === matchingIndices.length - 1;
+
+    if (isAtLastLoadedMatch && hasNextPage && !isFetchingNextPage) {
+      try {
+        const result = await fetchNextPage();
+
+        if (result.isError) {
+          Alert.alert(
+            "Search error",
+            "Unable to load more results. Please try again.",
+          );
+          return;
+        }
+
+        const loadedPages = result.data?.pages ?? [];
+        const previousMatchCount = loadedPages
+          .slice(0, -1)
+          .reduce((total, page) => total + page.items.length, 0);
+
+        const newPageMatchCount =
+          loadedPages[loadedPages.length - 1]?.items.length ?? 0;
+
+        if (newPageMatchCount > 0) {
+          setCurrentMatchIndex(previousMatchCount);
+        }
+      } catch {
+        Alert.alert(
+          "Search error",
+          "Unable to load more results. Please try again.",
+        );
+      }
+
+      return;
+    }
+
+    setCurrentMatchIndex((previous) =>
+      previous + 1 < matchingIndices.length ? previous + 1 : previous,
+    );
   };
 
   const handlePrevMatch = () => {
     if (matchingIndices.length === 0) return;
-    setCurrentMatchIndex((prev) =>
-      prev === 0 ? matchingIndices.length - 1 : prev - 1,
+
+    setCurrentMatchIndex((previous) =>
+      previous > 0 ? previous - 1 : previous,
     );
   };
 
