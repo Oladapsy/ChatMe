@@ -1,5 +1,8 @@
 import { api } from "@/services/api";
-import type { ConversationListResponse } from "@/features/chats/types/chat";
+import type {
+  ConversationListResponse,
+  GroupConversation,
+} from "@/features/chats/types/chat";
 import type {
   MessageHistoryResponse,
   Message,
@@ -142,8 +145,7 @@ export const startDirectConversation = async (
   return response.data;
 };
 
-
-// for the search match with backend 
+// for the search match with backend
 
 export interface SearchMessagesParams {
   q: string;
@@ -164,6 +166,23 @@ export const searchMessages = async (
         ...(params.cursor ? { cursor: params.cursor } : {}),
       },
     },
+  );
+
+  return response.data;
+};
+
+// group creation api
+export interface CreateGroupPayload {
+  name: string;
+  participantIds: string[];
+}
+
+export const createGroup = async (
+  payload: CreateGroupPayload,
+): Promise<GroupConversation> => {
+  const response = await api.post<GroupConversation>(
+    "/conversations/group",
+    payload,
   );
 
   return response.data;
