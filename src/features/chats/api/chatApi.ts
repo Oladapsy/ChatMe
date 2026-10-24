@@ -175,6 +175,7 @@ export const searchMessages = async (
 export interface CreateGroupPayload {
   name: string;
   participantIds: string[];
+  avatarMediaId?: string;
 }
 
 export const createGroup = async (
