@@ -544,41 +544,78 @@ export default function ChatRoomScreen() {
             />
           </View>
 
-          {/* Chat Feed */}
-          <FlatList
-            ref={flatListRef}
-            data={processedMessages}
-            keyExtractor={(item) => item.id}
-            onScrollToIndexFailed={(info) => {
-              flatListRef.current?.scrollToOffset({
-                offset: info.averageItemLength * info.index,
-                animated: true,
-              });
-            }}
-            renderItem={({ item }) => {
-              if (item.type === "date") {
-                return <MessageDateSeparator label={item.label} />;
-              }
+          {/* Chat Feed / Search States */}
+          {isSearching &&
+          normalizedSearchQuery.length > 0 &&
+          (isSearchLoading || showSearchError || showNoSearchResults) ? (
+            <View style={styles.searchStateContainer}>
+              {isSearchLoading ? (
+                <Typography size={14} color={themeColors.textSecondary}>
+                  Searching messages...
+                </Typography>
+              ) : showSearchError ? (
+                <>
+                  <Typography size={14} color={themeColors.textSecondary}>
+                    Unable to search messages. Please check your connection and
+                    try again.
+                  </Typography>
 
-              return (
-                <MessageBubble
-                  message={item}
-                  isGroup={isGroupChat}
-                  searchQuery={isSearching ? searchQuery : undefined}
-                />
-              );
-            }}
-            contentContainerStyle={{
-              paddingVertical: 10,
-              flexGrow: 1,
-              justifyContent: "flex-end",
-            }}
-            onContentSizeChange={() => {
-              if (!isSearching) {
-                flatListRef.current?.scrollToEnd({ animated: true });
-              }
-            }}
-          />
+                  <TouchableOpacity
+                    onPress={() => refetchSearchMessages()}
+                    activeOpacity={0.7}
+                    style={styles.searchRetryButton}
+                  >
+                    <Typography
+                      size={14}
+                      weight="bold"
+                      color={themeColors.primary}
+                    >
+                      Try again
+                    </Typography>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <Typography size={14} color={themeColors.textSecondary}>
+                  No messages found for "{normalizedSearchQuery}".
+                </Typography>
+              )}
+            </View>
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              data={processedMessages}
+              keyExtractor={(item) => item.id}
+              onScrollToIndexFailed={(info) => {
+                flatListRef.current?.scrollToOffset({
+                  offset: info.averageItemLength * info.index,
+                  animated: true,
+                });
+              }}
+              renderItem={({ item }) => {
+                if (item.type === "date") {
+                  return <MessageDateSeparator label={item.label} />;
+                }
+
+                return (
+                  <MessageBubble
+                    message={item}
+                    isGroup={isGroupChat}
+                    searchQuery={isSearching ? searchQuery : undefined}
+                  />
+                );
+              }}
+              contentContainerStyle={{
+                paddingVertical: 10,
+                flexGrow: 1,
+                justifyContent: "flex-end",
+              }}
+              onContentSizeChange={() => {
+                if (!isSearching) {
+                  flatListRef.current?.scrollToEnd({ animated: true });
+                }
+              }}
+            />
+          )}
         </View>
 
         {/* Selected Images Strip */}
@@ -740,5 +777,17 @@ const styles = StyleSheet.create({
   blockedText: {
     flex: 1,
     marginRight: 12,
+  },
+  searchStateContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    gap: 12,
+  },
+
+  searchRetryButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
 });
