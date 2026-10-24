@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  StyleSheet,
-  View,
-  Image,
-  TouchableOpacity,
-} from "react-native";
+import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import BackIcon from "@/assets/icons/shared/chevron-left.svg";
 import SearchIcon from "@/assets/icons/shared/search.svg";
@@ -18,6 +13,7 @@ interface Props {
   onBack: () => void;
   onSearch?: () => void;
   onShowQR?: () => void;
+  onEdit?: () => void;
 }
 
 export function GroupHeaderHero({
@@ -26,10 +22,8 @@ export function GroupHeaderHero({
   onBack,
   onSearch,
   onShowQR,
+  onEdit,
 }: Props) {
-    const { isDark, themeColors } = useAppTheme();
-
-
   return (
     <View style={styles.container}>
       <Image
@@ -41,25 +35,38 @@ export function GroupHeaderHero({
         style={styles.coverImage}
         resizeMode="cover"
       />
+
       <View style={styles.overlay} />
 
-      {/* Top Floating Action Bar */}
       <MySafeAreaView style={styles.topBar}>
         <TouchableOpacity style={styles.iconBtn} onPress={onBack}>
           <BackIcon width={20} height={20} color="white" />
         </TouchableOpacity>
 
         <View style={styles.rightActions}>
+          {onEdit && (
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={onEdit}
+              accessibilityRole="button"
+              accessibilityLabel="Edit group"
+            >
+              <Typography size={14} weight="semibold" color="white">
+                Edit
+              </Typography>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity style={styles.iconBtn} onPress={onSearch}>
             <SearchIcon width={24} height={24} color="white" />
           </TouchableOpacity>
+
           <TouchableOpacity style={styles.iconBtn} onPress={onShowQR}>
             <QrIcon width={24} height={24} color="white" />
           </TouchableOpacity>
         </View>
       </MySafeAreaView>
 
-      {/* Floating Group Name Title */}
       <View style={styles.titleContainer}>
         <Typography
           size={28}
@@ -103,11 +110,20 @@ const styles = StyleSheet.create({
   },
   rightActions: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   iconBtn: {
     width: 40,
     height: 40,
+    borderRadius: 20,
+    backgroundColor: "#000000A3",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  editBtn: {
+    height: 40,
+    paddingHorizontal: 14,
     borderRadius: 20,
     backgroundColor: "#000000A3",
     justifyContent: "center",
@@ -121,6 +137,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   titleText: {
-    lineHeight: 34, // Prevents custom font clipping from the component i created
+    lineHeight: 34,
   },
 });
