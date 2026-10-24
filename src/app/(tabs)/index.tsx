@@ -48,7 +48,7 @@ import { useSearchUsers } from "@/features/contacts/hooks/useSearchUsers";
 import { useStartDirectConversation } from "@/features/chats/hooks/useStartDirectConversation";
 
 import { SearchUserRow } from "@/features/chats/components/SearchUserRow";
-
+import { useCreateGroup } from "@/features/chats/hooks/useCreateGroup";
 export default function HomeScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
@@ -70,6 +70,8 @@ export default function HomeScreen() {
     return data?.items.map(mapConversationToChat) ?? [];
   }, [data]);
 
+  // create group
+  const createGroupMutation = useCreateGroup();
   // for pining and unpin
   const { pin, unpin, isPending: isPinPending } = useConversationPin();
   // mute
@@ -384,8 +386,15 @@ export default function HomeScreen() {
       <NewGroupModal
         visible={isGroupModalOpen}
         onClose={() => setIsGroupModalOpen(false)}
-        onGroupCreated={(newGroup) => {
-          console.log("Group Created Data:", newGroup);
+        onGroupCreated={async (groupData) => {
+          const participantIds = [
+            ...new Set(groupData.members.map((member) => member.id)),
+          ];
+
+          await createGroupMutation.mutateAsync({
+            name: groupData.name.trim(),
+            participantIds,
+          });
         }}
       />
 

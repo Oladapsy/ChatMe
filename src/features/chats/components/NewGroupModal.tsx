@@ -7,6 +7,8 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 
 import { GroupStepIndicator } from "@/features/chats/components/GroupStepIndicator";
@@ -25,16 +27,16 @@ interface Props {
     description: string;
     imageUri?: string;
     members: Contact[];
-  }) => void;
+  }) => Promise<void>;
 }
 
 export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
-    const { isDark, themeColors } = useAppTheme();
-
+  const { isDark, themeColors } = useAppTheme();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
 
+  const [isCreating, setIsCreating] = useState(false);
   const handleToggleContact = (contact: Contact) => {
     setSelectedContacts((prev) =>
       prev.some((c) => c.id === contact.id)
@@ -49,16 +51,46 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
     onClose();
   };
 
-  const handleCreate = (data: {
+  const handleCreate = async (data: {
     name: string;
     description: string;
     imageUri?: string;
   }) => {
-    onGroupCreated({
-      ...data,
-      members: selectedContacts,
-    });
-    handleReset();
+    if (isCreating) return;
+
+    if (!data.name.trim()) {
+      Alert.alert("Group name required", "Enter a name for your group.");
+      return;
+    }
+
+    if (selectedContacts.length === 0) {
+      Alert.alert(
+        "Add participants",
+        "Select at least one participant to create a group.",
+      );
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+
+      await onGroupCreated({
+        ...data,
+        name: data.name.trim(),
+        members: selectedContacts,
+      });
+
+      handleReset();
+    } catch (error) {
+      console.error("GROUP CREATION FAILED:", error);
+
+      Alert.alert(
+        "Couldn't create group",
+        "Please check your connection and try again.",
+      );
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -148,7 +180,11 @@ export function NewGroupModal({ visible, onClose, onGroupCreated }: Props) {
                     onNext={() => setStep(2)}
                   />
                 ) : (
-                  <NameGroupStep onCreate={handleCreate} isDark={isDark} />
+                  <NameGroupStep
+                    onCreate={handleCreate}
+                    isDark={isDark}
+                    isCreating={isCreating}
+                  />
                 )}
               </View>
             </KeyboardAvoidingView>

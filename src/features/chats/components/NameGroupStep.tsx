@@ -9,7 +9,6 @@ import {
 } from "react-native";
 
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import CameraIcon from "@/assets/icons/shared/add-a-photo.svg";
 import { useCameraHandler } from "@/features/chats/hooks/useCameraHandler";
 import { Button } from "@/shared/components/Button";
@@ -22,11 +21,11 @@ interface Props {
     imageUri?: string;
   }) => void;
   isDark: boolean;
+  isCreating?: boolean; // Add this
 }
 
-export function NameGroupStep({ onCreate, isDark }: Props) {
-   const {  themeColors } = useAppTheme();
-
+export function NameGroupStep({ onCreate, isDark, isCreating = false }: Props) {
+  const { themeColors } = useAppTheme();
 
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
@@ -45,7 +44,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
     }
   };
 
-  const isValid = groupName.trim().length > 0;
+  const isValid = groupName.trim().length > 0 && !isCreating;
 
   const getNameBorderColor = () =>
     isNameFocused ? "#52C47C" : isDark ? "#6E8597" : "#EAEEF2";
@@ -71,6 +70,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
             ]}
             onPress={handlePickAvatar}
             activeOpacity={0.8}
+            disabled={isCreating}
           >
             {imageUri ? (
               <Image source={{ uri: imageUri }} style={styles.avatarImage} />
@@ -107,6 +107,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
               onChangeText={setGroupName}
               onFocus={() => setIsNameFocused(true)}
               onBlur={() => setIsNameFocused(false)}
+              editable={!isCreating}
             />
           </View>
         </View>
@@ -142,6 +143,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
               onChangeText={setDescription}
               onFocus={() => setIsDescFocused(true)}
               onBlur={() => setIsDescFocused(false)}
+              editable={!isCreating}
             />
           </View>
         </View>
@@ -149,7 +151,7 @@ export function NameGroupStep({ onCreate, isDark }: Props) {
         {/* Action Button */}
         <View style={styles.buttonWrapper}>
           <Button
-            title="Create"
+            title={isCreating ? "Creating..." : "Create"}
             onPress={() => onCreate({ name: groupName, description, imageUri })}
             disabled={!isValid}
             textWeight="bold"
