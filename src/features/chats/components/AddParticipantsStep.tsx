@@ -1,10 +1,13 @@
-import React, { useState } from "react";
-import { StyleSheet, View, ScrollView } from "react-native";
+import React, { useMemo, useState } from "react";
+import { ActivityIndicator, StyleSheet, View, ScrollView } from "react-native";
 
 import { ParticipantItem } from "./ParticipantItem";
-import { Contact, MOCK_CONTACTS } from "@/features/contacts/data/mockContacts";
+import type { Contact } from "@/features/contacts/data/mockContacts";
 import { ContactSearchBar } from "@/features/contacts/components/ContactSearchBar";
+import { useContacts } from "@/features/contacts/hooks/useContacts";
 import { Button } from "@/shared/components/Button";
+import { Typography } from "@/shared/components/Typography";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 interface Props {
   selectedContacts: Contact[];
@@ -18,44 +21,85 @@ export function AddParticipantsStep({
   onNext,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { contacts, loading, permissionGranted } = useContacts();
+  const { themeColors } = useAppTheme();
 
-  const filteredContacts = MOCK_CONTACTS.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  // Only registered ChatMe users can be added to a group.
+  const registeredContacts = useMemo<Contact[]>(
+    () =>
+      contacts
+        .filter((contact) => contact.isOnApp && Boolean(contact.userId))
+        .map((contact) => ({
+          id: contact.userId!,
+          name: contact.name,
+          phone: contact.phone,
+          avatar: contact.avatar ?? "",
+        })),
+    [contacts],
+  );
+
+  const filteredContacts = registeredContacts.filter((contact) =>
+    contact.name.toLowerCase().includes(searchQuery.trim().toLowerCase()),
   );
 
   const isValid = selectedContacts.length > 0;
 
   return (
     <View style={styles.container}>
-      {/* Reusable Search Bar with focus states */}
       <View style={styles.searchContainer}>
         <ContactSearchBar value={searchQuery} onChangeText={setSearchQuery} />
       </View>
 
-      {/* Contacts Grid */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.gridContainer}
       >
-        {filteredContacts.map((contact) => {
-          const isSelected = selectedContacts.some((c) => c.id === contact.id);
-          return (
-            <ParticipantItem
-              key={contact.id}
-              contact={contact}
-              selected={isSelected}
-              onToggle={onToggleContact}
-            />
-          );
-        })}
+        {loading ? (
+          <View style={styles.messageContainer}>
+            <ActivityIndicator color={themeColors.primary} />
+            <Typography
+              size={14}
+              color={themeColors.text}
+              style={styles.messageText}
+            >
+              Loading your contacts...
+            </Typography>
+          </View>
+        ) : !permissionGranted ? (
+          <View style={styles.messageContainer}>
+            <Typography size={14} color={themeColors.text}>
+              Allow contact access to find people on ChatMe.
+            </Typography>
+          </View>
+        ) : filteredContacts.length === 0 ? (
+          <View style={styles.messageContainer}>
+            <Typography size={14} color={themeColors.text}>
+              No registered ChatMe contacts found.
+            </Typography>
+          </View>
+        ) : (
+          filteredContacts.map((contact) => {
+            const isSelected = selectedContacts.some(
+              (selected) => selected.id === contact.id,
+            );
+
+            return (
+              <ParticipantItem
+                key={contact.id}
+                contact={contact}
+                selected={isSelected}
+                onToggle={onToggleContact}
+              />
+            );
+          })
+        )}
       </ScrollView>
 
-      {/* Reusable Action Button with padding */}
       <View style={styles.buttonWrapper}>
         <Button
           title="Next"
           onPress={onNext}
-          disabled={!isValid}
+          disabled={!isValid || loading}
           textWeight="bold"
         />
       </View>
@@ -75,6 +119,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     paddingBottom: 16,
+    flexGrow: 1,
+  },
+  messageContainer: {
+    flex: 1,
+    width: "100%",
+    minHeight: 140,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 16,
+  },
+  messageText: {
+    marginTop: 12,
   },
   buttonWrapper: {
     paddingTop: 12,
