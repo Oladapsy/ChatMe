@@ -187,12 +187,13 @@ export default function ChatRoomScreen() {
 
   const messages = useMemo(() => {
     const historyMessages = messagesData?.items ?? [];
+    const query = searchQuery.trim();
+
     const searchMessages =
-      isSearching && debouncedSearchQuery
+      isSearching && query.length > 0 && debouncedSearchQuery === query
         ? (serverSearchData?.items ?? [])
         : [];
 
-    // Merge history and search results without duplicate messages.
     const uniqueMessages = new Map(
       [...historyMessages, ...searchMessages].map((message) => [
         message.id,
@@ -200,7 +201,6 @@ export default function ChatRoomScreen() {
       ]),
     );
 
-    // Keep messages in chronological order for the chat timeline.
     return Array.from(uniqueMessages.values()).sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
@@ -209,6 +209,7 @@ export default function ChatRoomScreen() {
     messagesData?.items,
     serverSearchData?.items,
     isSearching,
+    searchQuery,
     debouncedSearchQuery,
   ]);
 
