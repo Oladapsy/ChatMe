@@ -1,16 +1,11 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-} from "react-native";
+import { StyleSheet, View, TextInput, ScrollView } from "react-native";
 
 import { Typography } from "@/shared/components/Typography";
-import CameraIcon from "@/assets/icons/shared/add-a-photo.svg";
-import { useCameraHandler } from "@/features/chats/hooks/useCameraHandler";
+import {
+  AvatarPicker,
+  type SelectedImage,
+} from "@/features/contacts/components/AvatarPicker";
 import { Button } from "@/shared/components/Button";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
@@ -18,10 +13,10 @@ interface Props {
   onCreate: (groupData: {
     name: string;
     description: string;
-    imageUri?: string;
+    image?: SelectedImage;
   }) => void;
   isDark: boolean;
-  isCreating?: boolean; // Add this
+  isCreating?: boolean;
 }
 
 export function NameGroupStep({ onCreate, isDark, isCreating = false }: Props) {
@@ -29,20 +24,14 @@ export function NameGroupStep({ onCreate, isDark, isCreating = false }: Props) {
 
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
-  const [imageUri, setImageUri] = useState<string>();
+  const [selectedAvatar, setSelectedAvatar] = useState<
+    SelectedImage | undefined
+  >();
+  const [avatarUri, setAvatarUri] = useState<string | undefined>();
 
   // Focus ring state
   const [isNameFocused, setIsNameFocused] = useState(false);
   const [isDescFocused, setIsDescFocused] = useState(false);
-
-  const { pickImages } = useCameraHandler();
-
-  const handlePickAvatar = async () => {
-    const uris = await pickImages();
-    if (uris.length > 0) {
-      setImageUri(uris[0]);
-    }
-  };
 
   const isValid = groupName.trim().length > 0 && !isCreating;
 
@@ -59,25 +48,15 @@ export function NameGroupStep({ onCreate, isDark, isCreating = false }: Props) {
       contentContainerStyle={styles.scrollContent}
     >
       <View style={styles.container}>
-        {/* Circular Avatar Picker */}
+        {/* Avatar Picker Component */}
         <View style={styles.avatarPickerWrapper}>
-          <TouchableOpacity
-            style={[
-              styles.avatarCircle,
-              {
-                backgroundColor: isDark ? "#F5FBF7" : "#F2FAF5",
-              },
-            ]}
-            onPress={handlePickAvatar}
-            activeOpacity={0.8}
-            disabled={isCreating}
-          >
-            {imageUri ? (
-              <Image source={{ uri: imageUri }} style={styles.avatarImage} />
-            ) : (
-              <CameraIcon width={36} height={36} color={themeColors.primary} />
-            )}
-          </TouchableOpacity>
+          <AvatarPicker
+            uri={avatarUri}
+            onSelectImage={(image) => {
+              setSelectedAvatar(image);
+              setAvatarUri(image?.uri);
+            }}
+          />
         </View>
 
         {/* Group Name Input */}
@@ -152,7 +131,9 @@ export function NameGroupStep({ onCreate, isDark, isCreating = false }: Props) {
         <View style={styles.buttonWrapper}>
           <Button
             title={isCreating ? "Creating..." : "Create"}
-            onPress={() => onCreate({ name: groupName, description, imageUri })}
+            onPress={() =>
+              onCreate({ name: groupName, description, image: selectedAvatar })
+            }
             disabled={!isValid}
             textWeight="bold"
           />
@@ -172,18 +153,6 @@ const styles = StyleSheet.create({
   avatarPickerWrapper: {
     alignItems: "center",
     marginBottom: 24,
-  },
-  avatarCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  avatarImage: {
-    width: 120,
-    height: 120,
   },
   fieldGroup: {
     marginBottom: 16,

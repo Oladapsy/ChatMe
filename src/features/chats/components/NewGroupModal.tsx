@@ -18,6 +18,7 @@ import { Contact } from "@/features/contacts/data/mockContacts";
 import { Typography } from "@/shared/components/Typography";
 import BackIcon from "@/assets/icons/shared/chevron-left.svg";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import { SelectedImage } from "@/features/contacts/components/AvatarPicker";
 
 interface Props {
   visible: boolean;
@@ -25,7 +26,7 @@ interface Props {
   onGroupCreated: (groupData: {
     name: string;
     description: string;
-    imageUri?: string;
+    image?: SelectedImage;
     members: Contact[];
   }) => Promise<void>;
 }

@@ -49,6 +49,8 @@ import { useStartDirectConversation } from "@/features/chats/hooks/useStartDirec
 
 import { SearchUserRow } from "@/features/chats/components/SearchUserRow";
 import { useCreateGroup } from "@/features/chats/hooks/useCreateGroup";
+import { uploadMedia } from "@/services/mediaUpload";
+
 export default function HomeScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
@@ -387,14 +389,35 @@ export default function HomeScreen() {
         visible={isGroupModalOpen}
         onClose={() => setIsGroupModalOpen(false)}
         onGroupCreated={async (groupData) => {
-          const participantIds = [
-            ...new Set(groupData.members.map((member) => member.id)),
-          ];
+          try {
+            let avatarMediaId: string | undefined;
 
-          await createGroupMutation.mutateAsync({
-            name: groupData.name.trim(),
-            participantIds,
-          });
+            if (groupData.image) {
+              const media = await uploadMedia({
+                uri: groupData.image.uri,
+                purpose: "group_avatar",
+                contentType: groupData.image.mimeType,
+                sizeBytes: groupData.image.fileSize,
+                originalFilename: groupData.image.fileName,
+              });
+
+              avatarMediaId = media.id;
+            }
+
+            const participantIds = [
+              ...new Set(groupData.members.map((member) => member.id)),
+            ];
+
+            await createGroupMutation.mutateAsync({
+              name: groupData.name.trim(),
+              participantIds,
+              ...(avatarMediaId ? { avatarMediaId } : {}),
+            });
+
+            setIsGroupModalOpen(false);
+          } catch (error: any) {
+            console.log("GROUP CREATION ERROR:", error?.message);
+          }
         }}
       />
 

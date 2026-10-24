@@ -10,7 +10,6 @@ import { useRouter } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import { SettingItem } from "@/features/settings/components/SettingItem";
 
 // Icons
