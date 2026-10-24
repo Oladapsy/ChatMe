@@ -189,7 +189,6 @@ export const createGroup = async (
   return response.data;
 };
 
-
 // get group details
 export const getConversationById = async (
   conversationId: string,
@@ -200,3 +199,18 @@ export const getConversationById = async (
 
   return response.data;
 };
+
+// update group
+export interface UpdateGroupPayload {
+  name?: string;
+  avatarMediaId?: string | null;
+}
+
+export async function updateGroup(
+  conversationId: string,
+  payload: UpdateGroupPayload,
+) {
+  const response = await api.patch(`/conversations/${conversationId}`, payload);
+
+  return response.data;
+}
