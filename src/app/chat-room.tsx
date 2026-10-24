@@ -60,6 +60,7 @@ import { uploadChatAudio } from "@/features/chats/utils/uploadChatMedia";
 //socket
 import { useChatSocket } from "@/features/chats/hooks/useChatSocket";
 import { useConversations } from "@/features/chats/hooks/useConversations";
+import { useSearchMessages } from "@/features/chats/hooks/useSearchMessages";
 
 export default function ChatRoomScreen() {
   const router = useRouter();
@@ -127,6 +128,23 @@ export default function ChatRoomScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
 
+  // debounce search
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
+  const {
+    data: serverSearchData,
+    isFetching: isServerSearching,
+    isError: isServerSearchError,
+  } = useSearchMessages(activeChatId, isSearching ? debouncedSearchQuery : "");
+
   // Sync state if navigation parameter changes dynamically
   useEffect(() => {
     if (search === "true") {
@@ -167,7 +185,32 @@ export default function ChatRoomScreen() {
     avatar;
   const groupMembers = currentChat?.members;
 
-  const messages = [...(messagesData?.items ?? [])].reverse();
+  const messages = useMemo(() => {
+    const historyMessages = messagesData?.items ?? [];
+    const searchMessages =
+      isSearching && debouncedSearchQuery
+        ? (serverSearchData?.items ?? [])
+        : [];
+
+    // Merge history and search results without duplicate messages.
+    const uniqueMessages = new Map(
+      [...historyMessages, ...searchMessages].map((message) => [
+        message.id,
+        message,
+      ]),
+    );
+
+    // Keep messages in chronological order for the chat timeline.
+    return Array.from(uniqueMessages.values()).sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+  }, [
+    messagesData?.items,
+    serverSearchData?.items,
+    isSearching,
+    debouncedSearchQuery,
+  ]);
 
   const [messageText, setMessageText] = useState("");
   const [selectedImageUris, setSelectedImageUris] = useState<string[]>([]);
