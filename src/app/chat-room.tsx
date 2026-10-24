@@ -226,8 +226,36 @@ export default function ChatRoomScreen() {
 
   // Calculate indices of messages that match current search query
   const matchingIndices = useMemo(() => {
-    return findMatchingMessageIndices(processedMessages, searchQuery);
-  }, [processedMessages, searchQuery]);
+    const query = searchQuery.trim();
+
+    if (!query) {
+      return [];
+    }
+
+    // Use backend results once they correspond to the current query.
+    if (isSearching && debouncedSearchQuery === query && serverSearchData) {
+      const matchingMessageIds = new Set(
+        serverSearchData.items.map((message) => message.id),
+      );
+
+      return processedMessages.reduce<number[]>((matches, item, index) => {
+        if (item.type === "message" && matchingMessageIds.has(item.id)) {
+          matches.push(index);
+        }
+
+        return matches;
+      }, []);
+    }
+
+    // Keep local matching available while the backend request is pending.
+    return findMatchingMessageIndices(processedMessages, query);
+  }, [
+    processedMessages,
+    searchQuery,
+    isSearching,
+    debouncedSearchQuery,
+    serverSearchData,
+  ]);
 
   // Scroll to targeted matching item when match index changes
   useEffect(() => {
