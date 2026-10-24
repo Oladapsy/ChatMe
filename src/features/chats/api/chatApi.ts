@@ -188,3 +188,15 @@ export const createGroup = async (
 
   return response.data;
 };
+
+
+// get group details
+export const getConversationById = async (
+  conversationId: string,
+): Promise<GroupConversation> => {
+  const response = await api.get<GroupConversation>(
+    `/conversations/${conversationId}`,
+  );
+
+  return response.data;
+};

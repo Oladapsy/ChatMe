@@ -1,6 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createGroup,
+  getConversationById,
   type CreateGroupPayload,
 } from "@/features/chats/api/chatApi";
 
@@ -17,3 +18,14 @@ export const useCreateGroup = () => {
     },
   });
 };
+
+
+// group details fetch hook
+
+export function useGroupDetails(conversationId: string) {
+  return useQuery({
+    queryKey: ["conversation", conversationId],
+    queryFn: () => getConversationById(conversationId),
+    enabled: Boolean(conversationId),
+  });
+}
