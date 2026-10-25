@@ -9,14 +9,20 @@ import {
   ChatSharedLinksScreen,
   SharedLinkSection,
 } from "@/features/chats/screen/ChatSharedLinksScreen";
+import { EditGroupScreen } from "@/features/chats/screen/EditGroupScreen";
+import type { SelectedImage } from "@/features/contacts/components/AvatarPicker";
 
-type ActiveScreen = "details" | "photos" | "stars" | "links";
-
+type ActiveScreen = "details" | "photos" | "stars" | "links" | "edit";
 interface Props {
   groupDetails: GroupDetails;
   starredMessages?: StarredMessage[];
   sharedLinkSections?: SharedLinkSection[];
   onBack: () => void;
+  onSaveGroup?: (values: {
+    name: string;
+    selectedAvatar?: SelectedImage;
+  }) => Promise<void>;
+  savingGroup?: boolean;
 }
 
 export function GroupInfoFlowContainer({
@@ -24,6 +30,8 @@ export function GroupInfoFlowContainer({
   starredMessages = [],
   sharedLinkSections = [],
   onBack,
+  onSaveGroup,
+  savingGroup = false,
 }: Props) {
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("details");
 
@@ -42,6 +50,7 @@ export function GroupInfoFlowContainer({
           onNavigatePhotos={() => setCurrentScreen("photos")}
           onNavigateStars={() => setCurrentScreen("stars")}
           onNavigateLinks={() => setCurrentScreen("links")}
+          onEditGroup={() => setCurrentScreen("edit")}
         />
       )}
 
@@ -66,6 +75,24 @@ export function GroupInfoFlowContainer({
           sections={sharedLinkSections}
           onBack={() => setCurrentScreen("details")}
           onSelectTab={handleTabSwitch}
+        />
+      )}
+
+      {currentScreen === "edit" && (
+        <EditGroupScreen
+          groupDetails={groupDetails}
+          saving={savingGroup}
+          onBack={() => setCurrentScreen("details")}
+          onSave={async (values) => {
+            if (!onSaveGroup) return;
+
+            try {
+              await onSaveGroup(values);
+              setCurrentScreen("details");
+            } catch {
+              // Keep the edit screen open so the user can retry.
+            }
+          }}
         />
       )}
     </View>

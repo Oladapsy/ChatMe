@@ -14,6 +14,7 @@ interface Props {
   onNavigatePhotos: () => void;
   onNavigateStars: () => void;
   onNavigateLinks: () => void;
+  onEditGroup?: () => void;
   onSelectMember?: (member: GroupMember) => void;
 }
 
@@ -24,10 +25,11 @@ export function GroupDetailScreen({
   onNavigateStars,
   onNavigateLinks,
   onSelectMember,
+  onEditGroup,
 }: Props) {
-      const { isDark, themeColors } = useAppTheme();
+  const { isDark, themeColors } = useAppTheme();
 
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <View
@@ -38,13 +40,11 @@ export function GroupDetailScreen({
         name={groupDetails.name}
         coverImageUri={groupDetails.coverImageUri}
         onBack={onBack}
+        onEdit={onEditGroup}
         onSearch={() =>
           router.push({
             pathname: "/chat-room",
-            params: {
-              id: groupDetails.id,
-              search: "true", // Tells ChatRoomScreen to open directly in search mode
-            },
+            params: { id: groupDetails.id, search: "true" },
           })
         }
       />

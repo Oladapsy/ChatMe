@@ -214,3 +214,20 @@ export async function updateGroup(
 
   return response.data;
 }
+
+// Update the verified group avatar
+export interface UpdateGroupAvatarPayload {
+  mediaId: string;
+}
+
+export async function updateGroupAvatar(
+  conversationId: string,
+  payload: UpdateGroupAvatarPayload,
+) {
+  const response = await api.put(
+    `/conversations/${conversationId}/avatar`,
+    payload,
+  );
+
+  return response.data;
+}

@@ -2,13 +2,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createGroup,
   getConversationById,
+  updateGroupAvatar,
   type CreateGroupPayload,
 } from "@/features/chats/api/chatApi";
 import {
   updateGroup,
   type UpdateGroupPayload,
 } from "@/features/chats/api/chatApi";
-
 export const useCreateGroup = () => {
   const queryClient = useQueryClient();
 
@@ -35,17 +35,30 @@ export function useGroupDetails(conversationId: string) {
 
 // update group details hook
 
+
 interface UpdateGroupVariables {
   conversationId: string;
-  payload: UpdateGroupPayload;
+  name: string;
+  mediaId?: string;
 }
 
 export function useUpdateGroup() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ conversationId, payload }: UpdateGroupVariables) =>
-      updateGroup(conversationId, payload),
+    mutationFn: async ({
+      conversationId,
+      name,
+      mediaId,
+    }: UpdateGroupVariables) => {
+      // Update the group name.
+      await updateGroup(conversationId, { name });
+
+      // Update the avatar only when a new photo was uploaded.
+      if (mediaId) {
+        await updateGroupAvatar(conversationId, { mediaId });
+      }
+    },
 
     onSuccess: async (_data, variables) => {
       await Promise.all([
@@ -59,3 +72,4 @@ export function useUpdateGroup() {
     },
   });
 }
+
