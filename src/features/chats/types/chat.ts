@@ -20,7 +20,7 @@ export interface GroupMember {
   name: string;
   avatarUri?: string;
   isOnline?: boolean;
-  role?: "admin" | "member";
+  role?: "owner" | "admin" | "member";
 }
 
 export interface GroupDetails {
@@ -55,8 +55,6 @@ export interface Chat {
   groupDetails?: GroupDetails;
   lastActivityAt: string;
 }
-
-
 
 // Backend response for getting Conversations
 // last msg in conversation

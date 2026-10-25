@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+import { StyleSheet, View, TouchableOpacity, Image } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Colors } from "@/shared/constants/colors";
 import SearchIcon from "@/assets/icons/shared/search.svg";
@@ -25,8 +20,7 @@ export function GroupMembersList({
   onAddMember,
   onMemberPress,
 }: Props) {
-   const { isDark, themeColors } = useAppTheme();
-
+  const { isDark, themeColors } = useAppTheme();
 
   return (
     <View style={styles.container}>
@@ -81,12 +75,18 @@ export function GroupMembersList({
             <Typography
               size={13}
               color={
-                member.isOnline
+                member.role === "admin"
                   ? themeColors.primary
                   : themeColors.textSecondary
               }
             >
-              {member.isOnline ? "Online" : "Offline"}
+              {member.role === "admin"
+                ? "Admin"
+                : member.role === "owner"
+                  ? "Group owner"
+                  : member.isOnline
+                    ? "Online"
+                    : "Offline"}
             </Typography>
           </View>
         </TouchableOpacity>
