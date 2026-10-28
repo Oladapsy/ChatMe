@@ -1,3 +1,4 @@
+
 import type {
   GroupConversation,
   GroupDetails,
@@ -19,10 +20,14 @@ export function mapGroupConversationToDetails(
       id: participant.id,
       name: participant.displayName ?? "Unknown member",
       avatarUri: participant.avatarUrl ?? undefined,
+
+      // Preserve the participant's actual role.
       role:
-        participant.role === "admin" || participant.role === "owner"
-          ? "admin"
-          : "member",
+        participant.role === "owner"
+          ? "owner"
+          : participant.role === "admin"
+            ? "admin"
+            : "member",
     })),
   };
 }

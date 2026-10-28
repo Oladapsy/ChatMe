@@ -9,8 +9,11 @@ import { ScrollView, StyleSheet, View } from "react-native";
 
 import { useQueryClient } from "@tanstack/react-query";
 
+type MemberRole = "owner" | "admin" | "member";
+
 interface Props {
   groupDetails: GroupDetails;
+  currentUserRole?: MemberRole;
   onBack: () => void;
   onNavigatePhotos: () => void;
   onNavigateStars: () => void;
@@ -21,12 +24,13 @@ interface Props {
 
 export function GroupDetailScreen({
   groupDetails,
+  currentUserRole,
   onBack,
   onNavigatePhotos,
   onNavigateStars,
   onNavigateLinks,
-  onSelectMember,
   onEditGroup,
+  onSelectMember,
 }: Props) {
   const { isDark, themeColors } = useAppTheme();
 
@@ -98,6 +102,7 @@ export function GroupDetailScreen({
         <GroupMembersList
           members={groupDetails.members}
           conversationId={groupDetails.id}
+          currentUserRole={currentUserRole}
           onMemberPress={handleMemberPress}
           onMembersAdded={handleMembersAdded}
         />

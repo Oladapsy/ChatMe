@@ -13,8 +13,11 @@ import { EditGroupScreen } from "@/features/chats/screen/EditGroupScreen";
 import type { SelectedImage } from "@/features/contacts/components/AvatarPicker";
 
 type ActiveScreen = "details" | "photos" | "stars" | "links" | "edit";
+type MemberRole = "owner" | "admin" | "member";
+
 interface Props {
   groupDetails: GroupDetails;
+  currentUserRole?: MemberRole;
   starredMessages?: StarredMessage[];
   sharedLinkSections?: SharedLinkSection[];
   onBack: () => void;
@@ -32,6 +35,7 @@ export function GroupInfoFlowContainer({
   onBack,
   onSaveGroup,
   savingGroup = false,
+  currentUserRole,
 }: Props) {
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("details");
 
@@ -46,6 +50,7 @@ export function GroupInfoFlowContainer({
       {currentScreen === "details" && (
         <GroupDetailScreen
           groupDetails={groupDetails}
+          currentUserRole={currentUserRole}
           onBack={onBack}
           onNavigatePhotos={() => setCurrentScreen("photos")}
           onNavigateStars={() => setCurrentScreen("stars")}

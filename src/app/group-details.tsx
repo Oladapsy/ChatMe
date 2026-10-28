@@ -19,6 +19,16 @@ export default function GroupDetailsRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { data, isPending, isError, error } = useGroupDetails(id);
+  console.log("GROUP OWNERSHIP STATE", {
+    currentUserId: data?.participants?.find((member) => member.role === "owner")
+      ?.id,
+    currentUserRole: data?.role,
+    participants: data?.participants?.map((member) => ({
+      id: member.id,
+      name: member.displayName,
+      role: member.role,
+    })),
+  });
 
   // update group hook
   const updateGroupMutation = useUpdateGroup();
@@ -88,10 +98,20 @@ export default function GroupDetailsRoute() {
   }
 
   const groupDetails = mapGroupConversationToDetails(data);
+  console.log("Current user's group role:", data.role);
+  console.log(
+    "Member roles:",
+    data.participants.map((member) => ({
+      id: member.id,
+      name: member.displayName,
+      role: member.role,
+    })),
+  );
 
   return (
     <GroupInfoFlowContainer
       groupDetails={groupDetails}
+      currentUserRole={data.role}
       starredMessages={MOCK_STARRED_MESSAGES}
       sharedLinkSections={MOCK_SHARED_LINK_SECTIONS}
       onBack={() => router.back()}

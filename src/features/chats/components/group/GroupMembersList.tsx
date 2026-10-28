@@ -26,9 +26,12 @@ import {
   useTransferGroupOwnership,
 } from "@/features/chats/hooks/useGroupMemberMutations";
 
+type MemberRole = "owner" | "admin" | "member";
+
 interface Props {
   members: GroupMember[];
   conversationId?: string;
+  currentUserRole?: MemberRole;
   onSearchMembers?: () => void;
   onAddMember?: () => void;
   onMemberPress?: (member: GroupMember) => void;
@@ -38,6 +41,7 @@ interface Props {
 export function GroupMembersList({
   members,
   conversationId,
+  currentUserRole,
   onSearchMembers,
   onAddMember,
   onMemberPress,
@@ -50,7 +54,6 @@ export function GroupMembersList({
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // These hooks are always called, even when conversationId is missing.
   const groupId = conversationId ?? "";
 
   const removeMemberMutation = useRemoveGroupMember(groupId);
@@ -61,9 +64,22 @@ export function GroupMembersList({
     (member) => member.id === currentUser?.id,
   );
 
-  const isGroupOwner = currentMember?.role === "owner";
-  const isGroupAdmin = currentMember?.role === "admin";
+  // The conversation response's role takes precedence.
+  const myRole = currentUserRole ?? currentMember?.role;
+
+  const isGroupOwner = myRole === "owner";
+  const isGroupAdmin = myRole === "admin";
   const canManageMembers = isGroupOwner || isGroupAdmin;
+
+  // TEMPORARY DIAGNOSTIC: remove after confirming ownership works.
+  console.log("GROUP MEMBER PERMISSIONS", {
+    currentUserId: currentUser?.id,
+    currentUserRole,
+    currentMemberRole: currentMember?.role,
+    myRole,
+    isGroupOwner,
+    canManageMembers,
+  });
 
   const isMutationPending =
     removeMemberMutation.isPending ||
@@ -125,7 +141,9 @@ export function GroupMembersList({
     if (!conversationId || !canManageMembers || isMutationPending) return;
     if (member.id === currentUser?.id || member.role === "owner") return;
 
-    const nextRole = member.role === "admin" ? "member" : "admin";
+    const nextRole: "admin" | "member" =
+      member.role === "admin" ? "member" : "admin";
+
     const action = nextRole === "admin" ? "promote" : "demote";
 
     Alert.alert(
@@ -174,7 +192,7 @@ export function GroupMembersList({
 
   const handleTransferOwnership = (member: GroupMember) => {
     if (!conversationId || !isGroupOwner || isMutationPending) return;
-    if (member.id === currentUser?.id) return;
+    if (member.id === currentUser?.id || member.role === "owner") return;
 
     Alert.alert(
       "Transfer ownership?",
@@ -216,8 +234,10 @@ export function GroupMembersList({
 
   const renderRightActions = (member: GroupMember) => {
     const isSelf = member.id === currentUser?.id;
-    const canRemove = canManageMembers && !isSelf && member.role !== "owner";
-    const canTransfer = isGroupOwner && !isSelf;
+    const canRemove =
+      canManageMembers && !isSelf && member.role !== "owner";
+    const canTransfer =
+      isGroupOwner && !isSelf && member.role !== "owner";
 
     if (!canRemove && !canTransfer) return null;
 
@@ -248,6 +268,11 @@ export function GroupMembersList({
         )}
       </View>
     );
+  };
+
+  const getPresenceLabel = (isOnline: boolean | undefined) => {
+    if (isOnline === undefined) return "Status unavailable";
+    return isOnline ? "Online" : "Offline";
   };
 
   return (
@@ -309,70 +334,87 @@ export function GroupMembersList({
       )}
 
       {filteredMembers.length > 0 ? (
-        filteredMembers.map((member) => (
-          <Swipeable
-            key={member.id}
-            enabled={
-              Boolean(conversationId) &&
-              canManageMembers &&
-              member.id !== currentUser?.id
-            }
-            friction={2}
-            leftThreshold={30}
-            rightThreshold={40}
-            renderLeftActions={() => renderRoleAction(member)}
-            renderRightActions={() => renderRightActions(member)}
-          >
-            <TouchableOpacity
-              style={[
-                styles.memberRow,
-                { backgroundColor: themeColors.background },
-              ]}
-              onPress={() => onMemberPress?.(member)}
-              activeOpacity={0.7}
+        filteredMembers.map((member) => {
+          const isSelf = member.id === currentUser?.id;
+          const displayedRole =
+            isSelf && currentUserRole
+              ? currentUserRole
+              : member.role;
+
+          const presenceLabel = getPresenceLabel(member.isOnline);
+
+          return (
+            <Swipeable
+              key={member.id}
+              enabled={
+                Boolean(conversationId) &&
+                canManageMembers &&
+                !isSelf
+              }
+              friction={2}
+              leftThreshold={30}
+              rightThreshold={40}
+              renderLeftActions={() => renderRoleAction(member)}
+              renderRightActions={() => renderRightActions(member)}
             >
-              <View style={styles.avatarContainer}>
-                <Image
-                  source={
-                    member.avatarUri
-                      ? { uri: member.avatarUri }
-                      : require("@/assets/images/default-avatar.png")
-                  }
-                  style={styles.avatar}
-                />
-
-                {member.isOnline && <View style={styles.onlineDot} />}
-              </View>
-
-              <View style={styles.memberInfo}>
-                <Typography
-                  size={15}
-                  weight="medium"
-                  color={themeColors.text}
-                >
-                  {member.name}
-                </Typography>
-
-                <View style={styles.memberStatusRow}>
-                  {member.role === "owner" || member.role === "admin" ? (
-                    <Typography size={13} color={themeColors.primary}>
-                      {member.role === "owner" ? "Group owner" : "Admin"}
-                    </Typography>
-                  ) : null}
-
-                  <Typography
-                    size={13}
-                    color={
-                      member.isOnline ? "#52C47C" : themeColors.textSecondary
+              <TouchableOpacity
+                style={[
+                  styles.memberRow,
+                  { backgroundColor: themeColors.background },
+                ]}
+                onPress={() => onMemberPress?.(member)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.avatarContainer}>
+                  <Image
+                    source={
+                      member.avatarUri
+                        ? { uri: member.avatarUri }
+                        : require("@/assets/images/default-avatar.png")
                     }
-                  >
-                    {member.isOnline ? "Online" : "Offline"}
-                  </Typography>
+                    style={styles.avatar}
+                  />
+
+                  {member.isOnline === true && (
+                    <View style={styles.onlineDot} />
+                  )}
                 </View>
-              </View>
-            </TouchableOpacity>
-          </Swipeable>
-        ))
+
+                <View style={styles.memberInfo}>
+                  <Typography
+                    size={15}
+                    weight="medium"
+                    color={themeColors.text}
+                  >
+                    {member.id === currentUser?.id ? "You" : member.name}
+                  </Typography>
+
+                  <View style={styles.memberStatusRow}>
+                    {displayedRole === "owner" ||
+                    displayedRole === "admin" ? (
+                      <Typography size={13} color={themeColors.primary}>
+                        {displayedRole === "owner"
+                          ? "Group owner"
+                          : "Admin"}
+                      </Typography>
+                    ) : null}
+
+                    <Typography
+                      size={13}
+                      color={
+                        member.isOnline === true
+                          ? "#52C47C"
+                          : themeColors.textSecondary
+                      }
+                    >
+                      {presenceLabel}
+                    </Typography>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </Swipeable>
+          );
+        })
       ) : (
         <Typography
           size={14}
@@ -436,15 +478,15 @@ const styles = StyleSheet.create({
   avatar: {
     width: 56,
     height: 56,
-    borderRadius: 27,
+    borderRadius: 28,
   },
   onlineDot: {
     position: "absolute",
     bottom: 2,
     right: 2,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 11,
+    height: 11,
+    borderRadius: 6,
     backgroundColor: "#52C47C",
     borderWidth: 2,
     borderColor: "#FFFFFF",
@@ -458,6 +500,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    flexWrap: "wrap",
   },
   swipeActions: {
     flexDirection: "row",
