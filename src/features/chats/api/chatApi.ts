@@ -231,3 +231,21 @@ export async function updateGroupAvatar(
 
   return response.data;
 }
+
+
+// Add members to a group
+export interface AddGroupMembersPayload {
+  participantIds: string[];
+}
+
+export const addGroupMembers = async (
+  conversationId: string,
+  payload: AddGroupMembersPayload,
+): Promise<GroupConversation> => {
+  const response = await api.post<GroupConversation>(
+    `/conversations/${conversationId}/members`,
+    payload,
+  );
+
+  return response.data;
+};
