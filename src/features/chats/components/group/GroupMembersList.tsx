@@ -1,11 +1,11 @@
-
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Alert,
   StyleSheet,
   View,
   TouchableOpacity,
   Image,
+  TextInput,
 } from "react-native";
 
 import { Typography } from "@/shared/components/Typography";
@@ -34,7 +34,35 @@ export function GroupMembersList({
   onMembersAdded,
 }: Props) {
   const { themeColors } = useAppTheme();
+
   const [addMembersVisible, setAddMembersVisible] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredMembers = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) return members;
+
+    return members.filter((member) =>
+      member.name.toLowerCase().includes(query),
+    );
+  }, [members, searchQuery]);
+
+  const handleSearchPress = () => {
+    if (onSearchMembers) {
+      onSearchMembers();
+      return;
+    }
+
+    setIsSearching((current) => {
+      if (current) {
+        setSearchQuery("");
+      }
+
+      return !current;
+    });
+  };
 
   const handleOpenAddMembers = () => {
     if (!conversationId) {
@@ -59,20 +87,15 @@ export function GroupMembersList({
 
   return (
     <View style={styles.container}>
-      {/* Header Row */}
       <View style={styles.headerRow}>
-        <Typography
-          size={16}
-          weight="bold"
-          color={themeColors.descText}
-        >
+        <Typography size={16} weight="bold" color={themeColors.descText}>
           {members.length} members
         </Typography>
 
         <View style={styles.actionButtons}>
           <TouchableOpacity
             style={styles.iconBtn}
-            onPress={onSearchMembers}
+            onPress={handleSearchPress}
             accessibilityRole="button"
             accessibilityLabel="Search group members"
           >
@@ -98,59 +121,84 @@ export function GroupMembersList({
         </View>
       </View>
 
-      {/* Member Items */}
-      {members.map((member) => (
-        <TouchableOpacity
-          key={member.id}
-          style={styles.memberRow}
-          onPress={() => onMemberPress?.(member)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.avatarContainer}>
-            <Image
-              source={
-                member.avatarUri
-                  ? { uri: member.avatarUri }
-                  : require("@/assets/images/default-avatar.png")
-              }
-              style={styles.avatar}
-            />
+      {isSearching && (
+        <TextInput
+          style={[
+            styles.searchInput,
+            {
+              color: themeColors.text,
+              backgroundColor: themeColors.cardBackground,
+              borderColor: themeColors.border,
+            },
+          ]}
+          placeholder="Search members by name"
+          placeholderTextColor={themeColors.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoFocus
+          returnKeyType="search"
+          accessibilityLabel="Search group members by name"
+        />
+      )}
 
-            {member.isOnline && <View style={styles.onlineDot} />}
-          </View>
-
-          <View style={styles.memberInfo}>
-            <Typography
-              size={15}
-              weight="medium"
-              color={themeColors.text}
-            >
-              {member.name}
-            </Typography>
-
-            <View style={styles.memberStatusRow}>
-              {member.role === "owner" || member.role === "admin" ? (
-                <Typography size={13} color={themeColors.primary}>
-                  {member.role === "owner" ? "Group owner" : "Admin"}
-                </Typography>
-              ) : null}
-
-              <Typography
-                size={13}
-                color={
-                  member.isOnline
-                    ? "#52C47C"
-                    : themeColors.textSecondary
+      {filteredMembers.length > 0 ? (
+        filteredMembers.map((member) => (
+          <TouchableOpacity
+            key={member.id}
+            style={styles.memberRow}
+            onPress={() => onMemberPress?.(member)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.avatarContainer}>
+              <Image
+                source={
+                  member.avatarUri
+                    ? { uri: member.avatarUri }
+                    : require("@/assets/images/default-avatar.png")
                 }
-              >
-                {member.isOnline ? "Online" : "Offline"}
-              </Typography>
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
+                style={styles.avatar}
+              />
 
-      {/* Add Members Modal */}
+              {member.isOnline && <View style={styles.onlineDot} />}
+            </View>
+
+            <View style={styles.memberInfo}>
+              <Typography size={15} weight="medium" color={themeColors.text}>
+                {member.name}
+              </Typography>
+
+              <View style={styles.memberStatusRow}>
+                {member.role === "owner" || member.role === "admin" ? (
+                  <Typography size={13} color={themeColors.primary}>
+                    {member.role === "owner" ? "Group owner" : "Admin"}
+                  </Typography>
+                ) : null}
+
+                <Typography
+                  size={13}
+                  color={
+                    member.isOnline ? "#52C47C" : themeColors.textSecondary
+                  }
+                >
+                  {member.isOnline ? "Online" : "Offline"}
+                </Typography>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))
+      ) : (
+        <Typography
+          size={14}
+          color={themeColors.textSecondary}
+          align="center"
+          style={styles.emptyText}
+        >
+          No members found.
+        </Typography>
+      )}
+
       {conversationId ? (
         <AddGroupMembersModal
           visible={addMembersVisible}
@@ -182,6 +230,14 @@ const styles = StyleSheet.create({
   },
   iconBtn: {
     padding: 4,
+  },
+  searchInput: {
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    fontSize: 14,
   },
   memberRow: {
     flexDirection: "row",
@@ -216,5 +272,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+  },
+  emptyText: {
+    paddingVertical: 24,
   },
 });

@@ -50,7 +50,7 @@ export function GroupDetailScreen({
       params: { id: groupDetails.id, search: "true" },
     });
   };
-  
+
   return (
     <View
       style={[styles.container, { backgroundColor: themeColors.background }]}
@@ -98,7 +98,6 @@ export function GroupDetailScreen({
         <GroupMembersList
           members={groupDetails.members}
           conversationId={groupDetails.id}
-          onSearchMembers={handleSearchMembers}
           onMemberPress={handleMemberPress}
           onMembersAdded={handleMembersAdded}
         />
