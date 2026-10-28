@@ -249,3 +249,58 @@ export const addGroupMembers = async (
 
   return response.data;
 };
+
+
+/* Group member management */
+
+// Remove a member from a group
+export const removeGroupMember = async (
+  conversationId: string,
+  memberId: string,
+): Promise<void> => {
+  await api.delete(
+    `/conversations/${conversationId}/members/${memberId}`,
+  );
+};
+
+// Promote a member to admin or demote an admin to member
+export type GroupMemberRole = "admin" | "member";
+
+export interface UpdateGroupMemberRolePayload {
+  role: GroupMemberRole;
+}
+
+export const updateGroupMemberRole = async (
+  conversationId: string,
+  memberId: string,
+  payload: UpdateGroupMemberRolePayload,
+): Promise<void> => {
+  await api.patch(
+    `/conversations/${conversationId}/members/${memberId}/role`,
+    payload,
+  );
+};
+
+// Transfer group ownership to another member
+export interface TransferGroupOwnershipPayload {
+  newOwnerId: string;
+}
+
+export const transferGroupOwnership = async (
+  conversationId: string,
+  payload: TransferGroupOwnershipPayload,
+): Promise<GroupConversation> => {
+  const response = await api.post<GroupConversation>(
+    `/conversations/${conversationId}/transfer-ownership`,
+    payload,
+  );
+
+  return response.data;
+};
+
+// Leave a group
+export const leaveGroup = async (
+  conversationId: string,
+): Promise<void> => {
+  await api.post(`/conversations/${conversationId}/leave`);
+};
