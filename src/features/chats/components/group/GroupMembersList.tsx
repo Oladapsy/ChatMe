@@ -1,20 +1,30 @@
+
 import React, { useMemo, useState } from "react";
 import {
   Alert,
-  StyleSheet,
-  View,
-  TouchableOpacity,
   Image,
+  StyleSheet,
   TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
 import { Typography } from "@/shared/components/Typography";
 import SearchIcon from "@/assets/icons/shared/search.svg";
 import AddUserIcon from "@/assets/icons/shared/userPlus.svg";
+import TrashIcon from "@/assets/icons/chat/trash.svg";
 
 import type { GroupMember } from "@/features/chats/types/chat";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 import { AddGroupMembersModal } from "@/features/chats/components/AddGroupMembersModal";
+import { SwipeActionButton } from "@/features/chats/components/SwipeActionButton";
+import { useMe } from "@/features/auth/hooks/useMe";
+import {
+  useRemoveGroupMember,
+  useUpdateGroupMemberRole,
+  useTransferGroupOwnership,
+} from "@/features/chats/hooks/useGroupMemberMutations";
 
 interface Props {
   members: GroupMember[];
@@ -34,10 +44,31 @@ export function GroupMembersList({
   onMembersAdded,
 }: Props) {
   const { themeColors } = useAppTheme();
+  const { data: currentUser } = useMe();
 
   const [addMembersVisible, setAddMembersVisible] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // These hooks are always called, even when conversationId is missing.
+  const groupId = conversationId ?? "";
+
+  const removeMemberMutation = useRemoveGroupMember(groupId);
+  const updateRoleMutation = useUpdateGroupMemberRole(groupId);
+  const transferOwnershipMutation = useTransferGroupOwnership(groupId);
+
+  const currentMember = members.find(
+    (member) => member.id === currentUser?.id,
+  );
+
+  const isGroupOwner = currentMember?.role === "owner";
+  const isGroupAdmin = currentMember?.role === "admin";
+  const canManageMembers = isGroupOwner || isGroupAdmin;
+
+  const isMutationPending =
+    removeMemberMutation.isPending ||
+    updateRoleMutation.isPending ||
+    transferOwnershipMutation.isPending;
 
   const filteredMembers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -49,6 +80,13 @@ export function GroupMembersList({
     );
   }, [members, searchQuery]);
 
+  const showError = (title: string, error: unknown) => {
+    const message =
+      error instanceof Error ? error.message : "Please try again.";
+
+    Alert.alert(title, message);
+  };
+
   const handleSearchPress = () => {
     if (onSearchMembers) {
       onSearchMembers();
@@ -56,10 +94,7 @@ export function GroupMembersList({
     }
 
     setIsSearching((current) => {
-      if (current) {
-        setSearchQuery("");
-      }
-
+      if (current) setSearchQuery("");
       return !current;
     });
   };
@@ -74,6 +109,7 @@ export function GroupMembersList({
           "The group conversation ID is missing.",
         );
       }
+
       return;
     }
 
@@ -83,6 +119,135 @@ export function GroupMembersList({
   const handleMembersAdded = () => {
     setAddMembersVisible(false);
     onMembersAdded?.();
+  };
+
+  const handleChangeRole = (member: GroupMember) => {
+    if (!conversationId || !canManageMembers || isMutationPending) return;
+    if (member.id === currentUser?.id || member.role === "owner") return;
+
+    const nextRole = member.role === "admin" ? "member" : "admin";
+    const action = nextRole === "admin" ? "promote" : "demote";
+
+    Alert.alert(
+      nextRole === "admin" ? "Promote to admin?" : "Demote admin?",
+      `Are you sure you want to ${action} ${member.name}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: nextRole === "admin" ? "Promote" : "Demote",
+          onPress: () => {
+            updateRoleMutation.mutate(
+              { memberId: member.id, role: nextRole },
+              {
+                onError: (error) =>
+                  showError("Unable to update member role", error),
+              },
+            );
+          },
+        },
+      ],
+    );
+  };
+
+  const handleRemoveMember = (member: GroupMember) => {
+    if (!conversationId || !canManageMembers || isMutationPending) return;
+    if (member.id === currentUser?.id || member.role === "owner") return;
+
+    Alert.alert(
+      "Remove member?",
+      `Remove ${member.name} from this group?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => {
+            removeMemberMutation.mutate(member.id, {
+              onError: (error) =>
+                showError("Unable to remove member", error),
+            });
+          },
+        },
+      ],
+    );
+  };
+
+  const handleTransferOwnership = (member: GroupMember) => {
+    if (!conversationId || !isGroupOwner || isMutationPending) return;
+    if (member.id === currentUser?.id) return;
+
+    Alert.alert(
+      "Transfer ownership?",
+      `Make ${member.name} the owner of this group? Your role will change.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Transfer",
+          style: "destructive",
+          onPress: () => {
+            transferOwnershipMutation.mutate(member.id, {
+              onError: (error) =>
+                showError("Unable to transfer ownership", error),
+            });
+          },
+        },
+      ],
+    );
+  };
+
+  const renderRoleAction = (member: GroupMember) => {
+    if (!canManageMembers) return null;
+    if (member.id === currentUser?.id || member.role === "owner") return null;
+
+    const isAdmin = member.role === "admin";
+
+    return (
+      <View style={styles.swipeAction}>
+        <SwipeActionButton
+          label={isAdmin ? "Demote" : "Promote"}
+          icon={AddUserIcon}
+          backgroundColor={themeColors.primary}
+          isCompact
+          onPress={() => handleChangeRole(member)}
+        />
+      </View>
+    );
+  };
+
+  const renderRightActions = (member: GroupMember) => {
+    const isSelf = member.id === currentUser?.id;
+    const canRemove = canManageMembers && !isSelf && member.role !== "owner";
+    const canTransfer = isGroupOwner && !isSelf;
+
+    if (!canRemove && !canTransfer) return null;
+
+    return (
+      <View style={styles.swipeActions}>
+        {canTransfer && (
+          <View style={styles.swipeAction}>
+            <SwipeActionButton
+              label="Transfer"
+              icon={AddUserIcon}
+              backgroundColor="#D99A27"
+              isCompact
+              onPress={() => handleTransferOwnership(member)}
+            />
+          </View>
+        )}
+
+        {canRemove && (
+          <View style={styles.swipeAction}>
+            <SwipeActionButton
+              label="Remove"
+              icon={TrashIcon}
+              backgroundColor="#DD524C"
+              isCompact
+              onPress={() => handleRemoveMember(member)}
+            />
+          </View>
+        )}
+      </View>
+    );
   };
 
   return (
@@ -145,48 +310,68 @@ export function GroupMembersList({
 
       {filteredMembers.length > 0 ? (
         filteredMembers.map((member) => (
-          <TouchableOpacity
+          <Swipeable
             key={member.id}
-            style={styles.memberRow}
-            onPress={() => onMemberPress?.(member)}
-            activeOpacity={0.7}
+            enabled={
+              Boolean(conversationId) &&
+              canManageMembers &&
+              member.id !== currentUser?.id
+            }
+            friction={2}
+            leftThreshold={30}
+            rightThreshold={40}
+            renderLeftActions={() => renderRoleAction(member)}
+            renderRightActions={() => renderRightActions(member)}
           >
-            <View style={styles.avatarContainer}>
-              <Image
-                source={
-                  member.avatarUri
-                    ? { uri: member.avatarUri }
-                    : require("@/assets/images/default-avatar.png")
-                }
-                style={styles.avatar}
-              />
-
-              {member.isOnline && <View style={styles.onlineDot} />}
-            </View>
-
-            <View style={styles.memberInfo}>
-              <Typography size={15} weight="medium" color={themeColors.text}>
-                {member.name}
-              </Typography>
-
-              <View style={styles.memberStatusRow}>
-                {member.role === "owner" || member.role === "admin" ? (
-                  <Typography size={13} color={themeColors.primary}>
-                    {member.role === "owner" ? "Group owner" : "Admin"}
-                  </Typography>
-                ) : null}
-
-                <Typography
-                  size={13}
-                  color={
-                    member.isOnline ? "#52C47C" : themeColors.textSecondary
+            <TouchableOpacity
+              style={[
+                styles.memberRow,
+                { backgroundColor: themeColors.background },
+              ]}
+              onPress={() => onMemberPress?.(member)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.avatarContainer}>
+                <Image
+                  source={
+                    member.avatarUri
+                      ? { uri: member.avatarUri }
+                      : require("@/assets/images/default-avatar.png")
                   }
-                >
-                  {member.isOnline ? "Online" : "Offline"}
-                </Typography>
+                  style={styles.avatar}
+                />
+
+                {member.isOnline && <View style={styles.onlineDot} />}
               </View>
-            </View>
-          </TouchableOpacity>
+
+              <View style={styles.memberInfo}>
+                <Typography
+                  size={15}
+                  weight="medium"
+                  color={themeColors.text}
+                >
+                  {member.name}
+                </Typography>
+
+                <View style={styles.memberStatusRow}>
+                  {member.role === "owner" || member.role === "admin" ? (
+                    <Typography size={13} color={themeColors.primary}>
+                      {member.role === "owner" ? "Group owner" : "Admin"}
+                    </Typography>
+                  ) : null}
+
+                  <Typography
+                    size={13}
+                    color={
+                      member.isOnline ? "#52C47C" : themeColors.textSecondary
+                    }
+                  >
+                    {member.isOnline ? "Online" : "Offline"}
+                  </Typography>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </Swipeable>
         ))
       ) : (
         <Typography
@@ -265,6 +450,7 @@ const styles = StyleSheet.create({
     borderColor: "#FFFFFF",
   },
   memberInfo: {
+    flex: 1,
     justifyContent: "center",
     gap: 2,
   },
@@ -272,6 +458,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+  },
+  swipeActions: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 4,
+    paddingVertical: 6,
+    paddingLeft: 4,
+  },
+  swipeAction: {
+    width: 76,
   },
   emptyText: {
     paddingVertical: 24,
