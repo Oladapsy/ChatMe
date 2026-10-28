@@ -1,7 +1,6 @@
 import React from "react";
 import { StyleSheet, View, TouchableOpacity, Image } from "react-native";
 import { Typography } from "@/shared/components/Typography";
-import { Colors } from "@/shared/constants/colors";
 import SearchIcon from "@/assets/icons/shared/search.svg";
 import AddUserIcon from "@/assets/icons/shared/userPlus.svg";
 import { GroupMember } from "@/features/chats/types/chat";
@@ -72,22 +71,21 @@ export function GroupMembersList({
             <Typography size={15} weight="medium" color={themeColors.text}>
               {member.name}
             </Typography>
-            <Typography
-              size={13}
-              color={
-                member.role === "admin"
-                  ? themeColors.primary
-                  : themeColors.textSecondary
-              }
-            >
-              {member.role === "admin"
-                ? "Admin"
-                : member.role === "owner"
-                  ? "Group owner"
-                  : member.isOnline
-                    ? "Online"
-                    : "Offline"}
-            </Typography>
+
+            <View style={styles.memberStatusRow}>
+              {member.role === "owner" || member.role === "admin" ? (
+                <Typography size={13} color={themeColors.primary}>
+                  {member.role === "owner" ? "Group owner" : "Admin"}
+                </Typography>
+              ) : null}
+
+              <Typography
+                size={13}
+                color={member.isOnline ? "#52C47C" : themeColors.textSecondary}
+              >
+                {member.isOnline ? "Online" : "Offline"}
+              </Typography>
+            </View>
           </View>
         </TouchableOpacity>
       ))}
@@ -142,5 +140,10 @@ const styles = StyleSheet.create({
   memberInfo: {
     justifyContent: "center",
     gap: 2,
+  },
+  memberStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
 });
