@@ -26,6 +26,8 @@ interface Props {
     selectedAvatar?: SelectedImage;
   }) => Promise<void>;
   savingGroup?: boolean;
+  onLeaveGroup?: () => void;
+  leavingGroup?: boolean;
 }
 
 export function GroupInfoFlowContainer({
@@ -36,6 +38,8 @@ export function GroupInfoFlowContainer({
   onSaveGroup,
   savingGroup = false,
   currentUserRole,
+  onLeaveGroup,
+  leavingGroup = false,
 }: Props) {
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("details");
 
@@ -51,6 +55,8 @@ export function GroupInfoFlowContainer({
         <GroupDetailScreen
           groupDetails={groupDetails}
           currentUserRole={currentUserRole}
+          onLeaveGroup={onLeaveGroup}
+          leavingGroup={leavingGroup}
           onBack={onBack}
           onNavigatePhotos={() => setCurrentScreen("photos")}
           onNavigateStars={() => setCurrentScreen("stars")}

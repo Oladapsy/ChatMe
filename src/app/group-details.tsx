@@ -1,17 +1,20 @@
 import React, { useState } from "react";
-import { Alert } from "react-native";
-import { uploadMedia } from "@/services/mediaUpload";
-import { useUpdateGroup } from "@/features/chats/hooks/useCreateGroup";
-import type { SelectedImage } from "@/features/contacts/components/AvatarPicker";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Alert, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+
+import { uploadMedia } from "@/services/mediaUpload";
+import {
+  useUpdateGroup,
+  useGroupDetails,
+} from "@/features/chats/hooks/useCreateGroup";
+import { useLeaveGroup } from "@/features/chats/hooks/useGroupMemberMutations";
+import type { SelectedImage } from "@/features/contacts/components/AvatarPicker";
 
 import { GroupInfoFlowContainer } from "@/features/chats/components/group/GroupInfoFlowContainer";
 import {
   MOCK_SHARED_LINK_SECTIONS,
   MOCK_STARRED_MESSAGES,
 } from "@/features/chats/data/mockGroupDetails";
-import { useGroupDetails } from "@/features/chats/hooks/useCreateGroup";
 import { mapGroupConversationToDetails } from "@/features/chats/utils/mapGroupConversationToDetails";
 
 export default function GroupDetailsRoute() {
@@ -19,19 +22,10 @@ export default function GroupDetailsRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { data, isPending, isError, error } = useGroupDetails(id);
-  console.log("GROUP OWNERSHIP STATE", {
-    currentUserId: data?.participants?.find((member) => member.role === "owner")
-      ?.id,
-    currentUserRole: data?.role,
-    participants: data?.participants?.map((member) => ({
-      id: member.id,
-      name: member.displayName,
-      role: member.role,
-    })),
-  });
 
-  // update group hook
   const updateGroupMutation = useUpdateGroup();
+  const leaveGroupMutation = useLeaveGroup(id);
+
   const [saving, setSaving] = useState(false);
 
   const handleSaveGroup = async ({
@@ -79,9 +73,60 @@ export default function GroupDetailsRoute() {
     }
   };
 
+  const handleLeaveGroup = () => {
+    if (!data || data.type !== "group") return;
+
+    // The backend requires the owner to transfer ownership or delete
+    // the group before leaving.
+    if (data.role === "owner") {
+      Alert.alert(
+        "Transfer ownership first",
+        "You're the group owner. Transfer ownership to another member before leaving this group.",
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Leave group?",
+      `You'll no longer be a member of "${data.name}". You may need to be added again to rejoin.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Leave group",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await leaveGroupMutation.mutateAsync();
+
+              // Return to the previous screen after the API succeeds.
+              // Ensure this previous screen is your conversations list.
+              router.back();
+            } catch (error) {
+              console.error("Failed to leave group:", error);
+
+              Alert.alert(
+                "Unable to leave group",
+                error instanceof Error ? error.message : "Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
   if (isPending) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <ActivityIndicator />
       </View>
     );
@@ -98,15 +143,6 @@ export default function GroupDetailsRoute() {
   }
 
   const groupDetails = mapGroupConversationToDetails(data);
-  console.log("Current user's group role:", data.role);
-  console.log(
-    "Member roles:",
-    data.participants.map((member) => ({
-      id: member.id,
-      name: member.displayName,
-      role: member.role,
-    })),
-  );
 
   return (
     <GroupInfoFlowContainer
@@ -117,6 +153,8 @@ export default function GroupDetailsRoute() {
       onBack={() => router.back()}
       savingGroup={saving}
       onSaveGroup={handleSaveGroup}
+      onLeaveGroup={handleLeaveGroup}
+      leavingGroup={leaveGroupMutation.isPending}
     />
   );
 }

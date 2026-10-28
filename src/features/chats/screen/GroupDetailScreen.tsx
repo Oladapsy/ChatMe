@@ -5,9 +5,10 @@ import { GroupMembersList } from "@/features/chats/components/group/GroupMembers
 import { GroupDetails, GroupMember } from "@/features/chats/types/chat";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { Typography } from "@/shared/components/Typography";
 
 type MemberRole = "owner" | "admin" | "member";
 
@@ -20,6 +21,8 @@ interface Props {
   onNavigateLinks: () => void;
   onEditGroup?: () => void;
   onSelectMember?: (member: GroupMember) => void;
+  onLeaveGroup?: () => void;
+  leavingGroup?: boolean;
 }
 
 export function GroupDetailScreen({
@@ -31,6 +34,8 @@ export function GroupDetailScreen({
   onNavigateLinks,
   onEditGroup,
   onSelectMember,
+  onLeaveGroup,
+  leavingGroup,
 }: Props) {
   const { isDark, themeColors } = useAppTheme();
 
@@ -106,6 +111,23 @@ export function GroupDetailScreen({
           onMemberPress={handleMemberPress}
           onMembersAdded={handleMembersAdded}
         />
+        {/* Leave Group */}
+        {onLeaveGroup && (
+          <TouchableOpacity
+            onPress={onLeaveGroup}
+            disabled={leavingGroup}
+            style={[
+              styles.leaveGroupButton,
+              { borderColor: isDark ? "#563333" : "#F2DADA" },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Leave group"
+          >
+            <Typography size={15} weight="medium" color="#DD524C">
+              {leavingGroup ? "Leaving group..." : "Leave group"}
+            </Typography>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );
@@ -118,5 +140,14 @@ const styles = StyleSheet.create({
   divider: {
     height: 8,
     marginVertical: 4,
+  },
+  leaveGroupButton: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 28,
+    paddingVertical: 14,
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 12,
   },
 });
