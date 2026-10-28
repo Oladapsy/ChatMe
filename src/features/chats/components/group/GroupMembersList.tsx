@@ -1,43 +1,94 @@
-import React from "react";
-import { StyleSheet, View, TouchableOpacity, Image } from "react-native";
+
+import React, { useState } from "react";
+import {
+  Alert,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+
 import { Typography } from "@/shared/components/Typography";
 import SearchIcon from "@/assets/icons/shared/search.svg";
 import AddUserIcon from "@/assets/icons/shared/userPlus.svg";
-import { GroupMember } from "@/features/chats/types/chat";
+
+import type { GroupMember } from "@/features/chats/types/chat";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import { AddGroupMembersModal } from "@/features/chats/components/AddGroupMembersModal";
 
 interface Props {
   members: GroupMember[];
+  conversationId?: string;
   onSearchMembers?: () => void;
   onAddMember?: () => void;
   onMemberPress?: (member: GroupMember) => void;
+  onMembersAdded?: () => void;
 }
 
 export function GroupMembersList({
   members,
+  conversationId,
   onSearchMembers,
   onAddMember,
   onMemberPress,
+  onMembersAdded,
 }: Props) {
-  const { isDark, themeColors } = useAppTheme();
+  const { themeColors } = useAppTheme();
+  const [addMembersVisible, setAddMembersVisible] = useState(false);
+
+  const handleOpenAddMembers = () => {
+    if (!conversationId) {
+      if (onAddMember) {
+        onAddMember();
+      } else {
+        Alert.alert(
+          "Unable to add members",
+          "The group conversation ID is missing.",
+        );
+      }
+      return;
+    }
+
+    setAddMembersVisible(true);
+  };
+
+  const handleMembersAdded = () => {
+    setAddMembersVisible(false);
+    onMembersAdded?.();
+  };
 
   return (
     <View style={styles.container}>
       {/* Header Row */}
       <View style={styles.headerRow}>
-        <Typography size={16} weight="bold" color={themeColors.descText}>
+        <Typography
+          size={16}
+          weight="bold"
+          color={themeColors.descText}
+        >
           {members.length} members
         </Typography>
 
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.iconBtn} onPress={onSearchMembers}>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={onSearchMembers}
+            accessibilityRole="button"
+            accessibilityLabel="Search group members"
+          >
             <SearchIcon
               width={20}
               height={20}
               color={themeColors.textSecondary}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={onAddMember}>
+
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={handleOpenAddMembers}
+            accessibilityRole="button"
+            accessibilityLabel="Add group members"
+          >
             <AddUserIcon
               width={20}
               height={20}
@@ -64,11 +115,16 @@ export function GroupMembersList({
               }
               style={styles.avatar}
             />
+
             {member.isOnline && <View style={styles.onlineDot} />}
           </View>
 
           <View style={styles.memberInfo}>
-            <Typography size={15} weight="medium" color={themeColors.text}>
+            <Typography
+              size={15}
+              weight="medium"
+              color={themeColors.text}
+            >
               {member.name}
             </Typography>
 
@@ -81,7 +137,11 @@ export function GroupMembersList({
 
               <Typography
                 size={13}
-                color={member.isOnline ? "#52C47C" : themeColors.textSecondary}
+                color={
+                  member.isOnline
+                    ? "#52C47C"
+                    : themeColors.textSecondary
+                }
               >
                 {member.isOnline ? "Online" : "Offline"}
               </Typography>
@@ -89,6 +149,17 @@ export function GroupMembersList({
           </View>
         </TouchableOpacity>
       ))}
+
+      {/* Add Members Modal */}
+      {conversationId ? (
+        <AddGroupMembersModal
+          visible={addMembersVisible}
+          conversationId={conversationId}
+          existingMemberIds={members.map((member) => member.id)}
+          onClose={() => setAddMembersVisible(false)}
+          onMembersAdded={handleMembersAdded}
+        />
+      ) : null}
     </View>
   );
 }

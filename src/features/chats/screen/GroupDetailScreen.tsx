@@ -1,12 +1,13 @@
-import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { GroupDetails, GroupMember } from "@/features/chats/types/chat";
-import { GroupHeaderHero } from "@/features/chats/components/group/GroupHeaderHero";
 import { GroupDescriptionCard } from "@/features/chats/components/group/GroupDescriptionCard";
+import { GroupHeaderHero } from "@/features/chats/components/group/GroupHeaderHero";
 import { GroupMediaPreviewRow } from "@/features/chats/components/group/GroupMediaPreviewRow";
 import { GroupMembersList } from "@/features/chats/components/group/GroupMembersList";
-import { useRouter } from "expo-router";
+import { GroupDetails, GroupMember } from "@/features/chats/types/chat";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import { useRouter } from "expo-router";
+import { ScrollView, StyleSheet, View } from "react-native";
+
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Props {
   groupDetails: GroupDetails;
@@ -31,6 +32,25 @@ export function GroupDetailScreen({
 
   const router = useRouter();
 
+  const queryClient = useQueryClient();
+
+  const handleMemberPress = (member: GroupMember) => {
+    onSelectMember?.(member);
+  };
+
+  const handleMembersAdded = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["conversation", groupDetails.id],
+    });
+  };
+
+  const handleSearchMembers = () => {
+    router.push({
+      pathname: "/chat-room",
+      params: { id: groupDetails.id, search: "true" },
+    });
+  };
+  
   return (
     <View
       style={[styles.container, { backgroundColor: themeColors.background }]}
@@ -41,12 +61,7 @@ export function GroupDetailScreen({
         coverImageUri={groupDetails.coverImageUri}
         onBack={onBack}
         onEdit={onEditGroup}
-        onSearch={() =>
-          router.push({
-            pathname: "/chat-room",
-            params: { id: groupDetails.id, search: "true" },
-          })
-        }
+        onSearch={handleSearchMembers}
       />
 
       {/* 2. Description Card */}
@@ -82,7 +97,10 @@ export function GroupDetailScreen({
         {/* 4. Member List */}
         <GroupMembersList
           members={groupDetails.members}
-          onMemberPress={onSelectMember}
+          conversationId={groupDetails.id}
+          onSearchMembers={handleSearchMembers}
+          onMemberPress={handleMemberPress}
+          onMembersAdded={handleMembersAdded}
         />
       </ScrollView>
     </View>

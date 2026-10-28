@@ -16,17 +16,30 @@ interface Props {
   selectedContacts: Contact[];
   onToggleContact: (contact: Contact) => void;
   onNext: () => void;
+
+  // New props for adding members to an existing group
+  existingMemberIds?: string[];
+  actionLabel?: string;
+  isSubmitting?: boolean;
 }
 
 export function AddParticipantsStep({
   selectedContacts,
   onToggleContact,
   onNext,
+  existingMemberIds = [],
+  actionLabel = "Next",
+  isSubmitting = false,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Contact[]>([]);
   const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
+
+  const existingMemberIdSet = useMemo(
+    () => new Set(existingMemberIds),
+    [existingMemberIds],
+  );
 
   const {
     contacts,
@@ -126,30 +139,40 @@ export function AddParticipantsStep({
   const displayedContacts = useMemo(() => {
     const trimmedQuery = searchQuery.trim().toLowerCase();
 
+    const availableContacts = registeredDeviceContacts.filter(
+      (contact) => !existingMemberIdSet.has(contact.id),
+    );
+
     if (!trimmedQuery) {
-      return registeredDeviceContacts;
+      return availableContacts;
     }
 
-    // Local matches from synced address book
-    const localMatches = registeredDeviceContacts.filter(
+    const localMatches = availableContacts.filter(
       (contact) =>
         contact.name.toLowerCase().includes(trimmedQuery) ||
         contact.phone.includes(trimmedQuery),
     );
 
-    const seenIds = new Set(localMatches.map((c) => c.id));
+    const seenIds = new Set(localMatches.map((contact) => contact.id));
     const combined = [...localMatches];
 
-    // Append global search results not already matched locally
     for (const remoteContact of searchResults) {
-      if (!seenIds.has(remoteContact.id)) {
+      if (
+        !seenIds.has(remoteContact.id) &&
+        !existingMemberIdSet.has(remoteContact.id)
+      ) {
         seenIds.add(remoteContact.id);
         combined.push(remoteContact);
       }
     }
 
     return combined;
-  }, [searchQuery, registeredDeviceContacts, searchResults]);
+  }, [
+    searchQuery,
+    registeredDeviceContacts,
+    searchResults,
+    existingMemberIdSet,
+  ]);
 
   const isValid = selectedContacts.length > 0;
   const isLoading =
@@ -213,9 +236,9 @@ export function AddParticipantsStep({
 
       <View style={styles.buttonWrapper}>
         <Button
-          title="Next"
+          title={actionLabel}
           onPress={onNext}
-          disabled={!isValid || isLoading}
+          disabled={!isValid || isLoading || isSubmitting}
           textWeight="bold"
         />
       </View>
