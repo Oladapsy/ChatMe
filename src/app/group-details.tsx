@@ -102,8 +102,8 @@ export default function GroupDetailsRoute() {
               await leaveGroupMutation.mutateAsync();
 
               // Return to the previous screen after the API succeeds.
-              // Ensure this previous screen is your conversations list.
-              router.back();
+              // move to conversations list.
+              router.replace("/(tabs)");
             } catch (error) {
               console.error("Failed to leave group:", error);
 
