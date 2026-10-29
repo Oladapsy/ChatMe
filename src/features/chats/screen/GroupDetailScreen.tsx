@@ -118,7 +118,7 @@ export function GroupDetailScreen({
           onMembersAdded={handleMembersAdded}
         />
         {/* Leave Group */}
-        {onLeaveGroup && (
+        {currentUserRole != "owner" && onLeaveGroup && (
           <TouchableOpacity
             onPress={onLeaveGroup}
             disabled={leavingGroup}
