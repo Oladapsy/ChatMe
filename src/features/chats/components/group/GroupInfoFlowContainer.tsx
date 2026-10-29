@@ -28,6 +28,8 @@ interface Props {
   savingGroup?: boolean;
   onLeaveGroup?: () => void;
   leavingGroup?: boolean;
+  onDeleteGroup?: () => void;
+  deletingGroup?: boolean;
 }
 
 export function GroupInfoFlowContainer({
@@ -40,6 +42,8 @@ export function GroupInfoFlowContainer({
   currentUserRole,
   onLeaveGroup,
   leavingGroup = false,
+  onDeleteGroup,
+  deletingGroup = false,
 }: Props) {
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("details");
 
@@ -62,6 +66,8 @@ export function GroupInfoFlowContainer({
           onNavigateStars={() => setCurrentScreen("stars")}
           onNavigateLinks={() => setCurrentScreen("links")}
           onEditGroup={() => setCurrentScreen("edit")}
+          onDeleteGroup={onDeleteGroup}
+          deletingGroup={deletingGroup}
         />
       )}
 

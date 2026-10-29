@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -8,6 +9,7 @@ import {
   useGroupDetails,
 } from "@/features/chats/hooks/useCreateGroup";
 import { useLeaveGroup } from "@/features/chats/hooks/useGroupMemberMutations";
+import { useDeleteGroup } from "@/features/chats/hooks/useDeleteGroup";
 import type { SelectedImage } from "@/features/contacts/components/AvatarPicker";
 
 import { GroupInfoFlowContainer } from "@/features/chats/components/group/GroupInfoFlowContainer";
@@ -25,6 +27,7 @@ export default function GroupDetailsRoute() {
 
   const updateGroupMutation = useUpdateGroup();
   const leaveGroupMutation = useLeaveGroup(id);
+  const deleteGroupMutation = useDeleteGroup(id);
 
   const [saving, setSaving] = useState(false);
 
@@ -76,8 +79,6 @@ export default function GroupDetailsRoute() {
   const handleLeaveGroup = () => {
     if (!data || data.type !== "group") return;
 
-    // The backend requires the owner to transfer ownership or delete
-    // the group before leaving.
     if (data.role === "owner") {
       Alert.alert(
         "Transfer ownership first",
@@ -100,15 +101,46 @@ export default function GroupDetailsRoute() {
           onPress: async () => {
             try {
               await leaveGroupMutation.mutateAsync();
-
-              // Return to the previous screen after the API succeeds.
-              // move to conversations list.
               router.replace("/(tabs)");
             } catch (error) {
               console.error("Failed to leave group:", error);
 
               Alert.alert(
                 "Unable to leave group",
+                error instanceof Error ? error.message : "Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleDeleteGroup = () => {
+    if (!data || data.type !== "group" || data.role !== "owner") {
+      return;
+    }
+
+    Alert.alert(
+      "Delete group?",
+      `Are you sure you want to delete "${data.name}"? This action cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete group",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteGroupMutation.mutateAsync();
+              router.replace("/(tabs)");
+            } catch (error) {
+              console.error("Failed to delete group:", error);
+
+              Alert.alert(
+                "Unable to delete group",
                 error instanceof Error ? error.message : "Please try again.",
               );
             }
@@ -155,6 +187,8 @@ export default function GroupDetailsRoute() {
       onSaveGroup={handleSaveGroup}
       onLeaveGroup={handleLeaveGroup}
       leavingGroup={leaveGroupMutation.isPending}
+      onDeleteGroup={handleDeleteGroup}
+      deletingGroup={deleteGroupMutation.isPending}
     />
   );
 }
