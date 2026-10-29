@@ -30,7 +30,7 @@ import ChatBgIcon from "@/assets/icons/chat/ChatBg.svg";
 
 // Types & Data
 import { MessageBubble } from "@/features/chats/components/MessageBubble";
-import { MOCK_CHATS } from "@/features/chats/data/mockChats";
+// import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 // get msgs for a conversation
@@ -50,8 +50,6 @@ import {
   type ProcessedMessage,
 } from "@/features/chats/utils/processMessages";
 import { MessageDateSeparator } from "@/features/chats/components/MessageDateSeparator";
-
-import { findMatchingMessageIndices } from "@/features/chats/utils/searchMessages";
 
 // abstract the image upload
 import { uploadChatImage } from "@/features/chats/utils/uploadChatMedia";
@@ -164,13 +162,12 @@ export default function ChatRoomScreen() {
   }, [isContactBlocked, isBlockStatusLoading, isBlockStatusUnavailable]);
 
   // Find matching chat details from mock data
-  const currentChat = MOCK_CHATS.find((chat) => chat.id === activeChatId);
+  // Find matching chat details from mock data
 
-  const isGroupChat = currentChat
-    ? Boolean(currentChat.isGroup)
-    : isGroup === "true";
+  const isGroupChat =
+    currentConversation?.type === "group" || isGroup === "true";
+
   const chatName =
-    currentChat?.name ||
     (currentConversation?.type === "direct"
       ? currentConversation.otherParticipant.displayName
       : currentConversation?.type === "group"
@@ -180,14 +177,13 @@ export default function ChatRoomScreen() {
     "Unknown contact";
 
   const chatAvatar =
-    currentChat?.avatar ||
     (currentConversation?.type === "direct"
       ? currentConversation.otherParticipant.avatarUrl
       : currentConversation?.type === "group"
         ? currentConversation.avatarUrl
-        : undefined) ||
-    avatar;
-  const groupMembers = currentChat?.members;
+        : undefined) || avatar;
+
+  const groupMembers = undefined;
 
   const messages = useMemo(() => {
     const historyMessages = messagesData?.items ?? [];
