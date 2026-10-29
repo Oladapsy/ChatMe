@@ -10,6 +10,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { Typography } from "@/shared/components/Typography";
 
+
 type MemberRole = "owner" | "admin" | "member";
 
 interface Props {
@@ -23,6 +24,9 @@ interface Props {
   onSelectMember?: (member: GroupMember) => void;
   onLeaveGroup?: () => void;
   leavingGroup?: boolean;
+  // for delete group
+  onDeleteGroup?: () => void;
+  deletingGroup?: boolean;
 }
 
 export function GroupDetailScreen({
@@ -36,6 +40,8 @@ export function GroupDetailScreen({
   onSelectMember,
   onLeaveGroup,
   leavingGroup,
+  onDeleteGroup,
+  deletingGroup,
 }: Props) {
   const { isDark, themeColors } = useAppTheme();
 
@@ -125,6 +131,24 @@ export function GroupDetailScreen({
           >
             <Typography size={15} weight="medium" color="#DD524C">
               {leavingGroup ? "Leaving group..." : "Leave group"}
+            </Typography>
+          </TouchableOpacity>
+        )}
+
+        {/* Delete Group — owner only */}
+        {currentUserRole === "owner" && onDeleteGroup && (
+          <TouchableOpacity
+            onPress={onDeleteGroup}
+            disabled={deletingGroup}
+            style={[
+              styles.leaveGroupButton,
+              { borderColor: isDark ? "#563333" : "#F2DADA" },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Delete group"
+          >
+            <Typography size={15} weight="medium" color="#DD524C">
+              {deletingGroup ? "Deleting group..." : "Delete group"}
             </Typography>
           </TouchableOpacity>
         )}

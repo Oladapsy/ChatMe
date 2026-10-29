@@ -1,5 +1,11 @@
 import React, { useState, useMemo } from "react";
-import { StyleSheet, View, FlatList, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  View,
+  FlatList,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -50,6 +56,7 @@ import { useStartDirectConversation } from "@/features/chats/hooks/useStartDirec
 import { SearchUserRow } from "@/features/chats/components/SearchUserRow";
 import { useCreateGroup } from "@/features/chats/hooks/useCreateGroup";
 import { uploadMedia } from "@/services/mediaUpload";
+import { useDeleteDirectChat } from "@/features/chats/hooks/useDeleteDirectChat";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -205,6 +212,39 @@ export default function HomeScreen() {
     } else {
       favorite(chat.id);
     }
+  };
+
+  const deleteDirectChatMutation = useDeleteDirectChat();
+
+  const handleDeleteChat = (chat: Chat) => {
+    if (chat.isGroup) {
+      Alert.alert("Delete group", "Group deletion has not been connected yet.");
+      return;
+    }
+
+    Alert.alert(
+      "Delete chat?",
+      `This will hide "${chat.name}" from your lists and clear your chat history. The other participant will not be affected.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDirectChatMutation.mutateAsync(chat.id);
+            } catch (error) {
+              console.error("Failed to delete direct chat:", error);
+
+              Alert.alert("Unable to delete chat", "Please try again.");
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -366,7 +406,7 @@ export default function HomeScreen() {
                 onPin={handlePin}
                 onMute={handleMute}
                 onArchive={handleArchive}
-                onDelete={() => console.log("Delete is Pressed")}
+                onDelete={handleDeleteChat}
                 onFav={handleFavorite}
               />
             );

@@ -304,3 +304,11 @@ export const leaveGroup = async (
 ): Promise<void> => {
   await api.post(`/conversations/${conversationId}/leave`);
 };
+
+
+// Delete a group (owner only)
+export const deleteGroup = async (
+  conversationId: string,
+): Promise<void> => {
+  await api.delete(`/conversations/${conversationId}`);
+};

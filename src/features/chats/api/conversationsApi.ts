@@ -10,3 +10,11 @@ export async function getConversationById(
 
   return response.data;
 }
+
+export async function deleteDirectChatForMe(
+  conversationId: string,
+): Promise<void> {
+  await api.delete(
+    `/conversations/${conversationId}/for-me`,
+  );
+}
