@@ -357,3 +357,37 @@ export const leaveGroup = async (conversationId: string): Promise<void> => {
 export const deleteGroup = async (conversationId: string): Promise<void> => {
   await api.delete(`/conversations/${conversationId}`);
 };
+
+
+// edit and delete a msg 
+// Edit an existing message
+export interface EditMessagePayload {
+  text: string | null;
+  expectedVersion: number;
+}
+
+// Edit an existing message
+export const editMessage = async (
+  conversationId: string,
+  messageId: string,
+  payload: EditMessagePayload,
+): Promise<Message> => {
+  const response = await api.patch<Message>(
+    `/conversations/${conversationId}/messages/${messageId}`,
+    payload,
+  );
+
+  return response.data;
+};
+
+// Delete a message for everyone
+export const deleteMessage = async (
+  conversationId: string,
+  messageId: string,
+): Promise<Message> => {
+  const response = await api.delete<Message>(
+    `/conversations/${conversationId}/messages/${messageId}`,
+  );
+
+  return response.data;
+};

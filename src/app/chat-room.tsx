@@ -66,11 +66,30 @@ import { useSearchMessages } from "@/features/chats/hooks/useSearchMessages";
 import { useUpdateReceipts } from "@/features/chats/hooks/useUpdateReceipts";
 import { useReceiptFrontiers } from "@/features/chats/hooks/useReceiptFrontiers";
 
+// edit msg and delete
+import { useMessageActions } from "@/features/chats/hooks/useMessageActions";
+import type { Message } from "@/features/chats/types/message";
+import { MessageActionsSheet } from "@/features/chats/components/MessageActionsSheet";
+import { useQueryClient } from "@tanstack/react-query";
+type MessagePosition = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 export default function ChatRoomScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
   const [isSending, setIsSending] = useState(false);
   const [isAtLatest, setIsAtLatest] = useState(true);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [showMessageActions, setShowMessageActions] = useState(false);
+
+  const queryClient = useQueryClient();
+  const [messagePosition, setMessagePosition] =
+    useState<MessagePosition | null>(null);
 
   const { id, name, avatar, isGroup, membersText, search } =
     useLocalSearchParams<{
@@ -85,6 +104,8 @@ export default function ChatRoomScreen() {
   const { data: currentUser } = useMe();
 
   const activeChatId = id || "1";
+  const { editMessage, deleteMessage, isEditingMessage, isDeletingMessage } =
+    useMessageActions(activeChatId);
   const [isScreenFocused, setIsScreenFocused] = useState(false);
 
   const [isAppActive, setIsAppActive] = useState(
@@ -397,6 +418,72 @@ export default function ChatRoomScreen() {
     !isServerSearchError &&
     matchingIndices.length === 0;
 
+  // handle long press a msg
+  const handleMessageLongPress = (
+    message: Message,
+    position: MessagePosition,
+  ) => {
+    if (message.senderId !== currentUser?.id) return;
+    if (message.deletedAt) return;
+
+    setSelectedMessage(message);
+    setMessagePosition(position);
+    setShowMessageActions(true);
+  };
+
+  const handleCloseMessageActions = () => {
+    setShowMessageActions(false);
+    setSelectedMessage(null);
+    setMessagePosition(null);
+  };
+  const handleEditMessage = () => {
+    if (!selectedMessage || selectedMessage.deletedAt) return;
+
+    const messageToEdit = selectedMessage;
+
+    handleCloseMessageActions();
+
+    setEditingMessage(messageToEdit);
+    setMessageText(messageToEdit.text ?? "");
+  };
+
+  const handleDeleteMessage = () => {
+    if (!selectedMessage || isDeletingMessage) return;
+
+    const messageToDelete = selectedMessage;
+
+    handleCloseMessageActions();
+
+    Alert.alert(
+      "Delete Message",
+      "Are you sure you want to delete this message for everyone?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete for Everyone",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteMessage(messageToDelete.id);
+
+              console.log("Message deleted successfully:", messageToDelete.id);
+            } catch (error) {
+              console.error("Failed to delete message:", error);
+
+              Alert.alert(
+                "Delete Failed",
+                "Unable to delete this message. Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
   // Scroll to targeted matching item when match index changes
   useEffect(() => {
     if (isSearching && matchingIndices.length > 0) {
@@ -510,6 +597,143 @@ export default function ChatRoomScreen() {
 
   // Send text handler with comprehensive status checks and error logging
   const handleSend = async () => {
+    // EDIT MODE: Update an existing message instead of sending a new one
+    if (editingMessage) {
+      if (isEditingMessage) return;
+
+      const updatedText = messageText.trim();
+
+      if (!updatedText) {
+        Alert.alert("Invalid message", "Message text cannot be empty.");
+        return;
+      }
+
+      if (updatedText.length > 4000) {
+        Alert.alert(
+          "Message too long",
+          "A message cannot exceed 4000 characters.",
+        );
+        return;
+      }
+
+      if (updatedText === (editingMessage.text ?? "")) {
+        setEditingMessage(null);
+        setMessageText("");
+        return;
+      }
+
+      try {
+        await editMessage({
+          messageId: editingMessage.id,
+          payload: {
+            text: updatedText,
+            expectedVersion: editingMessage.version,
+          },
+        });
+
+        setEditingMessage(null);
+        setMessageText("");
+
+        console.log("Message edited successfully");
+      } catch (error) {
+        console.error("EDIT MESSAGE ERROR:", error);
+
+        if (axios.isAxiosError(error)) {
+          const status = error.response?.status;
+
+          if (status === 409) {
+            const errorCode = error.response?.data?.code;
+
+            if (errorCode === "MESSAGE_DELETED") {
+              Alert.alert(
+                "Message deleted",
+                "This message has already been deleted.",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => {
+                      setEditingMessage(null);
+                      setMessageText("");
+
+                      queryClient.invalidateQueries({
+                        queryKey: ["messages", activeChatId],
+                      });
+                    },
+                  },
+                ],
+              );
+
+              return;
+            }
+
+            Alert.alert(
+              "Message changed",
+              "This message has been updated since you started editing. Your changes are still in the input.",
+              [
+                {
+                  text: "Keep my draft",
+                  style: "cancel",
+                },
+                {
+                  text: "Refresh messages",
+                  onPress: async () => {
+                    try {
+                      await queryClient.invalidateQueries({
+                        queryKey: ["messages", activeChatId],
+                        refetchType: "all",
+                      });
+
+                      // Leave edit mode so we don't reuse the stale version.
+                      // Preserve the user's draft in the input.
+                      setEditingMessage(null);
+
+                      Alert.alert(
+                        "Messages refreshed",
+                        "Your draft is still in the input. You can copy it, or select the updated message and choose Edit again.",
+                      );
+                    } catch (refreshError) {
+                      console.error("MESSAGE REFRESH ERROR:", refreshError);
+
+                      Alert.alert(
+                        "Refresh failed",
+                        "Could not refresh the messages. Your draft has been preserved.",
+                      );
+                    }
+                  },
+                },
+              ],
+            );
+
+            return;
+          }
+
+          if (status === 403) {
+            Alert.alert(
+              "Edit not allowed",
+              "You can only edit messages you sent.",
+            );
+            return;
+          }
+
+          if (status === 404) {
+            Alert.alert(
+              "Message unavailable",
+              "This message is no longer available.",
+            );
+            return;
+          }
+        }
+
+        Alert.alert(
+          "Edit failed",
+          "Unable to edit this message. Please try again.",
+        );
+      }
+
+      return;
+    }
+
+    // NORMAL SEND MODE: Existing implementation
     if (
       sendInFlightRef.current ||
       isContactBlocked ||
@@ -581,6 +805,13 @@ export default function ChatRoomScreen() {
       sendInFlightRef.current = false;
       setIsSending(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    if (isEditingMessage) return;
+
+    setEditingMessage(null);
+    setMessageText("");
   };
 
   // Audio send handler protected by block/loading guards and detailed error catching
@@ -883,6 +1114,11 @@ export default function ChatRoomScreen() {
                     isGroup={isGroupChat}
                     searchQuery={isSearching ? searchQuery : undefined}
                     receiptStatus={receiptStatusByMessageId.get(item.id)}
+                    onLongPress={
+                      item.senderId === currentUser?.id && !item.deletedAt
+                        ? (position) => handleMessageLongPress(item, position)
+                        : undefined
+                    }
                   />
                 );
               }}
@@ -983,9 +1219,19 @@ export default function ChatRoomScreen() {
             onSendAudio={handleSendAudio}
             onOpenAttachment={() => setAttachmentVisible(true)}
             hasAttachments={selectedImageUris.length > 0}
-            isSending={isSending || isSendingMessage}
+            isSending={isSending || isEditingMessage}
+            isEditing={Boolean(editingMessage)}
+            onCancelEdit={handleCancelEdit}
           />
         )}
+
+        <MessageActionsSheet
+          visible={showMessageActions}
+          position={messagePosition}
+          onClose={handleCloseMessageActions}
+          onEdit={handleEditMessage}
+          onDelete={handleDeleteMessage}
+        />
       </KeyboardAvoidingView>
 
       <AttachmentModal

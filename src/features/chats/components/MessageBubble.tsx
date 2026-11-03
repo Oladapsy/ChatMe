@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, View, Image } from "react-native";
+import React, { useRef } from "react";
+import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Message } from "@/features/chats/types/message";
 
@@ -17,6 +17,12 @@ interface Props {
   isGroup?: boolean;
   searchQuery?: string;
   receiptStatus?: "sent" | "delivered" | "read";
+  onLongPress?: (position: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }) => void;
 }
 
 export function MessageBubble({
@@ -24,10 +30,23 @@ export function MessageBubble({
   isGroup = false,
   searchQuery,
   receiptStatus = "sent",
+  onLongPress,
 }: Props) {
   const { themeColors } = useAppTheme();
 
   const isMe = message.isMe;
+  const isDeleted = Boolean(message.deletedAt);
+  const isEdited = Boolean(message.editedAt) && !isDeleted;
+
+  const bubbleRef = useRef<View>(null);
+
+  const handleLongPress = () => {
+    if (!onLongPress) return;
+
+    bubbleRef.current?.measureInWindow((x, y, width, height) => {
+      onLongPress({ x, y, width, height });
+    });
+  };
 
   const sentBubbleBg = themeColors.primary;
   const receivedBubbleBg = themeColors.cardBackground;
@@ -90,8 +109,8 @@ export function MessageBubble({
     receiptStatus === "read"
       ? themeColors.blue
       : isMe
-      ? "rgba(255,255,255,0.7)"
-      : themeColors.textSecondary;
+        ? "rgba(255,255,255,0.7)"
+        : themeColors.textSecondary;
 
   return (
     <View style={[styles.row, isMe ? styles.rowMe : styles.rowOther]}>
@@ -129,88 +148,116 @@ export function MessageBubble({
         ]}
       >
         {/* Message Content Box */}
-        <View
-          style={[
-            styles.bubble,
-            { backgroundColor: isMe ? sentBubbleBg : receivedBubbleBg },
-            isMe ? styles.bubbleMe : styles.bubbleOther,
-          ]}
-        >
-          {/* Group Sender Name */}
-          {!isMe && isGroup && message.senderName && message.showAvatar && (
-            <Typography
-              size={13}
-              weight="bold"
-              color={themeColors.primary}
-              style={styles.senderName}
-            >
-              {message.senderName}
-            </Typography>
-          )}
+        <View ref={bubbleRef} collapsable={false}>
+          <TouchableOpacity
+            activeOpacity={1}
+            disabled={!onLongPress}
+            onLongPress={handleLongPress}
+            delayLongPress={400}
+            style={[
+              styles.bubble,
+              { backgroundColor: isMe ? sentBubbleBg : receivedBubbleBg },
+              isMe ? styles.bubbleMe : styles.bubbleOther,
+            ]}
+          >
+            {/* Group Sender Name */}
+            {!isMe && isGroup && message.senderName && message.showAvatar && (
+              <Typography
+                size={13}
+                weight="bold"
+                color={themeColors.primary}
+                style={styles.senderName}
+              >
+                {message.senderName}
+              </Typography>
+            )}
 
-          {/* Text & Media Message */}
-          <View style={styles.messageBody}>
-            {message.kind === "image" &&
+            {/* Text & Media Message / Deleted Placeholder */}
+            <View style={styles.messageBody}>
+              {isDeleted ? (
+                <Typography
+                  size={14}
+                  color={isMe ? "rgba(255,255,255,0.8)" : timeColor}
+                  style={styles.deletedText}
+                >
+                  This message was deleted
+                </Typography>
+              ) : (
+                <>
+                  {message.kind === "image" &&
+                    message.attachments.map((attachment) => {
+                      if (attachment.type !== "image") return null;
+
+                      return (
+                        <Image
+                          key={attachment.mediaId}
+                          source={{ uri: attachment.url }}
+                          style={styles.messageImage}
+                        />
+                      );
+                    })}
+
+                  {Boolean(message.text) &&
+                    renderHighlightedText(message.text!, searchQuery)}
+                </>
+              )}
+
+              <View style={styles.messageMeta}>
+                {isEdited && (
+                  <Typography
+                    size={10}
+                    color={isMe ? "rgba(255,255,255,0.75)" : timeColor}
+                  >
+                    Edited
+                  </Typography>
+                )}
+
+                <Typography
+                  size={10}
+                  color={isMe ? "rgba(255,255,255,0.75)" : timeColor}
+                >
+                  {formatMessageTime(message.createdAt)}
+                </Typography>
+
+                {isMe && !isDeleted && (
+                  <View style={styles.receiptContainer}>
+                    {receiptStatus === "sent" ? (
+                      <CheckMark width={14} height={14} color={receiptColor} />
+                    ) : (
+                      <View style={styles.doubleCheckContainer}>
+                        <CheckMark
+                          width={14}
+                          height={14}
+                          color={receiptColor}
+                        />
+                        <CheckMark
+                          width={14}
+                          height={14}
+                          color={receiptColor}
+                          style={styles.overlapCheck}
+                        />
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {/* Audio Attachment (Hidden if deleted) */}
+            {!isDeleted &&
+              message.kind === "audio" &&
               message.attachments.map((attachment) => {
-                if (attachment.type !== "image") return null;
+                if (attachment.type !== "audio") return null;
 
                 return (
-                  <Image
+                  <AudioMessagePlayer
                     key={attachment.mediaId}
-                    source={{ uri: attachment.url }}
-                    style={styles.messageImage}
+                    uri={attachment.url}
+                    durationMs={attachment.durationMs}
                   />
                 );
               })}
-
-            {Boolean(message.text) &&
-              renderHighlightedText(message.text!, searchQuery)}
-
-            <View style={styles.messageMeta}>
-              <Typography
-                size={10}
-                color={isMe ? "rgba(255,255,255,0.75)" : timeColor}
-              >
-                {formatMessageTime(message.createdAt)}
-              </Typography>
-
-              {isMe && (
-                <View style={styles.receiptContainer}>
-                  {receiptStatus === "sent" ? (
-                    <CheckMark width={14} height={14} color={receiptColor} />
-                  ) : (
-                    <View style={styles.doubleCheckContainer}>
-                      <CheckMark
-                        width={14}
-                        height={14}
-                        color={receiptColor}
-                      />
-                      <CheckMark
-                        width={14}
-                        height={14}
-                        color={receiptColor}
-                        style={styles.overlapCheck}
-                      />
-                    </View>
-                  )}
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* Audio Attachment */}
-          {message.kind === "audio" &&
-            message.attachments.map((attachment) => {
-              if (attachment.type !== "audio") return null;
-
-              return (
-                <AudioMessagePlayer
-                  key={attachment.mediaId}
-                  uri={attachment.url}
-                  durationMs={attachment.durationMs}
-                />
-              );
-            })}
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -276,6 +323,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   messageText: {
+    lineHeight: 20,
+  },
+  deletedText: {
+    fontStyle: "italic",
+    opacity: 0.85,
     lineHeight: 20,
   },
   highlightText: {

@@ -13,6 +13,7 @@ import { useAppTheme } from "@/shared/hooks/useAppTheme";
 import { stopActiveAudio } from "@/features/chats/utils/audioPlaybackController";
 
 import { File } from "expo-file-system"; // to get the file data for media upload
+
 interface Props {
   text: string;
   onChangeText: (val: string) => void;
@@ -21,6 +22,8 @@ interface Props {
   onOpenAttachment: () => void;
   hasAttachments?: boolean;
   isSending?: boolean;
+  isEditing?: boolean;
+  onCancelEdit?: () => void;
 }
 
 export function ChatInputBar({
@@ -31,6 +34,8 @@ export function ChatInputBar({
   onOpenAttachment,
   hasAttachments = false,
   isSending = false,
+  isEditing = false,
+  onCancelEdit,
 }: Props) {
   const { themeColors } = useAppTheme();
 
@@ -42,7 +47,10 @@ export function ChatInputBar({
     typeof setInterval
   > | null>(null);
 
-  const canSend = (text.trim().length > 0 || hasAttachments) && !isSending;
+  const canSend =
+    (isEditing
+      ? text.trim().length > 0
+      : text.trim().length > 0 || hasAttachments) && !isSending;
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
@@ -145,6 +153,36 @@ export function ChatInputBar({
     <View
       style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}
     >
+      {/* Editing Message Banner */}
+      {isEditing && (
+        <View
+          style={[
+            styles.editBanner,
+            { backgroundColor: themeColors.cardBackground },
+          ]}
+        >
+          <View style={styles.editBannerText}>
+            <Typography size={14} weight="bold" color={themeColors.primary}>
+              Editing message
+            </Typography>
+
+            <Typography size={12} color={themeColors.textSecondary}>
+              Make your changes and tap send to save
+            </Typography>
+          </View>
+
+          <TouchableOpacity
+            onPress={onCancelEdit}
+            style={styles.iconBtn}
+            accessibilityLabel="Cancel editing"
+          >
+            <Typography size={22} color={themeColors.textSecondary}>
+              ×
+            </Typography>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {isRecordingState ? (
         <View
           style={[
@@ -179,13 +217,15 @@ export function ChatInputBar({
             { backgroundColor: themeColors.cardBackground },
           ]}
         >
-          <TouchableOpacity onPress={onOpenAttachment} style={styles.iconBtn}>
-            <PaperclipIcon
-              width={22}
-              height={22}
-              color={themeColors.textSecondary}
-            />
-          </TouchableOpacity>
+          {!isEditing && (
+            <TouchableOpacity onPress={onOpenAttachment} style={styles.iconBtn}>
+              <PaperclipIcon
+                width={22}
+                height={22}
+                color={themeColors.textSecondary}
+              />
+            </TouchableOpacity>
+          )}
 
           <TextInput
             style={[styles.input, { color: themeColors.text }]}
@@ -197,9 +237,15 @@ export function ChatInputBar({
             onSubmitEditing={onSendText}
           />
 
-          <TouchableOpacity onPress={startRecording} style={styles.iconBtn}>
-            <MicIcon width={22} height={22} color={themeColors.textSecondary} />
-          </TouchableOpacity>
+          {!isEditing && (
+            <TouchableOpacity onPress={startRecording} style={styles.iconBtn}>
+              <MicIcon
+                width={22}
+                height={22}
+                color={themeColors.textSecondary}
+              />
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={[
@@ -226,7 +272,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     backgroundColor: "transparent",
-    // paddingBottom: 8,
+  },
+  editBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 8,
+  },
+  editBannerText: {
+    flex: 1,
+    gap: 3,
   },
   inputPill: {
     flexDirection: "row",
