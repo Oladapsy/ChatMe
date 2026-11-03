@@ -1,30 +1,29 @@
 import React from "react";
-import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
+import { StyleSheet, View, Image } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Message } from "@/features/chats/types/message";
 
 // Icons
-import DocumentIcon from "@/assets/icons/chat/document.svg";
-import LocationIcon from "@/assets/icons/chat/location.svg";
-import ContactIcon from "@/assets/icons/chat/contact2.svg";
-import PlayIcon from "@/assets/icons/chat/play.svg";
-import PauseIcon from "@/assets/icons/chat/pause.svg";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import CheckMark from "@/assets/icons/chat/check.svg";
 
 import AudioMessagePlayer from "@/features/chats/components/AudioMessagePlayer";
 
 import { formatMessageTime } from "@/features/chats/utils/formatMsgTime";
 import UserPlaceholderIcon from "@/assets/icons/shared/user.svg";
+
 interface Props {
   message: Message;
   isGroup?: boolean;
   searchQuery?: string;
+  receiptStatus?: "sent" | "delivered" | "read";
 }
 
 export function MessageBubble({
   message,
   isGroup = false,
   searchQuery,
+  receiptStatus = "sent",
 }: Props) {
   const { themeColors } = useAppTheme();
 
@@ -34,13 +33,6 @@ export function MessageBubble({
   const receivedBubbleBg = themeColors.cardBackground;
   const receivedTextColor = themeColors.text;
   const timeColor = themeColors.textSecondary;
-
-  // const formatAudioDuration = (sec?: number) => {
-  //   if (!sec) return "0:00";
-  //   const mins = Math.floor(sec / 60);
-  //   const secs = sec % 60;
-  //   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-  // };
 
   // Render text with highlighted search query substrings
   const renderHighlightedText = (text: string, query?: string) => {
@@ -93,6 +85,14 @@ export function MessageBubble({
     );
   };
 
+  // Use themeColors.blue for read status, and a semi-transparent white/grey for sent/delivered
+  const receiptColor =
+    receiptStatus === "read"
+      ? themeColors.blue
+      : isMe
+      ? "rgba(255,255,255,0.7)"
+      : themeColors.textSecondary;
+
   return (
     <View style={[styles.row, isMe ? styles.rowMe : styles.rowOther]}>
       {/* Group Chat Avatar */}
@@ -120,6 +120,7 @@ export function MessageBubble({
           )}
         </View>
       )}
+
       {/* Message Row Layout */}
       <View
         style={[
@@ -146,141 +147,8 @@ export function MessageBubble({
               {message.senderName}
             </Typography>
           )}
-          {/* 1. Image Attachment */}
-          {/* {message.imageUris && message.imageUris.length > 0 && (
-            <View style={styles.imageGridContainer}>
-              {message.imageUris.map((uri, idx) => (
-                <Image
-                  key={`${uri}-${idx}`}
-                  source={{ uri }}
-                  style={styles.messageImage}
-                />
-              ))}
-            </View>
-          )} */}
-          {/* 2. Audio / Voice Note Attachment */}
-          {/* {message.type === "audio" && (
-            <View style={styles.audioContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.playButton,
-                  {
-                    backgroundColor: isMe
-                      ? "rgba(255,255,255,0.25)"
-                      : themeColors.primary,
-                  },
-                ]}
-                onPress={() => console.log("Play audio:", message.audioUri)}
-              >
-                <PlayIcon width={16} height={16} color="white" />
-              </TouchableOpacity>
 
-              <View style={styles.audioWaveformContainer}>
-                <View style={styles.waveformBar} />
-                <View style={[styles.waveformBar, { height: 18 }]} />
-                <View style={[styles.waveformBar, { height: 12 }]} />
-                <View style={[styles.waveformBar, { height: 22 }]} />
-                <View style={[styles.waveformBar, { height: 20 }]} />
-                <View style={[styles.waveformBar, { height: 16 }]} />
-                <View style={[styles.waveformBar, { height: 12 }]} />
-                <View style={[styles.waveformBar, { height: 22 }]} />
-                <View style={[styles.waveformBar, { height: 10 }]} />
-                <View style={[styles.waveformBar, { height: 16 }]} />
-                <View style={[styles.waveformBar, { height: 10 }]} />
-                <View style={[styles.waveformBar, { height: 22 }]} />
-                <View style={[styles.waveformBar, { height: 10 }]} />
-                <View style={[styles.waveformBar, { height: 13 }]} />
-                <View style={[styles.waveformBar, { height: 12 }]} />
-              </View>
-
-              <Typography
-                size={14}
-                color={isMe ? "white" : receivedTextColor}
-                style={styles.audioDuration}
-              >
-                {formatAudioDuration(message.audioDuration)}
-              </Typography>
-            </View>
-          )} */}
-          {/* 3. Document Attachment */}
-          {/* {message.document && (
-            <View style={styles.attachmentCard}>
-              <DocumentIcon
-                width={22}
-                height={22}
-                color={isMe ? "white" : receivedTextColor}
-              />
-              <View style={styles.attachmentDetails}>
-                <Typography
-                  size={14}
-                  weight="bold"
-                  color={isMe ? "white" : receivedTextColor}
-                  numberOfLines={1}
-                >
-                  {message.document.name}
-                </Typography>
-                <Typography
-                  size={12}
-                  color={isMe ? "white" : receivedTextColor}
-                  style={{ opacity: 0.8 }}
-                >
-                  {message.document.size}
-                </Typography>
-              </View>
-            </View>
-          )} */}
-          {/* 4. Location Attachment */}
-          {/* {message.location && (
-            <View style={[styles.attachmentCard, { paddingRight: 12 }]}>
-              <LocationIcon
-                width={22}
-                height={22}
-                color={isMe ? "white" : receivedTextColor}
-              />
-              <Typography
-                size={14}
-                weight="medium"
-                color={isMe ? "white" : receivedTextColor}
-                style={{ marginLeft: 8 }}
-              >
-                {message.location.address || "Shared Location"}
-              </Typography>
-            </View>
-          )} */}
-          {/* 5. Contact Attachment */}
-          {/* {message.contact && (
-            <View style={styles.attachmentCard}>
-              {message.contact.avatar ? (
-                <Image
-                  source={{ uri: message.contact.avatar }}
-                  style={styles.contactAvatar}
-                />
-              ) : (
-                <ContactIcon
-                  width={40}
-                  height={40}
-                  color={isMe ? "white" : receivedTextColor}
-                />
-              )}
-              <View style={styles.attachmentDetails}>
-                <Typography
-                  size={16}
-                  weight="bold"
-                  color={isMe ? "white" : receivedTextColor}
-                >
-                  {message.contact.name}
-                </Typography>
-                <Typography
-                  size={14}
-                  color={isMe ? "white" : receivedTextColor}
-                  style={{ opacity: 0.8 }}
-                >
-                  {message.contact.phoneNumber}
-                </Typography>
-              </View>
-            </View>
-          )} */}
-          {/* 6. Text Message */}
+          {/* Text & Media Message */}
           <View style={styles.messageBody}>
             {message.kind === "image" &&
               message.attachments.map((attachment) => {
@@ -305,9 +173,32 @@ export function MessageBubble({
               >
                 {formatMessageTime(message.createdAt)}
               </Typography>
+
+              {isMe && (
+                <View style={styles.receiptContainer}>
+                  {receiptStatus === "sent" ? (
+                    <CheckMark width={14} height={14} color={receiptColor} />
+                  ) : (
+                    <View style={styles.doubleCheckContainer}>
+                      <CheckMark
+                        width={14}
+                        height={14}
+                        color={receiptColor}
+                      />
+                      <CheckMark
+                        width={14}
+                        height={14}
+                        color={receiptColor}
+                        style={styles.overlapCheck}
+                      />
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
           </View>
-          {/* attachment back */}
+
+          {/* Audio Attachment */}
           {message.kind === "audio" &&
             message.attachments.map((attachment) => {
               if (attachment.type !== "audio") return null;
@@ -321,8 +212,6 @@ export function MessageBubble({
               );
             })}
         </View>
-
-        {/* Timestamp on RIGHT for Received Messages */}
       </View>
     </View>
   );
@@ -357,7 +246,6 @@ const styles = StyleSheet.create({
     height: 40,
   },
   placeholderAvatar: {
-    // backgroundColor: "",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -395,65 +283,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
     overflow: "hidden",
   },
-  imageGridContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 4,
-    marginBottom: 4,
-  },
   messageImage: {
     width: 180,
     height: 130,
     borderRadius: 10,
-  },
-  audioContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    minWidth: 160,
-    paddingVertical: 2,
-  },
-  playButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  audioWaveformContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    marginHorizontal: 10,
-    flex: 1,
-  },
-  waveformBar: {
-    width: 3,
-    height: 14,
-    backgroundColor: "rgba(255,255,255,0.7)",
-    borderRadius: 2,
-  },
-  audioDuration: {
-    marginLeft: "auto",
-  },
-  attachmentCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 4,
-  },
-  attachmentDetails: {
-    marginLeft: 8,
-  },
-  contactAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    marginBottom: 4,
   },
   messageBody: {
     flexShrink: 1,
   },
-
   messageMeta: {
-    alignItems: "flex-end",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    alignSelf: "flex-end",
     marginTop: 2,
+    gap: 4,
+  },
+  receiptContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 2,
+  },
+  doubleCheckContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  overlapCheck: {
+    marginLeft: -6,
   },
 });

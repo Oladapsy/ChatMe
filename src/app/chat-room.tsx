@@ -63,11 +63,14 @@ import { uploadChatAudio } from "@/features/chats/utils/uploadChatMedia";
 import { useChatSocket } from "@/features/chats/hooks/useChatSocket";
 import { useConversations } from "@/features/chats/hooks/useConversations";
 import { useSearchMessages } from "@/features/chats/hooks/useSearchMessages";
+import { useUpdateReceipts } from "@/features/chats/hooks/useUpdateReceipts";
+import { useReceiptFrontiers } from "@/features/chats/hooks/useReceiptFrontiers";
 
 export default function ChatRoomScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
   const [isSending, setIsSending] = useState(false);
+  const [isAtLatest, setIsAtLatest] = useState(true);
 
   const { id, name, avatar, isGroup, membersText, search } =
     useLocalSearchParams<{
@@ -82,7 +85,16 @@ export default function ChatRoomScreen() {
   const { data: currentUser } = useMe();
 
   const activeChatId = id || "1";
+  const [isScreenFocused, setIsScreenFocused] = useState(false);
+
+  const [isAppActive, setIsAppActive] = useState(
+    AppState.currentState === "active",
+  );
+
   useChatSocket(activeChatId);
+
+  const { markDelivered, markRead } = useUpdateReceipts(activeChatId);
+  const { data: receiptFrontiersData } = useReceiptFrontiers(activeChatId);
 
   const { send: sendMessage, isPending: isSendingMessage } =
     useSendMessage(activeChatId);
@@ -224,6 +236,100 @@ export default function ChatRoomScreen() {
   ]);
 
   const latestMessageId = messages[messages.length - 1]?.id;
+  // Calculate receipt status for messages sent by the current user.
+
+  const receiptStatusByMessageId = useMemo(() => {
+    const statuses = new Map<string, "sent" | "delivered" | "read">();
+
+    if (!currentUser?.id || !receiptFrontiersData?.items) {
+      return statuses;
+    }
+
+    // Get receipt progress for everyone except the current user.
+    const recipientFrontiers = receiptFrontiersData.items
+      .filter((frontier) => frontier.userId !== currentUser.id)
+      .map((frontier) => ({
+        deliveredIndex: frontier.delivered
+          ? messages.findIndex(
+              (message) => message.id === frontier.delivered?.messageId,
+            )
+          : -1,
+
+        readIndex: frontier.read
+          ? messages.findIndex(
+              (message) => message.id === frontier.read?.messageId,
+            )
+          : -1,
+      }));
+
+    // Only calculate receipts when we have at least one recipient.
+    if (recipientFrontiers.length === 0) {
+      return statuses;
+    }
+
+    messages.forEach((message, index) => {
+      // Receipt indicators are only displayed on our own messages.
+      if (message.senderId !== currentUser.id) return;
+
+      // Every recipient must have reached this message's frontier.
+      const deliveredToEveryone = recipientFrontiers.every(
+        (frontier) =>
+          frontier.deliveredIndex !== -1 && index <= frontier.deliveredIndex,
+      );
+
+      const readByEveryone = recipientFrontiers.every(
+        (frontier) => frontier.readIndex !== -1 && index <= frontier.readIndex,
+      );
+
+      if (readByEveryone) {
+        statuses.set(message.id, "read");
+      } else if (deliveredToEveryone) {
+        statuses.set(message.id, "delivered");
+      } else {
+        statuses.set(message.id, "sent");
+      }
+    });
+
+    return statuses;
+  }, [messages, receiptFrontiersData, currentUser?.id]);
+
+  // Find the newest message sent by another participant.
+  const latestIncomingMessage = useMemo(() => {
+    if (!currentUser?.id) return undefined;
+
+    const incomingMessages = (
+      messagesData?.pages.flatMap((page) => page.items) ?? []
+    ).filter((message) => message.senderId !== currentUser.id);
+
+    if (incomingMessages.length === 0) return undefined;
+
+    return incomingMessages.reduce((latest, message) =>
+      new Date(message.createdAt).getTime() >
+      new Date(latest.createdAt).getTime()
+        ? message
+        : latest,
+    );
+  }, [messagesData?.pages, currentUser?.id]);
+
+  // Remember the last successfully processed message IDs.
+  const lastDeliveredMessageIdRef = useRef<string | null>(null);
+  const lastReadMessageIdRef = useRef<string | null>(null);
+
+  // Prevent overlapping receipt requests.
+  const deliveredInFlightRef = useRef(false);
+  const readInFlightRef = useRef(false);
+
+  // Keep the latest message and current conditions available to processors.
+  const latestIncomingMessageIdRef = useRef<string | null>(null);
+  const canMarkDeliveredRef = useRef(false);
+  const canMarkReadRef = useRef(false);
+  const activeChatIdRef = useRef(activeChatId);
+
+  latestIncomingMessageIdRef.current = latestIncomingMessage?.id ?? null;
+  canMarkDeliveredRef.current = isScreenFocused && isAppActive && !isSearching;
+  canMarkReadRef.current =
+    isScreenFocused && isAppActive && !isSearching && isAtLatest;
+  activeChatIdRef.current = activeChatId;
 
   const [messageText, setMessageText] = useState("");
   const [selectedImageUris, setSelectedImageUris] = useState<string[]>([]);
@@ -307,8 +413,15 @@ export default function ChatRoomScreen() {
 
   // Scroll handler for older messages pagination (reaching the top)
   const handleMessageScroll = (event: any) => {
-    const { contentOffset } = event.nativeEvent;
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
 
+    // Check whether the user is near the latest message.
+    const distanceFromBottom =
+      contentSize.height - layoutMeasurement.height - contentOffset.y;
+
+    setIsAtLatest(distanceFromBottom <= 80);
+
+    // Load older messages when the user reaches the top.
     if (
       contentOffset.y <= 50 &&
       hasNextPage &&
@@ -530,6 +643,102 @@ export default function ChatRoomScreen() {
     setSelectedImageUris((prev) => prev.filter((uri) => uri !== uriToRemove));
   };
 
+  // Mark incoming messages as delivered while this conversation is active.
+  const processDeliveredReceipts = useCallback(async () => {
+    if (deliveredInFlightRef.current) return;
+
+    deliveredInFlightRef.current = true;
+    const conversationId = activeChatId;
+
+    try {
+      while (
+        canMarkDeliveredRef.current &&
+        activeChatIdRef.current === conversationId
+      ) {
+        const messageId = latestIncomingMessageIdRef.current;
+
+        if (!messageId || lastDeliveredMessageIdRef.current === messageId) {
+          break;
+        }
+
+        await markDelivered({ throughMessageId: messageId });
+        lastDeliveredMessageIdRef.current = messageId;
+      }
+    } catch (error) {
+      console.error("DELIVERED RECEIPT ERROR:", error);
+    } finally {
+      deliveredInFlightRef.current = false;
+    }
+  }, [activeChatId, markDelivered]);
+
+  // Mark incoming messages as read only when the user is at the latest message.
+  const processReadReceipts = useCallback(async () => {
+    if (readInFlightRef.current) return;
+
+    readInFlightRef.current = true;
+    const conversationId = activeChatId;
+
+    try {
+      while (
+        canMarkReadRef.current &&
+        activeChatIdRef.current === conversationId
+      ) {
+        const messageId = latestIncomingMessageIdRef.current;
+
+        if (!messageId || lastReadMessageIdRef.current === messageId) {
+          break;
+        }
+
+        await markRead({ throughMessageId: messageId });
+        lastReadMessageIdRef.current = messageId;
+      }
+    } catch (error) {
+      console.error("READ RECEIPT ERROR:", error);
+    } finally {
+      readInFlightRef.current = false;
+    }
+  }, [activeChatId, markRead]);
+
+  useEffect(() => {
+    void processDeliveredReceipts();
+  }, [
+    processDeliveredReceipts,
+    latestIncomingMessage?.id,
+    isScreenFocused,
+    isAppActive,
+    isSearching,
+  ]);
+
+  useEffect(() => {
+    void processReadReceipts();
+  }, [
+    processReadReceipts,
+    latestIncomingMessage?.id,
+    isScreenFocused,
+    isAppActive,
+    isSearching,
+    isAtLatest,
+  ]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsScreenFocused(true);
+
+      return () => {
+        setIsScreenFocused(false);
+      };
+    }, []),
+  );
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      setIsAppActive(nextState === "active");
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
   const handleHeaderPress = () => {
     if (isGroupChat) {
       router.push({
@@ -673,6 +882,7 @@ export default function ChatRoomScreen() {
                     message={item}
                     isGroup={isGroupChat}
                     searchQuery={isSearching ? searchQuery : undefined}
+                    receiptStatus={receiptStatusByMessageId.get(item.id)}
                   />
                 );
               }}
