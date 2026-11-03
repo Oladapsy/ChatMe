@@ -6,6 +6,9 @@ import type {
 import type {
   MessageHistoryResponse,
   Message,
+  UpdateReceiptPayload,
+  ReceiptUpdateResponse,
+  ReceiptFrontiersResponse,
 } from "@/features/chats/types/message";
 
 export const getConversations = async (): Promise<ConversationListResponse> => {
@@ -82,15 +85,30 @@ export const unfavoriteConversation = async (
 };
 
 // get messages for a conversation
+// added limit and cursor to get msg
+export interface GetMessagesParams {
+  limit?: number;
+  cursor?: string;
+}
+
 export const getMessages = async (
   conversationId: string,
+  params: GetMessagesParams = {},
 ): Promise<MessageHistoryResponse> => {
   const response = await api.get<MessageHistoryResponse>(
     `/conversations/${conversationId}/messages`,
+    {
+      params: {
+        limit: params.limit ?? 50,
+        ...(params.cursor ? { cursor: params.cursor } : {}),
+      },
+    },
   );
 
   return response.data;
 };
+
+
 
 // send messages to a conversation payload
 export interface SendMessagePayload {
@@ -99,6 +117,42 @@ export interface SendMessagePayload {
   text?: string;
   attachmentMediaIds?: string[];
 }
+
+
+// new msg receipts
+export const markMessagesDelivered = async (
+  conversationId: string,
+  payload: UpdateReceiptPayload,
+): Promise<ReceiptUpdateResponse> => {
+  const response = await api.put(
+    `/conversations/${conversationId}/receipts/delivered`,
+    payload,
+  );
+
+  return response.data;
+};
+
+export const markMessagesRead = async (
+  conversationId: string,
+  payload: UpdateReceiptPayload,
+): Promise<ReceiptUpdateResponse> => {
+  const response = await api.put(
+    `/conversations/${conversationId}/receipts/read`,
+    payload,
+  );
+
+  return response.data;
+};
+
+export const getReceiptFrontiers = async (
+  conversationId: string,
+): Promise<ReceiptFrontiersResponse> => {
+  const response = await api.get(
+    `/conversations/${conversationId}/receipts`,
+  );
+
+  return response.data;
+};
 
 // send msgs to a convereation function
 export const sendMessage = async (
@@ -232,7 +286,6 @@ export async function updateGroupAvatar(
   return response.data;
 }
 
-
 // Add members to a group
 export interface AddGroupMembersPayload {
   participantIds: string[];
@@ -250,7 +303,6 @@ export const addGroupMembers = async (
   return response.data;
 };
 
-
 /* Group member management */
 
 // Remove a member from a group
@@ -258,9 +310,7 @@ export const removeGroupMember = async (
   conversationId: string,
   memberId: string,
 ): Promise<void> => {
-  await api.delete(
-    `/conversations/${conversationId}/members/${memberId}`,
-  );
+  await api.delete(`/conversations/${conversationId}/members/${memberId}`);
 };
 
 // Promote a member to admin or demote an admin to member
@@ -299,16 +349,11 @@ export const transferGroupOwnership = async (
 };
 
 // Leave a group
-export const leaveGroup = async (
-  conversationId: string,
-): Promise<void> => {
+export const leaveGroup = async (conversationId: string): Promise<void> => {
   await api.post(`/conversations/${conversationId}/leave`);
 };
 
-
 // Delete a group (owner only)
-export const deleteGroup = async (
-  conversationId: string,
-): Promise<void> => {
+export const deleteGroup = async (conversationId: string): Promise<void> => {
   await api.delete(`/conversations/${conversationId}`);
 };

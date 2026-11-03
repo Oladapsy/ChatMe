@@ -30,7 +30,6 @@ import ChatBgIcon from "@/assets/icons/chat/ChatBg.svg";
 
 // Types & Data
 import { MessageBubble } from "@/features/chats/components/MessageBubble";
-// import { MOCK_CHATS } from "@/features/chats/data/mockChats";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 // get msgs for a conversation
@@ -45,10 +44,7 @@ import { useBlockedUsers } from "@/features/contacts/hooks/useBlockedUsers";
 import { useUnblockUser } from "@/features/contacts/hooks/useUnblockUser";
 
 // format the chat date
-import {
-  processMessages,
-  type ProcessedMessage,
-} from "@/features/chats/utils/processMessages";
+import { processMessages } from "@/features/chats/utils/processMessages";
 import { MessageDateSeparator } from "@/features/chats/components/MessageDateSeparator";
 
 // abstract the image upload
@@ -83,7 +79,13 @@ export default function ChatRoomScreen() {
   const { send: sendMessage, isPending: isSendingMessage } =
     useSendMessage(activeChatId);
 
-  const { data: messagesData } = useMessages(activeChatId);
+  // Pagination properties from useMessages
+  const {
+    data: messagesData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useMessages(activeChatId);
 
   // Updated block & conversation hooks
   const {
@@ -142,9 +144,9 @@ export default function ChatRoomScreen() {
     isFetching: isServerSearching,
     isError: isServerSearchError,
     refetch: refetchSearchMessages,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
+    fetchNextPage: fetchNextSearchPage,
+    hasNextPage: hasNextSearchPage,
+    isFetchingNextPage: isFetchingNextSearchPage,
   } = useSearchMessages(activeChatId, isSearching ? debouncedSearchQuery : "");
 
   // Sync state if navigation parameter changes dynamically
@@ -160,9 +162,6 @@ export default function ChatRoomScreen() {
       setAttachmentVisible(false);
     }
   }, [isContactBlocked, isBlockStatusLoading, isBlockStatusUnavailable]);
-
-  // Find matching chat details from mock data
-  // Find matching chat details from mock data
 
   const isGroupChat =
     currentConversation?.type === "group" || isGroup === "true";
@@ -186,7 +185,8 @@ export default function ChatRoomScreen() {
   const groupMembers = undefined;
 
   const messages = useMemo(() => {
-    const historyMessages = messagesData?.items ?? [];
+    const historyMessages =
+      messagesData?.pages.flatMap((page) => page.items) ?? [];
 
     const query = searchQuery.trim();
     const searchPagesMatchCurrentQuery =
@@ -208,12 +208,14 @@ export default function ChatRoomScreen() {
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
   }, [
-    messagesData?.items,
+    messagesData?.pages,
     serverSearchData?.pages,
     isSearching,
     searchQuery,
     debouncedSearchQuery,
   ]);
+
+  const latestMessageId = messages[messages.length - 1]?.id;
 
   const [messageText, setMessageText] = useState("");
   const [selectedImageUris, setSelectedImageUris] = useState<string[]>([]);
@@ -221,11 +223,18 @@ export default function ChatRoomScreen() {
 
   const { takePhoto, pickImages } = useCameraHandler();
   const flatListRef = useRef<FlatList>(null);
+  const isLoadingOlderRef = useRef(false);
   const sendInFlightRef = useRef(false);
 
   const processedMessages = useMemo(() => {
     return processMessages(messages, currentUser?.id);
   }, [messages, currentUser?.id]);
+
+  useEffect(() => {
+    if (!isSearching && latestMessageId) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }
+  }, [latestMessageId, isSearching]);
 
   // Calculate indices of messages that match current search query
   const matchingIndices = useMemo(() => {
@@ -288,15 +297,33 @@ export default function ChatRoomScreen() {
     }
   }, [currentMatchIndex, matchingIndices, isSearching]);
 
+  // Scroll handler for older messages pagination (reaching the top)
+  const handleMessageScroll = (event: any) => {
+    const { contentOffset } = event.nativeEvent;
+
+    if (
+      contentOffset.y <= 50 &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      !isLoadingOlderRef.current
+    ) {
+      isLoadingOlderRef.current = true;
+
+      fetchNextPage().finally(() => {
+        isLoadingOlderRef.current = false;
+      });
+    }
+  };
+
   const handleNextMatch = async () => {
     if (matchingIndices.length === 0) return;
 
     const isAtLastLoadedMatch =
       currentMatchIndex === matchingIndices.length - 1;
 
-    if (isAtLastLoadedMatch && hasNextPage && !isFetchingNextPage) {
+    if (isAtLastLoadedMatch && hasNextSearchPage && !isFetchingNextSearchPage) {
       try {
-        const result = await fetchNextPage();
+        const result = await fetchNextSearchPage();
 
         if (result.isError) {
           Alert.alert(
@@ -617,6 +644,11 @@ export default function ChatRoomScreen() {
               ref={flatListRef}
               data={processedMessages}
               keyExtractor={(item) => item.id}
+              onScroll={handleMessageScroll}
+              scrollEventThrottle={16}
+              maintainVisibleContentPosition={{
+                minIndexForVisible: 0,
+              }}
               onScrollToIndexFailed={(info) => {
                 flatListRef.current?.scrollToOffset({
                   offset: info.averageItemLength * info.index,
@@ -640,11 +672,6 @@ export default function ChatRoomScreen() {
                 paddingVertical: 10,
                 flexGrow: 1,
                 justifyContent: "flex-end",
-              }}
-              onContentSizeChange={() => {
-                if (!isSearching) {
-                  flatListRef.current?.scrollToEnd({ animated: true });
-                }
               }}
             />
           )}
@@ -817,7 +844,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     gap: 12,
   },
-
   searchRetryButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,

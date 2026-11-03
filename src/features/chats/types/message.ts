@@ -112,3 +112,36 @@ export interface MessageHistoryResponse {
   items: Message[];
   pageInfo: MessagePageInfo;
 }
+
+export interface UpdateReceiptPayload {
+  throughMessageId: string;
+}
+
+export interface ReceiptBoundary {
+  messageId: string;
+  at: string;
+}
+
+export interface ReceiptUpdateResponse {
+  conversationId: string;
+  status: "delivered" | "read";
+  throughMessageId: string;
+  at: string;
+  changed: boolean;
+  unreadCount: number;
+  version: number;
+  delivered: ReceiptBoundary;
+  read: ReceiptBoundary | null;
+}
+
+export interface ReceiptFrontier {
+  userId: string;
+  version: number;
+  delivered: ReceiptBoundary | null;
+  read: ReceiptBoundary | null;
+}
+
+export interface ReceiptFrontiersResponse {
+  conversationId: string;
+  items: ReceiptFrontier[];
+}
