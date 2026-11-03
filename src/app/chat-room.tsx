@@ -1,4 +1,12 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
+import { AppState } from "react-native";
+import { useFocusEffect } from "expo-router";
 import {
   StyleSheet,
   View,
