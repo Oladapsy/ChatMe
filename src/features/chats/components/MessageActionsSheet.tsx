@@ -4,6 +4,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  Text,
   useWindowDimensions,
 } from "react-native";
 
@@ -25,7 +26,10 @@ interface Props {
   onReply: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onReact: (emoji: string) => void;
 }
+
+const REACTION_EMOJIS = ["❤️", "👍", "😂", "😮", "😢", "🙏"];
 
 export function MessageActionsSheet({
   visible,
@@ -35,13 +39,17 @@ export function MessageActionsSheet({
   onReply,
   onEdit,
   onDelete,
+  onReact,
 }: Props) {
   const { themeColors } = useAppTheme();
   const { width, height } = useWindowDimensions();
 
-  const MENU_WIDTH = 220;
-  const MENU_HEIGHT = isOwnMessage ? 168 : 56;
+  const MENU_WIDTH = 260;
+  const baseHeight = isOwnMessage ? 168 : 56;
+  const MENU_HEIGHT = baseHeight + 60;
+  
   const SCREEN_PADDING = 16;
+  const TOP_PADDING = 60;
   const GAP = 8;
 
   // Keep the menu within the horizontal screen boundaries.
@@ -58,7 +66,7 @@ export function MessageActionsSheet({
   // Prefer placing the menu below the selected message.
   // If there isn't enough room, position it above.
   const menuTop = position
-    ? position.y + position.height + GAP + MENU_HEIGHT <= height
+    ? position.y + position.height + GAP + MENU_HEIGHT <= height - SCREEN_PADDING
       ? position.y + position.height + GAP
       : position.y - MENU_HEIGHT - GAP
     : height / 2;
@@ -80,7 +88,7 @@ export function MessageActionsSheet({
             {
               backgroundColor: themeColors.cardBackground,
               top: Math.max(
-                SCREEN_PADDING,
+                TOP_PADDING,
                 Math.min(menuTop, height - MENU_HEIGHT - SCREEN_PADDING),
               ),
               left: menuLeft,
@@ -88,6 +96,26 @@ export function MessageActionsSheet({
             },
           ]}
         >
+          {/* Reaction Emoji Bar */}
+          <View style={styles.reactionsRow}>
+            {REACTION_EMOJIS.map((emoji) => (
+              <Pressable
+                key={emoji}
+                onPress={() => onReact(emoji)}
+                style={styles.reactionButton}
+              >
+                <Text style={styles.emojiText}>{emoji}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <View
+            style={[
+              styles.divider,
+              { backgroundColor: themeColors.textSecondary },
+            ]}
+          />
+
           <Pressable style={styles.action} onPress={onReply}>
             <Typography size={16} color={themeColors.text}>
               Reply
@@ -136,7 +164,6 @@ const styles = StyleSheet.create({
   },
   menu: {
     position: "absolute",
-    width: 220,
     borderRadius: 14,
     paddingVertical: 6,
     elevation: 10,
@@ -145,9 +172,27 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 5 },
   },
+  reactionsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingTop: 2,
+    paddingBottom: 10,
+  },
+  reactionButton: {
+    padding: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "visible",
+  },
+  emojiText: {
+    fontSize: 26,
+    lineHeight: 30,
+  },
   action: {
     paddingHorizontal: 18,
-    paddingVertical: 15,
+    paddingVertical: 14,
   },
   divider: {
     height: StyleSheet.hairlineWidth,

@@ -12,6 +12,7 @@ import { ReplyQuote } from "@/features/chats/components/ReplyQuote";
 
 import { formatMessageTime } from "@/features/chats/utils/formatMsgTime";
 import UserPlaceholderIcon from "@/assets/icons/shared/user.svg";
+import { MessageReactions } from "@/features/chats/components/MessageReactions";
 
 interface Props {
   message: Message;
@@ -27,6 +28,8 @@ interface Props {
   }) => void;
   onJumpToMessage?: (messageId: string) => void;
   isHighlighted?: boolean;
+  onRemoveReaction?: (messageId: string) => void;
+  isRemovingReaction?: boolean;
 }
 
 export function MessageBubble({
@@ -38,6 +41,8 @@ export function MessageBubble({
   currentUserId,
   onJumpToMessage,
   isHighlighted = false,
+  onRemoveReaction,
+  isRemovingReaction,
 }: Props) {
   const { themeColors } = useAppTheme();
 
@@ -283,6 +288,14 @@ export function MessageBubble({
                 );
               })}
           </TouchableOpacity>
+          {!message.deletedAt && (
+            <MessageReactions
+              reactions={message.reactions}
+              currentUserId={currentUserId}
+              onRemoveReaction={() => onRemoveReaction?.(message.id)}
+              isRemovingReaction={isRemovingReaction}
+            />
+          )}
         </View>
       </View>
     </View>

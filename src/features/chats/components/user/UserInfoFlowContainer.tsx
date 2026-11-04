@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { useBlockedUsers } from "@/features/contacts/hooks/useBlockedUsers";
 import { useBlockUser } from "@/features/contacts/hooks/useBlockUser";
 import { useUnblockUser } from "@/features/contacts/hooks/useUnblockUser";
+import { useClearConversationMessages } from "@/features/chats/hooks/useClearConversationMessages";
 
 type ActiveTab = "Main" | "Photo" | "Star" | "Links";
 
@@ -38,6 +39,9 @@ export function UserInfoFlowContainer({
   onSearchPress,
 }: Props) {
   const router = useRouter();
+  const { clearMessages, isClearingMessages } = useClearConversationMessages(
+    conversationId ?? "",
+  );
   const [activeTab, setActiveTab] = useState<ActiveTab>("Main");
 
   // 1. Maintain local profile state (specifically tracking isMuted)
@@ -54,6 +58,36 @@ export function UserInfoFlowContainer({
 
   const isBlockActionPending =
     blockMutation.isPending || unblockMutation.isPending;
+
+  const handleClearChat = () => {
+    if (!conversationId || isClearingMessages) return;
+
+    Alert.alert(
+      "Clear this chat?",
+      "Your message history will be cleared from this conversation. This won't delete messages for the other person.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear Chat",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearMessages();
+
+              router.replace({
+                pathname: "/chat-room",
+                params: { id: conversationId },
+              });
+            } catch (error) {
+              console.error("CLEAR CHAT ERROR:", error);
+
+              Alert.alert("Unable to clear chat", "Please try again.");
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const handleBlockPress = () => {
     if (isLoadingBlocks || isBlockActionPending) return;
@@ -168,6 +202,8 @@ export function UserInfoFlowContainer({
       onLinksPress={() => setActiveTab("Links")}
       onToggleNotifications={handleToggleNotifications}
       onBlockPress={handleBlockPress}
+      onClearChat={handleClearChat}
+      isClearingChat={isClearingMessages}
     />
   );
 }

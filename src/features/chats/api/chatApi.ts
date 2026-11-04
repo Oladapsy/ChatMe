@@ -397,3 +397,55 @@ export const getMessageById = async (
 
   return response.data;
 };
+
+// emoji or reaction adding...
+export interface SetMessageReactionPayload {
+  emoji: string;
+}
+
+export const setMessageReaction = async (
+  conversationId: string,
+  messageId: string,
+  payload: SetMessageReactionPayload,
+): Promise<Message> => {
+  const response = await api.put<Message>(
+    `/conversations/${conversationId}/messages/${messageId}/reaction`,
+    payload,
+  );
+
+  return response.data;
+};
+
+
+export const removeMessageReaction = async (
+  conversationId: string,
+  messageId: string,
+): Promise<Message> => {
+  const response = await api.delete<Message>(
+    `/conversations/${conversationId}/messages/${messageId}/reaction`,
+  );
+
+  return response.data;
+};
+
+
+// clear chat history
+
+export interface ClearConversationMessagesResponse {
+  conversationId: string;
+  changed: boolean;
+  clearedAt: string | null;
+  clearedThroughMessageId: string | null;
+}
+
+
+export const clearConversationMessages = async (
+  conversationId: string,
+): Promise<ClearConversationMessagesResponse> => {
+  const response =
+    await api.delete<ClearConversationMessagesResponse>(
+      `/conversations/${conversationId}/messages`,
+    );
+
+  return response.data;
+};

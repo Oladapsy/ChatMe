@@ -10,7 +10,6 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { Typography } from "@/shared/components/Typography";
 
-
 type MemberRole = "owner" | "admin" | "member";
 
 interface Props {
@@ -27,6 +26,9 @@ interface Props {
   // for delete group
   onDeleteGroup?: () => void;
   deletingGroup?: boolean;
+
+  onClearChat?: () => void;
+  isClearingChat?: boolean;
 }
 
 export function GroupDetailScreen({
@@ -42,6 +44,8 @@ export function GroupDetailScreen({
   leavingGroup,
   onDeleteGroup,
   deletingGroup,
+  onClearChat,
+  isClearingChat = false,
 }: Props) {
   const { isDark, themeColors } = useAppTheme();
 
@@ -117,6 +121,24 @@ export function GroupDetailScreen({
           onMemberPress={handleMemberPress}
           onMembersAdded={handleMembersAdded}
         />
+
+        {/* Clear Group Chat */}
+        {onClearChat && (
+          <TouchableOpacity
+            onPress={onClearChat}
+            disabled={isClearingChat}
+            style={[
+              styles.leaveGroupButton,
+              { borderColor: isDark ? "#563333" : "#F2DADA" },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Clear group chat"
+          >
+            <Typography size={15} weight="medium" color="#DD524C">
+              {isClearingChat ? "Clearing chat..." : "Clear Chat"}
+            </Typography>
+          </TouchableOpacity>
+        )}
         {/* Leave Group */}
         {currentUserRole != "owner" && onLeaveGroup && (
           <TouchableOpacity

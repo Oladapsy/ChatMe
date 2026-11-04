@@ -71,6 +71,10 @@ import { useMessageActions } from "@/features/chats/hooks/useMessageActions";
 import type { Message } from "@/features/chats/types/message";
 import { MessageActionsSheet } from "@/features/chats/components/MessageActionsSheet";
 import { useQueryClient } from "@tanstack/react-query";
+// emoji
+import { useSetMessageReaction } from "@/features/chats/hooks/useSetMessageReaction";
+import { useRemoveMessageReaction } from "@/features/chats/hooks/useRemoveMessageReaction";
+
 type MessagePosition = {
   x: number;
   y: number;
@@ -115,6 +119,10 @@ export default function ChatRoomScreen() {
   const activeChatId = id || "1";
   const { editMessage, deleteMessage, isEditingMessage, isDeletingMessage } =
     useMessageActions(activeChatId);
+  const { setReaction, isSettingReaction } =
+    useSetMessageReaction(activeChatId);
+  const { removeReaction, isRemovingReaction } =
+    useRemoveMessageReaction(activeChatId);
   const [isScreenFocused, setIsScreenFocused] = useState(false);
 
   const [isAppActive, setIsAppActive] = useState(
@@ -209,6 +217,25 @@ export default function ChatRoomScreen() {
     isFetchingNextPage: isFetchingNextSearchPage,
   } = useSearchMessages(activeChatId, isSearching ? debouncedSearchQuery : "");
 
+  const handleRemoveReaction = async (messageId: string) => {
+    if (isRemovingReaction) return;
+
+    try {
+      if (!currentUser?.id) return;
+
+      await removeReaction({
+        messageId,
+        userId: currentUser.id,
+      });
+    } catch (error) {
+      console.error("REMOVE REACTION ERROR:", error);
+
+      Alert.alert(
+        "Unable to remove reaction",
+        "Something went wrong. Please try again.",
+      );
+    }
+  };
   // Sync state if navigation parameter changes dynamically
   useEffect(() => {
     if (search === "true") {
@@ -501,6 +528,31 @@ export default function ChatRoomScreen() {
 
     // Store the message we're replying to
     setReplyingToMessage(messageToReply);
+  };
+
+  const handleReactToMessage = async (emoji: string) => {
+    if (!selectedMessage || isSettingReaction) return;
+
+    const messageId = selectedMessage.id;
+
+    handleCloseMessageActions();
+
+    try {
+      if (!currentUser?.id) return;
+
+      await setReaction({
+        messageId,
+        emoji,
+        userId: currentUser.id,
+      });
+    } catch (error) {
+      console.error("REACTION ERROR:", error);
+
+      Alert.alert(
+        "Reaction failed",
+        "Unable to react to this message. Please try again.",
+      );
+    }
   };
 
   const handleCancelReply = () => {
@@ -1300,6 +1352,8 @@ export default function ChatRoomScreen() {
                     currentUserId={currentUser?.id}
                     onJumpToMessage={handleJumpToMessage}
                     isHighlighted={highlightedMessageId === item.id}
+                    onRemoveReaction={handleRemoveReaction}
+                    isRemovingReaction={isRemovingReaction}
                   />
                 );
               }}
@@ -1415,6 +1469,7 @@ export default function ChatRoomScreen() {
           onReply={handleReplyToMessage}
           onEdit={handleEditMessage}
           onDelete={handleDeleteMessage}
+          onReact={handleReactToMessage}
         />
       </KeyboardAvoidingView>
 

@@ -7,6 +7,7 @@ import { UserAboutMediaSection } from "@/features/chats/components/user/UserAbou
 import { Typography } from "@/shared/components/Typography";
 import BlockIcon from "@/assets/icons/shared/Block.svg";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import Trash2 from "@/assets/icons/chat/trash.svg";
 
 interface Props {
   profile: UserProfile;
@@ -21,6 +22,8 @@ interface Props {
   onLinksPress: () => void;
   onToggleNotifications: (value: boolean) => void;
   onBlockPress: () => void;
+  onClearChat: () => void;
+  isClearingChat: boolean;
 }
 
 export function UserProfileDetailScreen({
@@ -36,6 +39,8 @@ export function UserProfileDetailScreen({
   onLinksPress,
   onToggleNotifications,
   onBlockPress,
+  onClearChat,
+  isClearingChat,
 }: Props) {
   const { isDark, themeColors } = useAppTheme();
 
@@ -82,6 +87,29 @@ export function UserProfileDetailScreen({
           onLinksPress={onLinksPress}
           onToggleNotifications={onToggleNotifications}
         />
+
+        <View
+          style={[
+            styles.divider,
+            { backgroundColor: isDark ? "#163043" : "#EAEEF2" },
+          ]}
+        />
+
+        {/* Clear Chat */}
+        <TouchableOpacity
+          style={[styles.blockRow, { backgroundColor: themeColors.background }]}
+          activeOpacity={0.7}
+          disabled={isClearingChat}
+          onPress={onClearChat}
+          accessibilityRole="button"
+          accessibilityLabel="Clear chat history"
+        >
+          <Trash2 width={22} height={22} color="#DD524C" />
+
+          <Typography size={15} weight="bold" color="#DD524C">
+            {isClearingChat ? "Clearing chat..." : "Clear Chat"}
+          </Typography>
+        </TouchableOpacity>
 
         <View
           style={[

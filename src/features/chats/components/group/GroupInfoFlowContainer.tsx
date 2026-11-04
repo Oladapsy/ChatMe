@@ -30,6 +30,8 @@ interface Props {
   leavingGroup?: boolean;
   onDeleteGroup?: () => void;
   deletingGroup?: boolean;
+  onClearChat?: () => void;
+  isClearingChat?: boolean;
 }
 
 export function GroupInfoFlowContainer({
@@ -44,6 +46,8 @@ export function GroupInfoFlowContainer({
   leavingGroup = false,
   onDeleteGroup,
   deletingGroup = false,
+  onClearChat,
+  isClearingChat = false,
 }: Props) {
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("details");
 
@@ -68,6 +72,8 @@ export function GroupInfoFlowContainer({
           onEditGroup={() => setCurrentScreen("edit")}
           onDeleteGroup={onDeleteGroup}
           deletingGroup={deletingGroup}
+          onClearChat={onClearChat}
+          isClearingChat={isClearingChat}
         />
       )}
 

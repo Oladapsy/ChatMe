@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -18,6 +17,7 @@ import {
   MOCK_STARRED_MESSAGES,
 } from "@/features/chats/data/mockGroupDetails";
 import { mapGroupConversationToDetails } from "@/features/chats/utils/mapGroupConversationToDetails";
+import { useClearConversationMessages } from "@/features/chats/hooks/useClearConversationMessages";
 
 export default function GroupDetailsRoute() {
   const router = useRouter();
@@ -25,11 +25,44 @@ export default function GroupDetailsRoute() {
 
   const { data, isPending, isError, error } = useGroupDetails(id);
 
+  const { clearMessages, isClearingMessages } =
+    useClearConversationMessages(id);
+
   const updateGroupMutation = useUpdateGroup();
   const leaveGroupMutation = useLeaveGroup(id);
   const deleteGroupMutation = useDeleteGroup(id);
 
   const [saving, setSaving] = useState(false);
+
+  const handleClearGroupChat = () => {
+    if (!id || isClearingMessages) return;
+
+    Alert.alert(
+      "Clear group chat?",
+      "This will clear the group's message history for you only. Other members will still see their messages, and you'll remain in the group.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear Chat",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearMessages();
+
+              router.replace({
+                pathname: "/chat-room",
+                params: { id },
+              });
+            } catch (error) {
+              console.error("CLEAR GROUP CHAT ERROR:", error);
+
+              Alert.alert("Unable to clear group chat", "Please try again.");
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const handleSaveGroup = async ({
     name,
@@ -189,6 +222,8 @@ export default function GroupDetailsRoute() {
       leavingGroup={leaveGroupMutation.isPending}
       onDeleteGroup={handleDeleteGroup}
       deletingGroup={deleteGroupMutation.isPending}
+      onClearChat={handleClearGroupChat}
+      isClearingChat={isClearingMessages}
     />
   );
 }
