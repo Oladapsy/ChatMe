@@ -597,9 +597,28 @@ export default function ChatRoomScreen() {
 
   // Send text handler with comprehensive status checks and error logging
   const handleSend = async () => {
+    // Prevent overlapping send and edit operations
+    if (sendInFlightRef.current || isSending || isEditingMessage) {
+      return;
+    }
+
     // EDIT MODE: Update an existing message instead of sending a new one
     if (editingMessage) {
-      if (isEditingMessage) return;
+      if (
+        isContactBlocked ||
+        isBlockStatusLoading ||
+        isBlockStatusUnavailable
+      ) {
+        return;
+      }
+
+      if (selectedImageUris.length > 0) {
+        Alert.alert(
+          "Attachments selected",
+          "Please remove your pending image attachments before saving this edit.",
+        );
+        return;
+      }
 
       const updatedText = messageText.trim();
 
@@ -621,6 +640,8 @@ export default function ChatRoomScreen() {
         setMessageText("");
         return;
       }
+
+      sendInFlightRef.current = true;
 
       try {
         await editMessage({
@@ -728,6 +749,8 @@ export default function ChatRoomScreen() {
           "Edit failed",
           "Unable to edit this message. Please try again.",
         );
+      } finally {
+        sendInFlightRef.current = false;
       }
 
       return;
