@@ -65,7 +65,7 @@ import { useConversations } from "@/features/chats/hooks/useConversations";
 import { useSearchMessages } from "@/features/chats/hooks/useSearchMessages";
 import { useUpdateReceipts } from "@/features/chats/hooks/useUpdateReceipts";
 import { useReceiptFrontiers } from "@/features/chats/hooks/useReceiptFrontiers";
-
+import { useMarkConversationAsRead } from "@/features/chats/hooks/useMarkConversationAsRead";
 // edit msg and delete
 import { useMessageActions } from "@/features/chats/hooks/useMessageActions";
 import type { Message } from "@/features/chats/types/message";
@@ -133,6 +133,8 @@ export default function ChatRoomScreen() {
 
   const { markDelivered, markRead } = useUpdateReceipts(activeChatId);
   const { data: receiptFrontiersData } = useReceiptFrontiers(activeChatId);
+  const { mutateAsync: markConversationAsRead } =
+    useMarkConversationAsRead(activeChatId);
 
   const { send: sendMessage, isPending: isSendingMessage } =
     useSendMessage(activeChatId);
@@ -1181,6 +1183,57 @@ export default function ChatRoomScreen() {
     isAtLatest,
   ]);
 
+  // Mark the conversation as read when viewing its latest messages.
+  const lastMarkedConversationRef = useRef<string | null>(null);
+  const conversationReadInFlightRef = useRef(false);
+
+  useEffect(() => {
+    if (
+      !isScreenFocused ||
+      !isAppActive ||
+      isSearching ||
+      !isAtLatest ||
+      !messagesData ||
+      !currentUser?.id ||
+      !id
+    ) {
+      return;
+    }
+
+    const readKey = `${activeChatId}:${latestIncomingMessage?.id ?? "empty"}`;
+
+    if (
+      conversationReadInFlightRef.current ||
+      lastMarkedConversationRef.current === readKey
+    ) {
+      return;
+    }
+
+    conversationReadInFlightRef.current = true;
+
+    void markConversationAsRead()
+      .then(() => {
+        lastMarkedConversationRef.current = readKey;
+      })
+      .catch((error) => {
+        console.error("MARK CONVERSATION READ ERROR:", error);
+      })
+      .finally(() => {
+        conversationReadInFlightRef.current = false;
+      });
+  }, [
+    activeChatId,
+    id,
+    currentUser?.id,
+    messagesData,
+    latestIncomingMessage?.id,
+    isScreenFocused,
+    isAppActive,
+    isSearching,
+    isAtLatest,
+    markConversationAsRead,
+  ]);
+  
   useFocusEffect(
     useCallback(() => {
       setIsScreenFocused(true);

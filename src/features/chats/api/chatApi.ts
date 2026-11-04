@@ -449,3 +449,21 @@ export const clearConversationMessages = async (
 
   return response.data;
 };
+
+// mark conversation as read
+
+export interface ConversationReadStateResponse {
+  conversationId: string;
+  lastReadAt: string;
+  unreadCount: number;
+}
+
+export const markConversationAsRead = async (
+  conversationId: string,
+): Promise<ConversationReadStateResponse> => {
+  const response = await api.post<ConversationReadStateResponse>(
+    `/conversations/${conversationId}/read`,
+  );
+
+  return response.data;
+};
