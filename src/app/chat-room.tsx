@@ -86,6 +86,15 @@ export default function ChatRoomScreen() {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [showMessageActions, setShowMessageActions] = useState(false);
+  const [replyingToMessage, setReplyingToMessage] = useState<Message | null>(
+    null,
+  );
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
+  const [pendingJumpMessageId, setPendingJumpMessageId] = useState<
+    string | null
+  >(null);
 
   const queryClient = useQueryClient();
   const [messagePosition, setMessagePosition] =
@@ -179,6 +188,16 @@ export default function ChatRoomScreen() {
 
     return () => clearTimeout(timeout);
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (!highlightedMessageId) return;
+
+    const timeout = setTimeout(() => {
+      setHighlightedMessageId(null);
+    }, 1500);
+
+    return () => clearTimeout(timeout);
+  }, [highlightedMessageId]);
 
   const {
     data: serverSearchData,
@@ -360,10 +379,34 @@ export default function ChatRoomScreen() {
   const flatListRef = useRef<FlatList>(null);
   const isLoadingOlderRef = useRef(false);
   const sendInFlightRef = useRef(false);
+  const isJumpingToMessageRef = useRef(false);
 
   const processedMessages = useMemo(() => {
     return processMessages(messages, currentUser?.id);
   }, [messages, currentUser?.id]);
+
+  useEffect(() => {
+    if (!pendingJumpMessageId) return;
+
+    const targetIndex = processedMessages.findIndex(
+      (item) => item.type === "message" && item.id === pendingJumpMessageId,
+    );
+
+    if (targetIndex === -1) return;
+
+    const frame = requestAnimationFrame(() => {
+      flatListRef.current?.scrollToIndex({
+        index: targetIndex,
+        animated: true,
+        viewPosition: 0.5,
+      });
+
+      setHighlightedMessageId(pendingJumpMessageId);
+      setPendingJumpMessageId(null);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [pendingJumpMessageId, processedMessages]);
 
   useEffect(() => {
     if (!isSearching && latestMessageId) {
@@ -423,7 +466,6 @@ export default function ChatRoomScreen() {
     message: Message,
     position: MessagePosition,
   ) => {
-    if (message.senderId !== currentUser?.id) return;
     if (message.deletedAt) return;
 
     setSelectedMessage(message);
@@ -445,6 +487,24 @@ export default function ChatRoomScreen() {
 
     setEditingMessage(messageToEdit);
     setMessageText(messageToEdit.text ?? "");
+  };
+
+  const handleReplyToMessage = () => {
+    if (!selectedMessage) return;
+
+    const messageToReply = selectedMessage;
+
+    handleCloseMessageActions();
+
+    // Exit editing mode if necessary
+    setEditingMessage(null);
+
+    // Store the message we're replying to
+    setReplyingToMessage(messageToReply);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingToMessage(null);
   };
 
   const handleDeleteMessage = () => {
@@ -513,7 +573,8 @@ export default function ChatRoomScreen() {
       contentOffset.y <= 50 &&
       hasNextPage &&
       !isFetchingNextPage &&
-      !isLoadingOlderRef.current
+      !isLoadingOlderRef.current &&
+      !isJumpingToMessageRef.current
     ) {
       isLoadingOlderRef.current = true;
 
@@ -756,7 +817,7 @@ export default function ChatRoomScreen() {
       return;
     }
 
-    // NORMAL SEND MODE: Existing implementation
+    // NORMAL SEND MODE
     if (
       sendInFlightRef.current ||
       isContactBlocked ||
@@ -768,6 +829,7 @@ export default function ChatRoomScreen() {
 
     const draftTextAtSubmit = messageText;
     const text = draftTextAtSubmit.trim();
+    const replyAtSubmit = replyingToMessage;
 
     if (!text && selectedImageUris.length === 0) {
       return;
@@ -788,6 +850,7 @@ export default function ChatRoomScreen() {
         clientMessageId: Crypto.randomUUID(),
         ...(text ? { text } : {}),
         ...(attachmentMediaIds.length > 0 ? { attachmentMediaIds } : {}),
+        ...(replyAtSubmit ? { replyToMessageId: replyAtSubmit.id } : {}),
       });
 
       setMessageText((currentText) =>
@@ -795,6 +858,10 @@ export default function ChatRoomScreen() {
       );
       setSelectedImageUris((currentUris) =>
         currentUris.filter((uri) => !selectedImageUris.includes(uri)),
+      );
+
+      setReplyingToMessage((current) =>
+        current?.id === replyAtSubmit?.id ? null : current,
       );
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -876,6 +943,94 @@ export default function ChatRoomScreen() {
     const photoUri = await takePhoto();
     if (photoUri) {
       setSelectedImageUris((prev) => [...prev, photoUri]);
+    }
+  };
+
+  const handleJumpToMessage = async (messageId: string) => {
+    if (isJumpingToMessageRef.current) return;
+
+    isJumpingToMessageRef.current = true;
+
+    try {
+      // First check the messages already loaded.
+      let targetIndex = processedMessages.findIndex(
+        (item) => item.type === "message" && item.id === messageId,
+      );
+
+      if (targetIndex === -1) {
+        // Load older pages until the target is found.
+        let canLoadMore = hasNextPage;
+        let pages = messagesData?.pages ?? [];
+
+        while (canLoadMore) {
+          const result = await fetchNextPage();
+
+          if (result.isError) {
+            throw result.error ?? new Error("Failed to load older messages");
+          }
+
+          pages = result.data?.pages ?? [];
+
+          const found = pages.some((page) =>
+            page.items.some((message) => message.id === messageId),
+          );
+
+          if (found) {
+            break;
+          }
+
+          canLoadMore = Boolean(pages[pages.length - 1]?.pageInfo.hasNextPage);
+        }
+
+        // Rebuild the list indices from the newly loaded history.
+        const allMessages = pages
+          .flatMap((page) => page.items)
+          .filter(
+            (message, index, array) =>
+              array.findIndex((item) => item.id === message.id) === index,
+          )
+          .sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          );
+
+        const updatedProcessedMessages = processMessages(
+          allMessages,
+          currentUser?.id,
+        );
+
+        targetIndex = updatedProcessedMessages.findIndex(
+          (item) => item.type === "message" && item.id === messageId,
+        );
+      }
+
+      if (targetIndex === -1) {
+        Alert.alert(
+          "Message unavailable",
+          "The original message could not be found in this conversation.",
+        );
+        return;
+      }
+
+      // Allow React Native to render the newly fetched messages.
+      requestAnimationFrame(() => {
+        flatListRef.current?.scrollToIndex({
+          index: targetIndex,
+          animated: true,
+          viewPosition: 0.5,
+        });
+
+        setHighlightedMessageId(messageId);
+      });
+    } catch (error) {
+      console.error("JUMP TO MESSAGE ERROR:", error);
+
+      Alert.alert(
+        "Unable to find message",
+        "Could not load the original message. Please try again.",
+      );
+    } finally {
+      setPendingJumpMessageId(messageId);
     }
   };
 
@@ -1138,10 +1293,13 @@ export default function ChatRoomScreen() {
                     searchQuery={isSearching ? searchQuery : undefined}
                     receiptStatus={receiptStatusByMessageId.get(item.id)}
                     onLongPress={
-                      item.senderId === currentUser?.id && !item.deletedAt
+                      !item.deletedAt
                         ? (position) => handleMessageLongPress(item, position)
                         : undefined
                     }
+                    currentUserId={currentUser?.id}
+                    onJumpToMessage={handleJumpToMessage}
+                    isHighlighted={highlightedMessageId === item.id}
                   />
                 );
               }}
@@ -1245,13 +1403,16 @@ export default function ChatRoomScreen() {
             isSending={isSending || isEditingMessage}
             isEditing={Boolean(editingMessage)}
             onCancelEdit={handleCancelEdit}
+            replyingToMessage={replyingToMessage}
+            onCancelReply={handleCancelReply}
           />
         )}
-
         <MessageActionsSheet
           visible={showMessageActions}
           position={messagePosition}
+          isOwnMessage={selectedMessage?.senderId === currentUser?.id}
           onClose={handleCloseMessageActions}
+          onReply={handleReplyToMessage}
           onEdit={handleEditMessage}
           onDelete={handleDeleteMessage}
         />

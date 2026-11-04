@@ -20,7 +20,9 @@ interface MessagePosition {
 interface Props {
   visible: boolean;
   position: MessagePosition | null;
+  isOwnMessage: boolean;
   onClose: () => void;
+  onReply: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
@@ -28,7 +30,9 @@ interface Props {
 export function MessageActionsSheet({
   visible,
   position,
+  isOwnMessage,
   onClose,
+  onReply,
   onEdit,
   onDelete,
 }: Props) {
@@ -36,7 +40,7 @@ export function MessageActionsSheet({
   const { width, height } = useWindowDimensions();
 
   const MENU_WIDTH = 220;
-  const MENU_HEIGHT = 112;
+  const MENU_HEIGHT = isOwnMessage ? 168 : 56;
   const SCREEN_PADDING = 16;
   const GAP = 8;
 
@@ -84,24 +88,41 @@ export function MessageActionsSheet({
             },
           ]}
         >
-          <Pressable style={styles.action} onPress={onEdit}>
+          <Pressable style={styles.action} onPress={onReply}>
             <Typography size={16} color={themeColors.text}>
-              Edit
+              Reply
             </Typography>
           </Pressable>
 
-          <View
-            style={[
-              styles.divider,
-              { backgroundColor: themeColors.textSecondary },
-            ]}
-          />
+          {isOwnMessage && (
+            <>
+              <View
+                style={[
+                  styles.divider,
+                  { backgroundColor: themeColors.textSecondary },
+                ]}
+              />
 
-          <Pressable style={styles.action} onPress={onDelete}>
-            <Typography size={16} color="#EF4444">
-              Delete for Everyone
-            </Typography>
-          </Pressable>
+              <Pressable style={styles.action} onPress={onEdit}>
+                <Typography size={16} color={themeColors.text}>
+                  Edit
+                </Typography>
+              </Pressable>
+
+              <View
+                style={[
+                  styles.divider,
+                  { backgroundColor: themeColors.textSecondary },
+                ]}
+              />
+
+              <Pressable style={styles.action} onPress={onDelete}>
+                <Typography size={16} color="#EF4444">
+                  Delete for Everyone
+                </Typography>
+              </Pressable>
+            </>
+          )}
         </View>
       </View>
     </Modal>

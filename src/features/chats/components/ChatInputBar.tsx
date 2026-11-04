@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
 
 import { Typography } from "@/shared/components/Typography";
+import type { Message } from "@/features/chats/types/message";
 
 import PaperclipIcon from "@/assets/icons/chat/paperClip.svg";
 import SendIcon from "@/assets/icons/chat/send.svg";
@@ -24,6 +25,8 @@ interface Props {
   isSending?: boolean;
   isEditing?: boolean;
   onCancelEdit?: () => void;
+  replyingToMessage?: Message | null;
+  onCancelReply?: () => void;
 }
 
 export function ChatInputBar({
@@ -36,6 +39,8 @@ export function ChatInputBar({
   isSending = false,
   isEditing = false,
   onCancelEdit,
+  replyingToMessage = null,
+  onCancelReply,
 }: Props) {
   const { themeColors } = useAppTheme();
 
@@ -153,6 +158,56 @@ export function ChatInputBar({
     <View
       style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}
     >
+      {/* Reply Message Preview */}
+      {replyingToMessage && !isEditing && !isRecordingState && (
+        <View
+          style={[
+            styles.replyBanner,
+            { backgroundColor: themeColors.cardBackground },
+          ]}
+        >
+          <View
+            style={[
+              styles.replyIndicator,
+              { backgroundColor: themeColors.primary },
+            ]}
+          />
+
+          <View style={styles.replyBannerText}>
+            <Typography size={14} weight="bold" color={themeColors.primary}>
+              {replyingToMessage.isMe
+                ? "You"
+                : replyingToMessage.senderName || "Contact"}
+            </Typography>
+
+            <Typography size={12} color={themeColors.textSecondary}>
+              {replyingToMessage.deletedAt
+                ? "This message was deleted"
+                : replyingToMessage.text ||
+                  (replyingToMessage.kind === "image"
+                    ? "Photo"
+                    : replyingToMessage.kind === "audio"
+                      ? "Voice message"
+                      : replyingToMessage.kind === "video"
+                        ? "Video"
+                        : replyingToMessage.kind === "document"
+                          ? "Document"
+                          : "Message")}
+            </Typography>
+          </View>
+
+          <TouchableOpacity
+            onPress={onCancelReply}
+            style={styles.iconBtn}
+            accessibilityLabel="Cancel reply"
+          >
+            <Typography size={22} color={themeColors.textSecondary}>
+              ×
+            </Typography>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Editing Message Banner */}
       {isEditing && (
         <View
@@ -283,6 +338,25 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   editBannerText: {
+    flex: 1,
+    gap: 3,
+  },
+  replyBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 8,
+    overflow: "hidden",
+  },
+  replyIndicator: {
+    width: 4,
+    alignSelf: "stretch",
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  replyBannerText: {
     flex: 1,
     gap: 3,
   },

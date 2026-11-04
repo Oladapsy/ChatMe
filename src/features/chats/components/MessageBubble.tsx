@@ -8,6 +8,7 @@ import { useAppTheme } from "@/shared/hooks/useAppTheme";
 import CheckMark from "@/assets/icons/chat/check.svg";
 
 import AudioMessagePlayer from "@/features/chats/components/AudioMessagePlayer";
+import { ReplyQuote } from "@/features/chats/components/ReplyQuote";
 
 import { formatMessageTime } from "@/features/chats/utils/formatMsgTime";
 import UserPlaceholderIcon from "@/assets/icons/shared/user.svg";
@@ -17,12 +18,15 @@ interface Props {
   isGroup?: boolean;
   searchQuery?: string;
   receiptStatus?: "sent" | "delivered" | "read";
+  currentUserId?: string;
   onLongPress?: (position: {
     x: number;
     y: number;
     width: number;
     height: number;
   }) => void;
+  onJumpToMessage?: (messageId: string) => void;
+  isHighlighted?: boolean;
 }
 
 export function MessageBubble({
@@ -31,6 +35,9 @@ export function MessageBubble({
   searchQuery,
   receiptStatus = "sent",
   onLongPress,
+  currentUserId,
+  onJumpToMessage,
+  isHighlighted = false,
 }: Props) {
   const { themeColors } = useAppTheme();
 
@@ -113,7 +120,15 @@ export function MessageBubble({
         : themeColors.textSecondary;
 
   return (
-    <View style={[styles.row, isMe ? styles.rowMe : styles.rowOther]}>
+    <View
+      style={[
+        styles.row,
+        isMe ? styles.rowMe : styles.rowOther,
+        isHighlighted && {
+          backgroundColor: themeColors.primary + "25",
+        },
+      ]}
+    >
       {/* Group Chat Avatar */}
       {!isMe && isGroup && (
         <View style={styles.avatarContainer}>
@@ -139,7 +154,6 @@ export function MessageBubble({
           )}
         </View>
       )}
-
       {/* Message Row Layout */}
       <View
         style={[
@@ -170,6 +184,17 @@ export function MessageBubble({
               >
                 {message.senderName}
               </Typography>
+            )}
+
+            {/* Quoted Reply Preview */}
+            {!isDeleted && message.replyToMessageId && (
+              <ReplyQuote
+                conversationId={message.conversationId}
+                replyToMessageId={message.replyToMessageId}
+                currentUserId={currentUserId}
+                isOwnBubble={Boolean(isMe)}
+                onPress={() => onJumpToMessage?.(message.replyToMessageId!)}
+              />
             )}
 
             {/* Text & Media Message / Deleted Placeholder */}

@@ -108,8 +108,6 @@ export const getMessages = async (
   return response.data;
 };
 
-
-
 // send messages to a conversation payload
 export interface SendMessagePayload {
   clientMessageId: string;
@@ -117,7 +115,6 @@ export interface SendMessagePayload {
   text?: string;
   attachmentMediaIds?: string[];
 }
-
 
 // new msg receipts
 export const markMessagesDelivered = async (
@@ -147,9 +144,7 @@ export const markMessagesRead = async (
 export const getReceiptFrontiers = async (
   conversationId: string,
 ): Promise<ReceiptFrontiersResponse> => {
-  const response = await api.get(
-    `/conversations/${conversationId}/receipts`,
-  );
+  const response = await api.get(`/conversations/${conversationId}/receipts`);
 
   return response.data;
 };
@@ -358,8 +353,7 @@ export const deleteGroup = async (conversationId: string): Promise<void> => {
   await api.delete(`/conversations/${conversationId}`);
 };
 
-
-// edit and delete a msg 
+// edit and delete a msg
 // Edit an existing message
 export interface EditMessagePayload {
   text: string | null;
@@ -386,6 +380,18 @@ export const deleteMessage = async (
   messageId: string,
 ): Promise<Message> => {
   const response = await api.delete<Message>(
+    `/conversations/${conversationId}/messages/${messageId}`,
+  );
+
+  return response.data;
+};
+
+// get a single msg
+export const getMessageById = async (
+  conversationId: string,
+  messageId: string,
+): Promise<Message> => {
+  const response = await api.get<Message>(
     `/conversations/${conversationId}/messages/${messageId}`,
   );
 
