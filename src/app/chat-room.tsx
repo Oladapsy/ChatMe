@@ -18,7 +18,6 @@ import {
   Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import * as Crypto from "expo-crypto";
 import axios from "axios";
 
 import MySafeAreaView from "@/shared/components/EdgeMySafeAreaView";
@@ -43,7 +42,7 @@ import { useAppTheme } from "@/shared/hooks/useAppTheme";
 // get msgs for a conversation
 import { useMessages } from "@/features/chats/hooks/useMessages";
 // send msgs
-import { useSendMessage } from "@/features/chats/hooks/useSendMessage";
+import { useMessageDelivery } from "@/features/chats/hooks/useMessageDelivery";
 // get current user
 import { useMe } from "@/features/auth/hooks/useMe";
 
@@ -56,8 +55,6 @@ import { processMessages } from "@/features/chats/utils/processMessages";
 import { MessageDateSeparator } from "@/features/chats/components/MessageDateSeparator";
 
 // abstract the image upload
-import { uploadChatImage } from "@/features/chats/utils/uploadChatMedia";
-import { uploadChatAudio } from "@/features/chats/utils/uploadChatMedia";
 
 //socket
 import { useChatSocket } from "@/features/chats/hooks/useChatSocket";
@@ -85,7 +82,6 @@ type MessagePosition = {
 export default function ChatRoomScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
-  const [isSending, setIsSending] = useState(false);
   const [isAtLatest, setIsAtLatest] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
@@ -116,7 +112,7 @@ export default function ChatRoomScreen() {
 
   const { data: currentUser } = useMe();
 
-  const activeChatId = id || "1";
+  const activeChatId = id || "";
   const { editMessage, deleteMessage, isEditingMessage, isDeletingMessage } =
     useMessageActions(activeChatId);
   const { setReaction, isSettingReaction } =
@@ -129,15 +125,14 @@ export default function ChatRoomScreen() {
     AppState.currentState === "active",
   );
 
-  useChatSocket(activeChatId);
+  const realtime = useChatSocket(activeChatId, currentUser?.id);
 
   const { markDelivered, markRead } = useUpdateReceipts(activeChatId);
   const { data: receiptFrontiersData } = useReceiptFrontiers(activeChatId);
   const { mutateAsync: markConversationAsRead } =
     useMarkConversationAsRead(activeChatId);
 
-  const { send: sendMessage, isPending: isSendingMessage } =
-    useSendMessage(activeChatId);
+  const { submit, retry, failedCount, isSending } = useMessageDelivery(activeChatId);
 
   // Pagination properties from useMessages
   const {
@@ -735,7 +730,8 @@ export default function ChatRoomScreen() {
         return;
       }
 
-      const updatedText = messageText.trim();
+      const editDraft = messageText;
+      const updatedText = editDraft.trim();
 
       if (!updatedText) {
         Alert.alert("Invalid message", "Message text cannot be empty.");
@@ -767,8 +763,8 @@ export default function ChatRoomScreen() {
           },
         });
 
-        setEditingMessage(null);
-        setMessageText("");
+        setEditingMessage(current => current?.id === editingMessage.id ? null : current);
+        setMessageText(current => current === editDraft ? "" : current);
 
         console.log("Message edited successfully");
       } catch (error) {
@@ -889,107 +885,25 @@ export default function ChatRoomScreen() {
       return;
     }
 
-    sendInFlightRef.current = true;
-    setIsSending(true);
-
-    try {
-      const attachmentMediaIds: string[] = [];
-
-      for (const uri of selectedImageUris) {
-        const mediaId = await uploadChatImage(uri);
-        attachmentMediaIds.push(mediaId);
-      }
-
-      await sendMessage({
-        clientMessageId: Crypto.randomUUID(),
-        ...(text ? { text } : {}),
-        ...(attachmentMediaIds.length > 0 ? { attachmentMediaIds } : {}),
-        ...(replyAtSubmit ? { replyToMessageId: replyAtSubmit.id } : {}),
-      });
-
-      setMessageText((currentText) =>
-        currentText === draftTextAtSubmit ? "" : currentText,
-      );
-      setSelectedImageUris((currentUris) =>
-        currentUris.filter((uri) => !selectedImageUris.includes(uri)),
-      );
-
-      setReplyingToMessage((current) =>
-        current?.id === replyAtSubmit?.id ? null : current,
-      );
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error("SEND MESSAGE ERROR:", {
-          status: error.response?.status,
-          data: error.response?.data,
-          url: error.config?.url,
-          method: error.config?.method,
-        });
-
-        const status = error.response?.status;
-
-        if (status === 404) {
-          Alert.alert(
-            "Message not sent",
-            isContactBlocked
-              ? "You blocked this contact. Unblock them to send messages."
-              : "This conversation or messaging resource could not be found.",
-          );
-          return;
-        }
-      } else {
-        console.error("SEND MESSAGE ERROR:", error);
-      }
-
-      Alert.alert(
-        "Message not sent",
-        "Something went wrong. Please try again.",
-      );
-    } finally {
-      sendInFlightRef.current = false;
-      setIsSending(false);
-    }
+    const submittedImages = [...selectedImageUris];
+    realtime.setTyping(false);
+    const accepted = await submit(text, submittedImages, replyAtSubmit?.id);
+    if (accepted === null) return;
+    // The operation owns failed payloads too, so the composer can move on.
+    setMessageText(current => current === draftTextAtSubmit ? "" : current);
+    setSelectedImageUris(current => current.filter(uri => !submittedImages.includes(uri)));
+    setReplyingToMessage(current => current?.id === replyAtSubmit?.id ? null : current);
   };
 
   const handleCancelEdit = () => {
-    if (isEditingMessage) return;
-
     setEditingMessage(null);
     setMessageText("");
   };
 
-  // Audio send handler protected by block/loading guards and detailed error catching
   const handleSendAudio = async (uri: string, durationSec: number) => {
-    if (isContactBlocked || isBlockStatusLoading || isBlockStatusUnavailable) {
-      return;
-    }
-
-    try {
-      const mediaId = await uploadChatAudio(uri, durationSec);
-
-      const sentMessage = await sendMessage({
-        clientMessageId: Crypto.randomUUID(),
-        attachmentMediaIds: [mediaId],
-      });
-
-      console.log("AUDIO MESSAGE SENT:", sentMessage);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error("AUDIO MESSAGE ERROR:", {
-          status: error.response?.status,
-          data: error.response?.data,
-          url: error.config?.url,
-          method: error.config?.method,
-        });
-      } else {
-        console.error("AUDIO MESSAGE ERROR:", error);
-      }
-
-      Alert.alert(
-        "Audio not sent",
-        "Unable to send your voice message. Please try again.",
-      );
-    }
+    if (isSending || isEditingMessage || editingMessage || isContactBlocked || isBlockStatusLoading || isBlockStatusUnavailable) return;
+    await submit("", [], replyingToMessage?.id, { uri, duration: durationSec });
+    // Audio submission never clears text or image drafts.
   };
 
   const handleCameraCapture = async () => {
@@ -1297,6 +1211,7 @@ export default function ChatRoomScreen() {
         />
       ) : (
         <ChatRoomHeader
+          realtimeSubtitle={realtime.typingUsers.length ? (isGroupChat ? `${realtime.typingUsers.length} typing…` : "Typing…") : realtime.status !== "Connected" ? realtime.status : isGroupChat ? undefined : otherParticipant && realtime.participants[otherParticipant.id] === "online" ? "Online" : "Offline"}
           name={chatName}
           avatar={chatAvatar}
           isGroup={isGroupChat}
@@ -1419,6 +1334,11 @@ export default function ChatRoomScreen() {
           )}
         </View>
 
+        {failedCount > 0 && (
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Retry failed message. ${failedCount} pending`} disabled={isSending || isContactBlocked || isBlockStatusUnavailable || isBlockStatusLoading} onPress={() => void retry()} style={{ padding: 16 }}>
+            <Typography accessibilityLiveRegion="polite">{failedCount} message(s) awaiting confirmation. Tap to retry.</Typography>
+          </TouchableOpacity>
+        )}
         {/* Selected Images Strip */}
         {selectedImageUris.length > 0 && !isSearching && !isContactBlocked && (
           <View style={styles.previewWrapper}>
@@ -1438,6 +1358,8 @@ export default function ChatRoomScreen() {
                   <Image source={{ uri: item }} style={styles.previewImage} />
                   <TouchableOpacity
                     style={styles.removePreviewBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel="Remove attached photo"
                     onPress={() => removeSelectedImage(item)}
                   >
                     <CloseIcon width={12} height={12} color="white" />
@@ -1502,7 +1424,7 @@ export default function ChatRoomScreen() {
         ) : (
           <ChatInputBar
             text={messageText}
-            onChangeText={setMessageText}
+            onChangeText={text => { setMessageText(text); realtime.setTyping(text.trim().length > 0); }}
             onSendText={handleSend}
             onSendAudio={handleSendAudio}
             onOpenAttachment={() => setAttachmentVisible(true)}

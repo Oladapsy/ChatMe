@@ -1,7 +1,8 @@
 import { refreshApi } from "@/services/refreshApi";
 import {
   getRefreshToken,
-  saveSession,
+  saveSessionIfCurrent,
+  getSessionGeneration,
 } from "@/services/authStorage";
 
 export type RefreshResponse = {
@@ -19,7 +20,19 @@ export type RefreshResponse = {
   };
 };
 
-export async function refreshSession(): Promise<RefreshResponse> {
+const pendingRefreshes = new Map<number, Promise<RefreshResponse>>();
+
+export function refreshSession(): Promise<RefreshResponse> {
+  const generation = getSessionGeneration();
+  const existing = pendingRefreshes.get(generation);
+  if (existing) return existing;
+  const pending = performRefresh().finally(() => pendingRefreshes.delete(generation));
+  pendingRefreshes.set(generation, pending);
+  return pending;
+}
+
+async function performRefresh(): Promise<RefreshResponse> {
+  const generation = getSessionGeneration();
   const refreshToken = await getRefreshToken();
 
   if (!refreshToken) {
@@ -37,14 +50,15 @@ export async function refreshSession(): Promise<RefreshResponse> {
 
   const now = Date.now();
 
-  await saveSession({
+  const saved = await saveSessionIfCurrent({
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
     accessTokenExpiresAt:
       now + data.accessTokenExpiresInSeconds * 1000,
     refreshTokenExpiresAt:
       now + data.refreshTokenExpiresInSeconds * 1000,
-  });
+  }, generation);
+  if (!saved) throw new Error("Session changed during refresh");
 
   return data;
 }

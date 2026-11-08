@@ -2,7 +2,7 @@
 // contact first...
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, SectionList, StyleSheet, View } from "react-native";
+import { Alert, ActivityIndicator, SectionList, StyleSheet, View } from "react-native";
 
 import { ContactItemRow } from "@/features/contacts/components/ContactItemRow";
 import { ContactSearchBar } from "@/features/contacts/components/ContactSearchBar";
@@ -65,7 +65,7 @@ export default function ContactsScreen() {
     if (!contact.userId) {
       // This person is not a matched ChatMe user.
       // Show an invite option here instead of opening a chat.
-      console.log("Contact is not registered on ChatMe");
+      Alert.alert("Contact unavailable", "This contact is not registered on ChatMe yet. Invite them to join before starting a conversation.");
       return;
     }
 

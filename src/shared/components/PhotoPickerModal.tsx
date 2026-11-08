@@ -17,12 +17,7 @@ import CameraIcon from "@/assets/icons/auth/camera.svg";
 import GalleryIcon from "@/assets/icons/auth/gallery.svg";
 
 // Expo Media Library
-import {
-  AssetField,
-  MediaType,
-  Query,
-  requestPermissionsAsync,
-} from "expo-media-library";
+import { getRecentPhotos, type GalleryPreview } from "@/shared/utils/recentPhotos";
 import { useAppTheme } from "../hooks/useAppTheme";
 
 interface PhotoPickerModalProps {
@@ -33,10 +28,7 @@ interface PhotoPickerModalProps {
   onSelectImage: (uri: string) => void;
 }
 
-interface GalleryPreview {
-  id: string;
-  uri: string;
-}
+
 
 export function PhotoPickerModal({
   visible,
@@ -53,27 +45,15 @@ export function PhotoPickerModal({
   useEffect(() => {
     if (!visible) return;
 
-    const loadRecentPhotos = async () => {
-      const { status } = await requestPermissionsAsync();
-      if (status !== "granted") return;
-
-      const assets = await new Query()
-        .eq(AssetField.MEDIA_TYPE, MediaType.IMAGE)
-        .orderBy({ key: AssetField.CREATION_TIME, ascending: false })
-        .limit(20)
-        .exe();
-
-      const resolved = await Promise.all(
-        assets.map(async (asset) => ({
-          id: asset.id,
-          uri: await asset.getUri(),
-        })),
-      );
-
-      setPreviews(resolved);
-    };
-
-    loadRecentPhotos();
+    let cancelled = false;
+    setPreviews([]);
+    void getRecentPhotos().then(photos => {
+      if (!cancelled) setPreviews(photos);
+    }).catch(() => {
+      // The system gallery picker remains available if previews are denied.
+      if (!cancelled) setPreviews([]);
+    });
+    return () => { cancelled = true; };
   }, [visible]);
 
   return (

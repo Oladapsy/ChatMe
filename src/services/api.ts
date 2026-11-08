@@ -1,107 +1,45 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-
-import {
-  clearSession,
-  getAccessToken,
-  getRefreshToken,
-} from "@/services/authStorage";
-
+import { clearSessionIfCurrent, getAccessToken, getSessionGeneration } from "@/services/authStorage";
 import { refreshSession } from "@/services/refreshSession";
+import { useAuthStore } from "@/store/authStore";
 
-const API_ORIGIN = process.env.EXPO_PUBLIC_API_ORIGIN;
-
+type SessionRequest = InternalAxiosRequestConfig & { _retry?: boolean; _session?: number };
 export const api = axios.create({
-  baseURL: `${API_ORIGIN}/v1`,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: `${process.env.EXPO_PUBLIC_API_ORIGIN}/v1`,
+  timeout: 30000,
+  headers: { "Content-Type": "application/json" },
 });
-
-// Prevent multiple requests from refreshing the token at the same time.
-let refreshPromise: Promise<void> | null = null;
-
-// Add access token to every request
-api.interceptors.request.use(async (config) => {
-  const accessToken = await getAccessToken();
-
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
-  }
-
+const refreshes = new Map<number, Promise<unknown>>();
+api.interceptors.request.use(async (config: SessionRequest) => {
+  const generation = config._session ?? getSessionGeneration();
+  const token = await getAccessToken();
+  if (generation !== getSessionGeneration()) throw new Error("Session changed");
+  config._session = generation;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
-
-// Handle expired access tokens
-api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-
-  async (error: AxiosError) => {
-    console.log("RESPONSE ERROR:", error.response?.status);
-
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
-
-    if (error.response?.status !== 401) {
-      return Promise.reject(error);
+api.interceptors.response.use(response => response, async (error: AxiosError) => {
+  const request = error.config as SessionRequest | undefined;
+  if (!request || error.response?.status !== 401 || request._retry) throw error;
+  const generation = request._session!;
+  if (generation !== getSessionGeneration()) throw error;
+  request._retry = true;
+  try {
+    let pending = refreshes.get(generation);
+    if (!pending) {
+      pending = refreshSession().finally(() => refreshes.delete(generation));
+      refreshes.set(generation, pending);
     }
-
-    console.log("401 DETECTED — attempting refresh");
-
-    if (originalRequest._retry) {
-      console.log("Already retried — stopping");
-      return Promise.reject(error);
+    await pending;
+    if (generation !== getSessionGeneration()) throw new Error("Session changed");
+    return api(request);
+  } catch (refreshError) {
+    // Network errors, rate limits and server outages leave credentials available for retry.
+    if (axios.isAxiosError(refreshError) && [400, 401, 403].includes(refreshError.response?.status ?? 0)) {
+      if (await clearSessionIfCurrent(generation)) {
+        useAuthStore.getState().setAuthenticated(false);
+      }
     }
-
-    originalRequest._retry = true;
-
-    try {
-      const refreshToken = await getRefreshToken();
-
-      if (!refreshToken) {
-        console.log("NO REFRESH TOKEN");
-        await clearSession();
-        return Promise.reject(error);
-      }
-
-      console.log("REFRESH TOKEN FOUND");
-
-      if (!refreshPromise) {
-        console.log("STARTING TOKEN REFRESH");
-
-        refreshPromise = refreshSession().then(() => {
-          console.log("TOKEN REFRESH SUCCESSFUL");
-          refreshPromise = null;
-        });
-      } else {
-        console.log("REFRESH ALREADY IN PROGRESS — WAITING");
-      }
-
-      await refreshPromise;
-
-      const newAccessToken = await getAccessToken();
-
-      // console.log("NEW ACCESS TOKEN:", newAccessToken);
-
-      if (!newAccessToken) {
-        throw new Error("Failed to get new access token");
-      }
-
-      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-      console.log("RETRYING ORIGINAL REQUEST");
-
-      return api(originalRequest);
-    } catch (refreshError) {
-      console.log("TOKEN REFRESH FAILED:", refreshError);
-
-      refreshPromise = null;
-
-      await clearSession();
-
-      return Promise.reject(refreshError);
-    }
-  },
-);
+    throw refreshError;
+  }
+});

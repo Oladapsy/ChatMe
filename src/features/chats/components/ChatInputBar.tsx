@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, View, TextInput, TouchableOpacity } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { Alert, StyleSheet, View, TextInput, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
 
@@ -57,6 +57,7 @@ export function ChatInputBar({
       ? text.trim().length > 0
       : text.trim().length > 0 || hasAttachments) && !isSending;
 
+  const recorderBusy = useRef(false);
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
   useEffect(() => {
@@ -66,11 +67,16 @@ export function ChatInputBar({
   }, [timerInterval]);
 
   const startRecording = async () => {
+    if (isSending || recorderBusy.current || isRecordingState) return;
+    recorderBusy.current = true;
     try {
       stopActiveAudio();
 
       const status = await AudioModule.requestRecordingPermissionsAsync();
-      if (!status.granted) return;
+      if (!status.granted) {
+        Alert.alert("Microphone access required", "Allow microphone access in Settings to record a voice message. You can still send text and photos.");
+        return;
+      }
 
       await AudioModule.setAudioModeAsync({
         allowsRecording: true,
@@ -87,11 +93,15 @@ export function ChatInputBar({
       }, 1000);
       setTimerInterval(interval);
     } catch (err) {
-      console.warn("Failed to start recording:", err);
+      Alert.alert("Recording unavailable", "Could not start recording. Please try again.");
+    } finally {
+      recorderBusy.current = false;
     }
   };
 
   const stopAndSendRecording = async () => {
+    if (recorderBusy.current) return;
+    recorderBusy.current = true;
     if (timerInterval) clearInterval(timerInterval);
     setTimerInterval(null);
     setIsRecordingState(false);
@@ -125,7 +135,9 @@ export function ChatInputBar({
         }
       }
     } catch (err) {
-      console.warn("Failed to stop recording:", err);
+      Alert.alert("Recording unavailable", "Could not finish recording. Please record again.");
+    } finally {
+      recorderBusy.current = false;
     }
 
     setRecordDuration(0);
@@ -245,7 +257,7 @@ export function ChatInputBar({
             { backgroundColor: themeColors.cardBackground },
           ]}
         >
-          <TouchableOpacity onPress={cancelRecording} style={styles.iconBtn}>
+          <TouchableOpacity onPress={cancelRecording} accessibilityRole="button" accessibilityLabel="Discard recording" style={styles.iconBtn}>
             <TrashIcon width={22} height={22} color={themeColors.error} />
           </TouchableOpacity>
 
@@ -260,6 +272,8 @@ export function ChatInputBar({
 
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: themeColors.primary }]}
+            accessibilityRole="button"
+            accessibilityLabel="Send voice message"
             onPress={stopAndSendRecording}
           >
             <SendIcon width={18} height={18} color="white" />
@@ -273,7 +287,7 @@ export function ChatInputBar({
           ]}
         >
           {!isEditing && (
-            <TouchableOpacity onPress={onOpenAttachment} style={styles.iconBtn}>
+            <TouchableOpacity onPress={onOpenAttachment} accessibilityRole="button" accessibilityLabel="Attach photos" style={styles.iconBtn}>
               <PaperclipIcon
                 width={22}
                 height={22}
@@ -284,6 +298,7 @@ export function ChatInputBar({
 
           <TextInput
             style={[styles.input, { color: themeColors.text }]}
+            accessibilityLabel="Message draft"
             placeholder="Type a message..."
             placeholderTextColor={themeColors.textSecondary}
             value={text}
@@ -293,7 +308,7 @@ export function ChatInputBar({
           />
 
           {!isEditing && (
-            <TouchableOpacity onPress={startRecording} style={styles.iconBtn}>
+            <TouchableOpacity onPress={startRecording} disabled={isSending} accessibilityState={{ disabled: isSending }} accessibilityRole="button" accessibilityLabel="Record voice message" style={styles.iconBtn}>
               <MicIcon
                 width={22}
                 height={22}
@@ -312,6 +327,9 @@ export function ChatInputBar({
               },
             ]}
             onPress={onSendText}
+            accessibilityRole="button"
+            accessibilityLabel={isEditing ? "Save edited message" : "Send message"}
+            accessibilityState={{ disabled: !canSend, busy: isSending }}
             disabled={!canSend}
           >
             <SendIcon width={18} height={18} color="white" />

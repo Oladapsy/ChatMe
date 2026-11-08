@@ -1,8 +1,8 @@
 
 import { File } from "expo-file-system";
-import { uploadMedia } from "@/services/mediaUpload";
+import { uploadMedia, type UploadProgress } from "@/services/mediaUpload";
 
-export async function uploadChatImage(uri: string): Promise<string> {
+export async function uploadChatImage(uri: string, clientUploadId?: string, progress?: UploadProgress): Promise<string> {
   const file = new File(uri);
   const extension = file.name.split(".").pop()?.toLowerCase();
 
@@ -15,6 +15,8 @@ export async function uploadChatImage(uri: string): Promise<string> {
 
   const media = await uploadMedia({
     uri,
+    clientUploadId,
+    progress,
     purpose: "message_attachment",
     contentType: mimeType,
     sizeBytes: file.size,
@@ -25,23 +27,12 @@ export async function uploadChatImage(uri: string): Promise<string> {
 }
 
 
-// for the audio
-
-export async function uploadChatAudio(
-  uri: string,
-  durationSec: number
-): Promise<string> {
+export async function uploadChatAudio(uri: string, durationSec: number, clientUploadId?: string, progress?: UploadProgress): Promise<string> {
   const file = new File(uri);
-  const base64 = await file.base64();
-  const sizeBytes = Math.floor((base64.length * 3) / 4);
-
-  const media = await uploadMedia({
-    uri,
-    purpose: "message_attachment",
-    contentType: "audio/m4a",
-    sizeBytes,
-    originalFilename: file.name,
-  });
-
+  if (!file.exists || file.size <= 0) throw new Error("Recording is missing or empty");
+  const types: Record<string, string> = { m4a: "audio/mp4", mp4: "audio/mp4", aac: "audio/aac", wav: "audio/wav", webm: "audio/webm", caf: "audio/x-caf" };
+  const contentType = file.type || types[file.extension.replace(".", "").toLowerCase()];
+  if (!contentType) throw new Error("Unknown recording format");
+  const media = await uploadMedia({ uri, purpose: "message_attachment", contentType, sizeBytes: file.size, originalFilename: file.name, clientUploadId, progress });
   return media.id;
 }

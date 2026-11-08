@@ -16,6 +16,7 @@ interface ChatRoomHeaderProps {
   name?: string;
   avatar?: string;
   lastSeen?: string;
+  realtimeSubtitle?: string;
   isGroup?: boolean;
   members?: GroupMember[];
   membersText?: string;
@@ -29,6 +30,7 @@ export function ChatRoomHeader({
   name = "Unknown Contact",
   avatar,
   lastSeen = "5 minutes",
+  realtimeSubtitle,
   isGroup = false,
   members,
   membersText = "User1, User2, You",
@@ -45,7 +47,7 @@ export function ChatRoomHeader({
       ? members.map((m) => m.name).join(", ")
       : membersText;
 
-  const subTitle = isGroup ? resolvedMembersText : `Active ${lastSeen} ago`;
+  const subTitle = realtimeSubtitle ?? (isGroup ? resolvedMembersText : `Active ${lastSeen} ago`);
 
   return (
     <View style={[styles.header, { backgroundColor }]}>

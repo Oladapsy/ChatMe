@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { getRefreshToken } from "@/services/authStorage";
+import { getRefreshToken, getSessionGeneration } from "@/services/authStorage";
 import { getMe } from "@/features/auth/api/authApi";
 import { useAuthStore } from "@/store/authStore";
 import { queryClient } from "@/services/queryClient";
@@ -10,6 +10,8 @@ export function useInitializeAuth() {
 
   useEffect(() => {
     async function initialize() {
+      const generation = getSessionGeneration();
+      let hadSession = false;
       try {
         console.log("AUTH INIT: checking session...");
 
@@ -24,12 +26,14 @@ export function useInitializeAuth() {
           return;
         }
 
+        hadSession = true;
         console.log("AUTH INIT: calling /me...");
 
         const user = await getMe();
 
         console.log("AUTH INIT: /me successful", user);
 
+        if (generation !== getSessionGeneration()) return;
         queryClient.setQueryData(["me"], user);
         
         useAuthStore.getState().setAuthenticated(true);
@@ -40,7 +44,9 @@ export function useInitializeAuth() {
       } catch (error) {
         console.log("AUTH INIT: failed", error);
 
-        useAuthStore.getState().setAuthenticated(false);
+        if (generation === getSessionGeneration()) {
+          useAuthStore.getState().setAuthenticated(hadSession);
+        }
       } finally {
         setIsInitializing(false);
       }

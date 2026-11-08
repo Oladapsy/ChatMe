@@ -92,6 +92,7 @@ export default function RootLayout() {
 
           <Stack.Protected guard={isAuthenticated && profileComplete}>
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="chat-room" />
           </Stack.Protected>
         </Stack>
       </GestureHandlerRootView>
