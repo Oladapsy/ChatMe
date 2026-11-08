@@ -77,3 +77,61 @@ test('text-only delivery omits attachmentMediaIds', async () => {
   assert.equal(await useMessageDelivery('text-room').submit('hello',[]),true);
   assert.equal('attachmentMediaIds' in sent,false);
 });
+
+test('attachment upload sends the file directly without fetching a data URL', async () => {
+  const parts = [];
+  const requests = [];
+  class File {
+    constructor(uri) { this.uri = uri; this.exists = true; }
+    async arrayBuffer() { return new Uint8Array([1,2,3]).buffer; }
+    base64() { assert.fail('must not convert attachment to base64'); }
+  }
+  const exports = {};
+  const js = ts.transpileModule(fs.readFileSync('src/services/cloudinary.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+  const fetch = async (url, options) => {
+    requests.push({url,options});
+    return {ok:true,json:async()=>({public_id:'voice'})};
+  };
+  vm.runInNewContext(js, {exports, console, TextEncoder, Uint8Array, Blob: class {constructor(){assert.fail("Android Blob must not be constructed");}}, FormData: class {append(...args) {parts.push(args);}}, require: name => {
+    if (name === 'expo-file-system') return {File};
+    if (name === 'expo/fetch') return {fetch};
+    throw Error(name);
+  }});
+  await exports.uploadToCloudinary({uri:'file:///recording.m4a',uploadUrl:'https://upload.example.com',fields:{signature:'signed'},contentType:'audio/mp4',filename:'recording.m4a'});
+  assert.equal(requests.length,1);
+  assert.equal(requests[0].url,'https://upload.example.com');
+  assert.equal(requests[0].options.method,'POST');
+  const body=requests[0].options.body;
+  assert.ok(body instanceof Uint8Array);
+  const encoded=Buffer.from(body).toString('utf8');
+  assert.match(encoded,/name="signature"\r\n\r\nsigned/);
+  assert.match(encoded,/filename="recording.m4a"/);
+  assert.match(encoded,/Content-Type: audio\/mp4/);
+  assert.ok(Buffer.from(body).includes(Buffer.from([1,2,3])));
+  assert.match(requests[0].options.headers['Content-Type'],/^multipart\/form-data; boundary=/);
+});
+
+test('optional device PIN persists a hash, locks, verifies, throttles and disables', async () => {
+  let saved, state;
+  const {usePinStore} = load('src/store/pinStore.ts', {
+    zustand: {create: initializer => {state=initializer(update => {state={...state,...(typeof update==='function'?update(state):update)};});return {getState:()=>state};}},
+    'expo-secure-store': {getItemAsync:async()=>saved??null,setItemAsync:async(_,value)=>{saved=value;}},
+    'expo-crypto': {randomUUID:()=> 'salt',CryptoDigestAlgorithm:{SHA256:'SHA256'},digestStringAsync:async(_,text)=>require('node:crypto').createHash('sha256').update(text).digest('hex')}
+  });
+  const pin=()=>usePinStore.getState();
+  await pin().initialize(); assert.equal(pin().enabled,false);
+  await pin().dismissPrompt(); assert.equal(pin().prompted,true);
+  await pin().setup('1234'); assert.equal(pin().enabled,true);
+  assert.equal(saved.includes('1234'),false);
+  pin().lock(); assert.equal(pin().locked,true);
+  assert.equal(await pin().verify('9999'),false); assert.equal(pin().locked,true);
+  assert.equal(await pin().verify('1234'),true); assert.equal(pin().locked,false);
+  await pin().initialize(); assert.equal(pin().locked,true);
+  for(let i=0;i<5;i++) assert.equal(await pin().verify('9999'),false);
+  await assert.rejects(pin().verify('1234'),/Too many attempts/);
+  // Reset only the simulated persisted clock to exercise authenticated disabling.
+  saved=JSON.stringify({...JSON.parse(saved),retryAt:0});
+  await pin().initialize(); assert.equal(await pin().verify('1234'),true);
+  await pin().disable(); assert.equal(pin().enabled,false);
+  await pin().initialize(); assert.equal(pin().locked,false); assert.equal(pin().prompted,true);
+});

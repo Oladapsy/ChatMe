@@ -31,7 +31,7 @@ export async function uploadChatAudio(uri: string, durationSec: number, clientUp
   const file = new File(uri);
   if (!file.exists || file.size <= 0) throw new Error("Recording is missing or empty");
   const types: Record<string, string> = { m4a: "audio/mp4", mp4: "audio/mp4", aac: "audio/aac", wav: "audio/wav", webm: "audio/webm", caf: "audio/x-caf" };
-  const contentType = file.type || types[file.extension.replace(".", "").toLowerCase()];
+  const contentType = types[file.extension.replace(".", "").toLowerCase()] || file.type;
   if (!contentType) throw new Error("Unknown recording format");
   const media = await uploadMedia({ uri, purpose: "message_attachment", contentType, sizeBytes: file.size, originalFilename: file.name, clientUploadId, progress });
   return media.id;

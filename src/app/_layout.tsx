@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PinLock } from "@/features/security/components/PinLock";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
@@ -91,10 +92,12 @@ export default function RootLayout() {
           </Stack.Protected> */}
 
           <Stack.Protected guard={isAuthenticated && profileComplete}>
+            <Stack.Screen name="(auth)/setup-pin" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="chat-room" />
           </Stack.Protected>
         </Stack>
+        <PinLock authenticated={isAuthenticated} />
       </GestureHandlerRootView>
     </QueryClientProvider>
   );

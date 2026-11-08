@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { StyleSheet, View} from "react-native";
-import { useRouter } from "expo-router";
+import { Alert, StyleSheet, View} from "react-native";
+import { usePinStore } from "@/store/pinStore";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
@@ -17,21 +18,35 @@ export default function SetupPinScreen() {
 
   const [pin, setPin] = useState<string[]>([]);
 
-  const handleDigitPress = (digit: string) => {
-    if (pin.length < PIN_LENGTH) {
-      const updatedPin = [...pin, digit];
-      setPin(updatedPin);
-
-      if (updatedPin.length === PIN_LENGTH) {
-        setTimeout(() => {
-          console.log("PIN Created:", updatedPin.join(""));
-          router.replace("/(tabs)");
-        }, 300);
-      }
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const security = usePinStore();
+  const [firstPin, setFirstPin] = useState("");
+  const [busy, setBusy] = useState(false);
+  const disabling = mode === "disable";
+  const handleDigitPress = async (digit: string) => {
+    if (busy || pin.length >= PIN_LENGTH) return;
+    const next = [...pin, digit];
+    setPin(next);
+    if (next.length !== PIN_LENGTH) return;
+    const code = next.join("");
+    if (!disabling && !firstPin) { setFirstPin(code); setPin([]); return; }
+    if (!disabling && code !== firstPin) {
+      Alert.alert("PINs do not match", "Please choose your PIN again.");
+      setFirstPin(""); setPin([]); return;
     }
+    setBusy(true);
+    try {
+      if (disabling) {
+        if (!await security.verify(code)) throw new Error("Incorrect PIN.");
+        await security.disable();
+      } else await security.setup(code);
+      router.back();
+    } catch (error) { Alert.alert("App PIN", error instanceof Error ? error.message : "Could not save PIN."); }
+    finally { setBusy(false); setPin([]); }
   };
 
   const handleDelete = () => {
+    if (busy) return;
     setPin((prev) => prev.slice(0, -1));
   };
 
@@ -51,7 +66,7 @@ export default function SetupPinScreen() {
             align="center"
             color={themeColors.text}
           >
-            Setup pin code
+            {disabling ? "Turn off app PIN" : firstPin ? "Confirm your PIN" : "Set up app PIN"}
           </Typography>
 
           <Typography

@@ -1,3 +1,4 @@
+import { usePinStore } from "@/store/pinStore";
 import React from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
@@ -11,6 +12,7 @@ import { useBlockedUsers } from "@/features/contacts/hooks/useBlockedUsers";
 
 export default function PrivacyScreen() {
   const router = useRouter();
+  const pinEnabled = usePinStore(state => state.enabled);
   const { isDark, themeColors } = useAppTheme();
   // the blocked list count 
   const { data, isLoading, isError } = useBlockedUsers();
@@ -35,6 +37,13 @@ export default function PrivacyScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ marginTop: 0 }}
         >
+          <PrivacyRowItem
+            label="App PIN"
+            value={pinEnabled ? "On · Tap to turn off" : "Off · Tap to set up"}
+            onPress={() => router.push({ pathname: "/(auth)/setup-pin", params: { mode: pinEnabled ? "disable" : "setup" } })}
+            isDark={isDark}
+            themeColors={themeColors}
+          />
           <PrivacyRowItem
             label="Last Seen"
             value="Everyone"

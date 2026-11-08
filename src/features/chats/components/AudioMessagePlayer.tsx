@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import PauseIcon from "@/assets/icons/chat/pause.svg";
@@ -13,14 +13,18 @@ import { useAppTheme } from "@/shared/hooks/useAppTheme";
 type AudioMessagePlayerProps = {
   uri: string;
   durationMs: number;
+  isOwnMessage?: boolean;
+  metadata?: ReactNode;
 };
 
 export default function AudioMessagePlayer({
   uri,
   durationMs,
+  isOwnMessage = false,
+  metadata,
 }: AudioMessagePlayerProps) {
   const { themeColors } = useAppTheme();
-  const styles = createStyles(themeColors);
+  const styles = createStyles(themeColors, isOwnMessage);
 
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
@@ -32,7 +36,6 @@ export default function AudioMessagePlayer({
 }, [player]);
 
   const isPlaying = status.playing;
-  const hasFinished = status.didJustFinish;
   const currentTimeMs = status.didJustFinish
     ? 0
     : (status.currentTime ?? 0) * 1000;
@@ -73,13 +76,11 @@ export default function AudioMessagePlayer({
         accessibilityRole="button"
         accessibilityLabel={isPlaying ? "Pause audio" : "Play audio"}
       >
-        <Text style={styles.playIcon}>
           {isPlaying ? (
             <PauseIcon width={20} height={20} color={"white"} />
           ) : (
             <PlayIcon width={20} height={20} color={"white"} />
           )}
-        </Text>
       </Pressable>
 
       <View style={styles.details}>
@@ -87,27 +88,32 @@ export default function AudioMessagePlayer({
           <View style={[styles.progress, { width: `${progress}%` }]} />
         </View>
 
-        <Text style={styles.time}>
-          {formatTime(currentTimeMs > 0 ? currentTimeMs : durationMs)}
-        </Text>
+        <View style={styles.footer}>
+          <Text style={styles.time}>
+            {formatTime(currentTimeMs > 0 ? currentTimeMs : durationMs)}
+          </Text>
+          {metadata}
+        </View>
       </View>
     </View>
   );
 }
 
-function createStyles(colors: ReturnType<typeof useAppTheme>["themeColors"]) {
+function createStyles(colors: ReturnType<typeof useAppTheme>["themeColors"], isOwnMessage: boolean) {
   return StyleSheet.create({
     container: {
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
-      minWidth: 200,
+      width: 230,
+      maxWidth: "100%",
+      minHeight: 48,
     },
     playButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.primary,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: isOwnMessage ? "rgba(255,255,255,0.18)" : colors.primary,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -117,21 +123,30 @@ function createStyles(colors: ReturnType<typeof useAppTheme>["themeColors"]) {
     },
     details: {
       flex: 1,
-      gap: 6,
+      gap: 8,
+      paddingTop: 8,
     },
     track: {
       height: 4,
-      backgroundColor: colors.border,
+      backgroundColor: isOwnMessage ? "rgba(255,255,255,0.3)" : colors.border,
       borderRadius: 4,
       overflow: "hidden",
     },
     progress: {
       height: "100%",
-      backgroundColor: colors.textSecondary,
+      backgroundColor: isOwnMessage ? "white" : colors.primary,
+    },
+    footer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 8,
     },
     time: {
       fontSize: 12,
-      color: colors.textSecondary,
+      lineHeight: 16,
+      includeFontPadding: false,
+      color: isOwnMessage ? "rgba(255,255,255,0.8)" : colors.textSecondary,
     },
   });
 }

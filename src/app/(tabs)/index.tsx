@@ -1,3 +1,4 @@
+import { usePinStore } from "@/store/pinStore";
 import React, { useState, useMemo } from "react";
 import {
   StyleSheet,
@@ -101,6 +102,7 @@ export default function HomeScreen() {
   // the top head color -> safe area side
   const topHeaderBg = isDark ? themeColors.onboardingTop : themeColors.primary;
 
+  const pinSecurity = usePinStore();
   const [showPinModal, setShowPinModal] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -462,12 +464,13 @@ export default function HomeScreen() {
       />
 
       <PinPromptModal
-        visible={showPinModal}
+        visible={showPinModal && pinSecurity.ready && !pinSecurity.prompted && !pinSecurity.enabled}
         onAccept={() => {
           setShowPinModal(false);
+          void pinSecurity.dismissPrompt();
           router.push("/(auth)/setup-pin");
         }}
-        onDecline={() => setShowPinModal(false)}
+        onDecline={() => { setShowPinModal(false); void pinSecurity.dismissPrompt().catch(() => {}); }}
       />
     </View>
   );

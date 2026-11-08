@@ -402,6 +402,12 @@ export default function ChatRoomScreen() {
   const { takePhoto, pickImages } = useCameraHandler();
   const flatListRef = useRef<FlatList>(null);
   const isLoadingOlderRef = useRef(false);
+  const openingAtLatest = useRef(true);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
+  useEffect(() => {
+    openingAtLatest.current = true;
+    setInitialScrollDone(false);
+  }, [activeChatId]);
   const sendInFlightRef = useRef(false);
   const isJumpingToMessageRef = useRef(false);
 
@@ -616,9 +622,14 @@ export default function ChatRoomScreen() {
       contentSize.height - layoutMeasurement.height - contentOffset.y;
 
     setIsAtLatest(distanceFromBottom <= 80);
+    if (openingAtLatest.current && distanceFromBottom <= 1) {
+      openingAtLatest.current = false;
+      setInitialScrollDone(true);
+    }
 
     // Load older messages when the user reaches the top.
     if (
+      !openingAtLatest.current &&
       contentOffset.y <= 50 &&
       hasNextPage &&
       !isFetchingNextPage &&
@@ -1292,9 +1303,21 @@ export default function ChatRoomScreen() {
               keyExtractor={(item) => item.id}
               onScroll={handleMessageScroll}
               scrollEventThrottle={16}
-              maintainVisibleContentPosition={{
-                minIndexForVisible: 0,
+              onContentSizeChange={() => {
+                if (!isSearching && processedMessages.length && (openingAtLatest.current || isAtLatest)) {
+                  flatListRef.current?.scrollToEnd({ animated: false });
+                }
               }}
+              onLayout={() => {
+                if (openingAtLatest.current && !isSearching) flatListRef.current?.scrollToEnd({ animated: false });
+              }}
+              onScrollBeginDrag={() => {
+                openingAtLatest.current = false;
+                setInitialScrollDone(true);
+              }}
+              maintainVisibleContentPosition={initialScrollDone ? {
+                minIndexForVisible: 0,
+              } : undefined}
               onScrollToIndexFailed={(info) => {
                 flatListRef.current?.scrollToOffset({
                   offset: info.averageItemLength * info.index,

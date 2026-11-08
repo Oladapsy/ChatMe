@@ -124,6 +124,49 @@ export function MessageBubble({
         ? "rgba(255,255,255,0.7)"
         : themeColors.textSecondary;
 
+  const messageMeta = (
+              <View style={[styles.messageMeta, message.kind === "audio" && styles.audioMeta]}>
+                {isEdited && (
+                  <Typography
+                    size={10}
+                    lineHeight={14}
+                    color={isMe ? "rgba(255,255,255,0.75)" : timeColor}
+                  >
+                    Edited
+                  </Typography>
+                )}
+
+                <Typography
+                  size={10}
+                  color={isMe ? "rgba(255,255,255,0.75)" : timeColor}
+                >
+                  {formatMessageTime(message.createdAt)}
+                </Typography>
+
+                {isMe && !isDeleted && (
+                  <View style={styles.receiptContainer}>
+                    {receiptStatus === "sent" ? (
+                      <CheckMark width={14} height={14} color={receiptColor} />
+                    ) : (
+                      <View style={styles.doubleCheckContainer}>
+                        <CheckMark
+                          width={14}
+                          height={14}
+                          color={receiptColor}
+                        />
+                        <CheckMark
+                          width={14}
+                          height={14}
+                          color={receiptColor}
+                          style={styles.overlapCheck}
+                        />
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+  );
+
   return (
     <View
       style={[
@@ -175,6 +218,7 @@ export function MessageBubble({
             delayLongPress={400}
             style={[
               styles.bubble,
+              message.kind === "audio" && !isDeleted && styles.audioBubble,
               { backgroundColor: isMe ? sentBubbleBg : receivedBubbleBg },
               isMe ? styles.bubbleMe : styles.bubbleOther,
             ]}
@@ -227,66 +271,29 @@ export function MessageBubble({
                       );
                     })}
 
+                  {message.kind === "audio" &&
+                    message.attachments.map((attachment) => {
+                      if (attachment.type !== "audio") return null;
+                      return (
+                        <AudioMessagePlayer
+                          key={attachment.mediaId}
+                          uri={attachment.url}
+                          durationMs={attachment.durationMs}
+                          isOwnMessage={Boolean(isMe)}
+                          metadata={!message.text ? messageMeta : undefined}
+                        />
+                      );
+                    })}
+
                   {Boolean(message.text) &&
                     renderHighlightedText(message.text!, searchQuery)}
                 </>
               )}
 
-              <View style={styles.messageMeta}>
-                {isEdited && (
-                  <Typography
-                    size={10}
-                    color={isMe ? "rgba(255,255,255,0.75)" : timeColor}
-                  >
-                    Edited
-                  </Typography>
-                )}
-
-                <Typography
-                  size={10}
-                  color={isMe ? "rgba(255,255,255,0.75)" : timeColor}
-                >
-                  {formatMessageTime(message.createdAt)}
-                </Typography>
-
-                {isMe && !isDeleted && (
-                  <View style={styles.receiptContainer}>
-                    {receiptStatus === "sent" ? (
-                      <CheckMark width={14} height={14} color={receiptColor} />
-                    ) : (
-                      <View style={styles.doubleCheckContainer}>
-                        <CheckMark
-                          width={14}
-                          height={14}
-                          color={receiptColor}
-                        />
-                        <CheckMark
-                          width={14}
-                          height={14}
-                          color={receiptColor}
-                          style={styles.overlapCheck}
-                        />
-                      </View>
-                    )}
-                  </View>
-                )}
-              </View>
+              {(message.kind !== "audio" || isDeleted || Boolean(message.text)) && messageMeta}
             </View>
 
-            {/* Audio Attachment (Hidden if deleted) */}
-            {!isDeleted &&
-              message.kind === "audio" &&
-              message.attachments.map((attachment) => {
-                if (attachment.type !== "audio") return null;
 
-                return (
-                  <AudioMessagePlayer
-                    key={attachment.mediaId}
-                    uri={attachment.url}
-                    durationMs={attachment.durationMs}
-                  />
-                );
-              })}
           </TouchableOpacity>
           {!message.deletedAt && (
             <MessageReactions
@@ -351,6 +358,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     flexShrink: 1,
   },
+  audioBubble: {
+    paddingTop: 12,
+    paddingBottom: 10,
+  },
   bubbleMe: {
     borderBottomRightRadius: 0,
   },
@@ -389,6 +400,10 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     marginTop: 2,
     gap: 4,
+  },
+  audioMeta: {
+    marginTop: 0,
+    height: 16,
   },
   receiptContainer: {
     justifyContent: "center",
