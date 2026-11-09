@@ -135,3 +135,44 @@ test('optional device PIN persists a hash, locks, verifies, throttles and disabl
   await pin().disable(); assert.equal(pin().enabled,false);
   await pin().initialize(); assert.equal(pin().locked,false); assert.equal(pin().prompted,true);
 });
+
+test('push registration retains installation UUID and uses Expo tokens across logins', async () => {
+  let state, generation=1, uuidCalls=0;
+  const saved=new Map(), calls=[];
+  const notifications={getPermissionsAsync:async()=>({granted:true}),getExpoPushTokenAsync:async()=>({data:'ExpoPushToken[test]'}),setNotificationChannelAsync:async()=>{},AndroidImportance:{HIGH:4}};
+  const push=load('src/features/notifications/pushDevices.ts',{
+    'react-native':{Platform:{OS:'android'}},'expo-constants':{appOwnership:'standalone',easConfig:{projectId:'project'}},
+    'expo-secure-store':{getItemAsync:async key=>saved.get(key)??null,setItemAsync:async(key,value)=>{saved.set(key,value);}},
+    'expo-crypto':{randomUUID:()=>{uuidCalls++;return 'stable-installation';}},
+    zustand:{create:initializer=>{state=initializer();return {getState:()=>state,setState:update=>{state={...state,...update};}};}},
+    '@/services/api':{api:{put:async(path,body)=>calls.push({method:'PUT',path,body}),delete:async path=>calls.push({method:'DELETE',path})}},
+    '@/services/authStorage':{getSessionGeneration:()=>generation},'expo-notifications':notifications
+  });
+  push.beginPushSession(); await push.syncPushRegistration();
+  await push.unregisterPushForLogout();
+  generation++; push.beginPushSession(); await push.syncPushRegistration();
+  assert.equal(uuidCalls,1);
+  assert.equal(calls[0].body.token,'ExpoPushToken[test]');
+  assert.equal(calls[0].body.platform,'android');
+  assert.equal(calls[0].path,calls[2].path);
+  await push.setPushEnabled(false);
+  const count=calls.length;
+  await push.syncPushRegistration(); assert.equal(calls.length,count);
+});
+
+test('logout cancels registration while token acquisition is in flight', async () => {
+  let state;
+  const token=deferred(), entered=deferred(), calls=[];
+  const push=load('src/features/notifications/pushDevices.ts',{
+    'react-native':{Platform:{OS:'ios'}},'expo-constants':{appOwnership:'standalone',easConfig:{projectId:'project'}},
+    'expo-secure-store':{getItemAsync:async()=>null,setItemAsync:async()=>{}},'expo-crypto':{randomUUID:()=> 'installation'},
+    zustand:{create:initializer=>{state=initializer();return {getState:()=>state,setState:update=>{state={...state,...update};}};}},
+    '@/services/api':{api:{put:async()=>calls.push('PUT'),delete:async()=>calls.push('DELETE')}},
+    '@/services/authStorage':{getSessionGeneration:()=>1},
+    'expo-notifications':{getPermissionsAsync:async()=>({granted:true}),getExpoPushTokenAsync:()=>{entered.resolve();return token.promise;}}
+  });
+  const pending=push.syncPushRegistration(); await entered.promise;
+  const logout=push.unregisterPushForLogout(); token.resolve({data:'ExpoPushToken[test]'});
+  await pending; await logout;
+  assert.deepEqual(calls,['DELETE']);
+});

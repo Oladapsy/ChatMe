@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PushNotifications } from "@/features/notifications/PushNotifications";
 import { PinLock } from "@/features/security/components/PinLock";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -97,6 +98,7 @@ export default function RootLayout() {
             <Stack.Screen name="chat-room" />
           </Stack.Protected>
         </Stack>
+        <PushNotifications authenticated={isAuthenticated} profileComplete={profileComplete} />
         <PinLock authenticated={isAuthenticated} />
       </GestureHandlerRootView>
     </QueryClientProvider>

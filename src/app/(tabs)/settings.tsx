@@ -1,3 +1,4 @@
+import { usePushState, setPushEnabled } from "@/features/notifications/pushDevices";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -5,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -36,7 +38,12 @@ export default function SettingsScreen() {
 
   const logoutMutation = useLogout();
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const pushState = usePushState();
+  const notificationsEnabled = pushState.registered && pushState.enabled;
+  const setNotificationsEnabled = (enabled: boolean) => {
+    if (pushState.busy) return;
+    void setPushEnabled(enabled).catch(error => Alert.alert("Notifications", error.message));
+  };
   const { data: profile, isPending, isError, error } = useMe();
 
   // Mock Profile Data
