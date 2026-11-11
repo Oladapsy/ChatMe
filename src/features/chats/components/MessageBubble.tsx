@@ -1,10 +1,11 @@
 import React, { useRef } from "react";
-import { ActivityIndicator, StyleSheet, View, Image, TouchableOpacity } from "react-native";
+import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
 import { Message } from "@/features/chats/types/message";
 
 // Icons
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import PendingClock from "@/assets/icons/chat/pendingClock.svg";
 import CheckMark from "@/assets/icons/chat/check.svg";
 
 import AudioMessagePlayer from "@/features/chats/components/AudioMessagePlayer";
@@ -147,7 +148,7 @@ export function MessageBubble({
                   {formatMessageTime(message.createdAt)}
                 </Typography>
 
-                {isMe && message.localDelivery === "pending" && <ActivityIndicator size="small" color="white" accessibilityLabel="Sending message" />}
+                {isMe && message.localDelivery === "pending" && <PendingClock width={14} height={14} color="rgba(255,255,255,0.7)" accessibilityRole="image" accessibilityLabel="Sending message" />}
                 {isMe && message.localDelivery === "failed" && <TouchableOpacity onPress={onRetry} disabled={retryDisabled} accessibilityRole="button" accessibilityLabel="Message failed. Tap to resend" accessibilityHint={message.failureReason} accessibilityState={{ disabled: retryDisabled }} style={{ paddingHorizontal: 8, paddingVertical: 6 }}>
                   <Typography size={12} lineHeight={16} color="white" weight="bold">! Retry</Typography>
                 </TouchableOpacity>}
