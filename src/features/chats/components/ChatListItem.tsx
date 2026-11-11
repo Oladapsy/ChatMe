@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 import CheckMark from "@/assets/icons/chat/check.svg";
 import { useMe } from "@/features/auth/hooks/useMe";
 import { useReceiptFrontiers } from "@/features/chats/hooks/useReceiptFrontiers";
@@ -31,7 +31,7 @@ export function ChatListItem({
 }: ChatListItemProps) {
   const { themeColors } = useAppTheme();
   const { data: user } = useMe();
-  const { data: typingUsers = [] } = useQuery<string[]>({ queryKey: ["typing", chat.id], initialData: [], enabled: false });
+  const { data: typingUsers = [] } = useQuery<string[]>({ queryKey: ["typing", chat.id], queryFn: skipToken, initialData: [] });
   const otherTypingUsers = typingUsers.filter(id => id !== user?.id);
   const typingNames = otherTypingUsers.map(id => chat.members?.find(member => member.id === id)?.name).filter(Boolean);
   const typingLabel = !otherTypingUsers.length ? null : !chat.isGroup ? "Typing…" : otherTypingUsers.length > 1 ? `${otherTypingUsers.length} people are typing…` : `${typingNames[0] ?? "Someone"} is typing…`;
