@@ -406,3 +406,23 @@ test('list typing cannot update a new account from an older socket',()=>{
   const app=listTypingHarness();app.switchAccount();app.event('typing.started',{conversationId:'room',userId:'A',expiresAt:new Date(Date.now()+5000).toISOString()});assert.equal(app.users().length,0);
   app.dispose();app.unobserve();app.client.clear();
 });
+
+test('conversation draft preview updates while typing, clears after sending, and restores after restart',async()=>{
+  const saved=new Map();
+  function app() {
+    const h=hooks();
+    const module=load('src/features/chats/hooks/useComposerDraft.ts',{
+      react:h.react,'react-native':{Alert:{alert:()=>{}}},
+      '@/features/chats/utils/retainAttachment':{retainAttachment:uri=>uri},
+      '@/services/authStorage':{getSessionGeneration:()=>0},
+      '@react-native-async-storage/async-storage':{getItem:async key=>saved.get(key)??null,setItem:async(key,value)=>{saved.set(key,value);}}
+    });
+    return account=>h.render(()=>({composer:module.useComposerDraft(account,'room'),preview:module.useDraftPreview(account,'room')}));
+  }
+  let render=app();render('A');await settle();render('A');await settle();
+  render('A').composer.setText('unsent\nmessage');assert.equal(render('A').preview,'unsent message');await settle();
+  render=app();render('A');await settle();assert.equal(render('A').preview,'unsent message');
+  render('A').composer.setText('');assert.equal(render('A').preview,null);await settle();
+  render('A').composer.setImages(['photo']);assert.equal(render('A').preview,'Photo');await settle();
+  assert.equal(render('B').preview,null);await settle();assert.equal(render('B').preview,null);
+});

@@ -1,3 +1,4 @@
+import { useDraftPreview } from "@/features/chats/hooks/useComposerDraft";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import CheckMark from "@/assets/icons/chat/check.svg";
 import { useMe } from "@/features/auth/hooks/useMe";
@@ -35,6 +36,7 @@ export function ChatListItem({
   const otherTypingUsers = typingUsers.filter(id => id !== user?.id);
   const typingNames = otherTypingUsers.map(id => chat.members?.find(member => member.id === id)?.name).filter(Boolean);
   const typingLabel = !otherTypingUsers.length ? null : !chat.isGroup ? "Typing…" : otherTypingUsers.length > 1 ? `${otherTypingUsers.length} people are typing…` : `${typingNames[0] ?? "Someone"} is typing…`;
+  const draftPreview = useDraftPreview(user?.id, chat.id);
   const outgoing = !!user?.id && chat.latestMessage?.senderId === user.id;
   const { data: receipts } = useReceiptFrontiers(outgoing ? chat.id : "");
   const status = latestMessageReceipt(chat.latestMessage, user?.id, receipts?.items, chat.isGroup ? chat.members?.map(member => member.id) : undefined);
@@ -114,18 +116,18 @@ export function ChatListItem({
         </View>
 
         <View style={styles.bottomRow}>
-          {status && !typingLabel && <View style={styles.receipt} accessible accessibilityRole="image" accessibilityLabel={`Message ${status}`}>
+          {status && !typingLabel && !draftPreview && <View style={styles.receipt} accessible accessibilityRole="image" accessibilityLabel={`Message ${status}`}>
             <CheckMark width={18} height={18} color={receiptColor} />
             {status !== "sent" && <CheckMark width={18} height={18} color={receiptColor} style={{ marginLeft: -9 }} />}
           </View>}
           <Typography
             size={15}
-            color={typingLabel ? themeColors.primary : themeColors.textSecondary}
+            color={typingLabel && !draftPreview ? themeColors.primary : themeColors.textSecondary}
             accessibilityLiveRegion="polite"
             numberOfLines={1}
             style={styles.lastMessage}
           >
-            {typingLabel ?? chat.lastMessage}
+            {draftPreview ? <><Typography color={themeColors.error} weight="bold" size={15}>Draft: </Typography>{draftPreview}</> : typingLabel ?? chat.lastMessage}
           </Typography>
 
           {/* Badges: Unread Counter or Pin Icon */}

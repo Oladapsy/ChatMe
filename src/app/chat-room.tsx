@@ -411,11 +411,9 @@ export default function ChatRoomScreen() {
   const { takePhoto, pickImages } = useCameraHandler();
   const flatListRef = useRef<FlatList>(null);
   const isLoadingOlderRef = useRef(false);
-  const openingAtLatest = useRef(true);
   const followingLatestRef = useRef(true);
   const [followingLatest, setFollowingLatest] = useState(true);
   const userScrollingRef = useRef(false);
-  const listSize = useRef({ content: 0, viewport: 0 });
   const bottomFrame = useRef<number | null>(null);
   const searchingRef = useRef(isSearching);
   searchingRef.current = isSearching;
@@ -427,8 +425,7 @@ export default function ChatRoomScreen() {
     if (bottomFrame.current !== null) cancelAnimationFrame(bottomFrame.current);
     const scroll = () => {
       if (!followingLatestRef.current || searchingRef.current || userScrollingRef.current) return;
-      const { content, viewport } = listSize.current;
-      if (viewport > 0) flatListRef.current?.scrollToOffset({ offset: Math.max(0, content - viewport), animated: false });
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
     };
     bottomFrame.current = requestAnimationFrame(() => {
       scroll();
@@ -444,20 +441,17 @@ export default function ChatRoomScreen() {
       if (bottomFrame.current !== null) cancelAnimationFrame(bottomFrame.current);
     };
   }, [scrollToLatest]);
-  const [initialScrollDone, setInitialScrollDone] = useState(false);
   useEffect(() => {
-    openingAtLatest.current = true;
     userScrollingRef.current = false;
     followLatest(true);
     setIsAtLatest(true);
-    setInitialScrollDone(false);
     scrollToLatest();
   }, [activeChatId, followLatest, scrollToLatest]);
   const sendInFlightRef = useRef(false);
   const isJumpingToMessageRef = useRef(false);
 
   const processedMessages = useMemo(() => {
-    return processMessages(messages, currentUser?.id);
+    return processMessages(messages, currentUser?.id).reverse();
   }, [messages, currentUser?.id]);
 
   useEffect(() => {
@@ -669,21 +663,17 @@ export default function ChatRoomScreen() {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
 
     // Check whether the user is near the latest message.
-    const distanceFromBottom =
-      contentSize.height - layoutMeasurement.height - contentOffset.y;
+    const distanceFromBottom = Math.max(0, contentOffset.y);
+    const distanceFromOldest = contentSize.height - layoutMeasurement.height - contentOffset.y;
 
     setIsAtLatest(distanceFromBottom <= 24);
     // Layout-driven scroll events must not turn off bottom following.
     if (userScrollingRef.current) followLatest(distanceFromBottom <= 24);
-    if (openingAtLatest.current && distanceFromBottom <= 1) {
-      openingAtLatest.current = false;
-      setInitialScrollDone(true);
-    }
 
     // Load older messages when the user reaches the top.
     if (
-      !openingAtLatest.current &&
-      contentOffset.y <= 50 &&
+      userScrollingRef.current &&
+      distanceFromOldest <= 50 &&
       hasNextPage &&
       !isFetchingNextPage &&
       !isLoadingOlderRef.current &&
@@ -983,6 +973,7 @@ export default function ChatRoomScreen() {
     if (isJumpingToMessageRef.current) return;
 
     isJumpingToMessageRef.current = true;
+    followLatest(false);
 
     try {
       // First check the messages already loaded.
@@ -1030,7 +1021,7 @@ export default function ChatRoomScreen() {
         const updatedProcessedMessages = processMessages(
           allMessages,
           currentUser?.id,
-        );
+        ).reverse();
 
         targetIndex = updatedProcessedMessages.findIndex(
           (item) => item.type === "message" && item.id === messageId,
@@ -1045,16 +1036,8 @@ export default function ChatRoomScreen() {
         return;
       }
 
-      // Allow React Native to render the newly fetched messages.
-      requestAnimationFrame(() => {
-        flatListRef.current?.scrollToIndex({
-          index: targetIndex,
-          animated: true,
-          viewPosition: 0.5,
-        });
-
-        setHighlightedMessageId(messageId);
-      });
+      // The effect waits for the actual rendered feed before jumping once.
+      setPendingJumpMessageId(messageId);
     } catch (error) {
       console.error("JUMP TO MESSAGE ERROR:", error);
 
@@ -1063,7 +1046,7 @@ export default function ChatRoomScreen() {
         "Could not load the original message. Please try again.",
       );
     } finally {
-      setPendingJumpMessageId(messageId);
+      isJumpingToMessageRef.current = false;
     }
   };
 
@@ -1355,24 +1338,21 @@ export default function ChatRoomScreen() {
           ) : (
             <FlatList
               ref={flatListRef}
+              inverted
               data={processedMessages}
               keyExtractor={(item) => item.id}
               onScroll={handleMessageScroll}
               scrollEventThrottle={16}
               contentInsetAdjustmentBehavior="never"
-              onContentSizeChange={(_width, height) => {
-                listSize.current.content = height;
+              onContentSizeChange={() => {
                 if (followingLatestRef.current) scrollToLatest();
               }}
-              onLayout={event => {
-                listSize.current.viewport = event.nativeEvent.layout.height;
+              onLayout={() => {
                 if (followingLatestRef.current) scrollToLatest();
               }}
               onScrollBeginDrag={() => {
                 userScrollingRef.current = true;
                 followLatest(false);
-                openingAtLatest.current = false;
-                setInitialScrollDone(true);
               }}
               onScrollEndDrag={() => { userScrollingRef.current = false; }}
               onMomentumScrollBegin={() => { userScrollingRef.current = true; }}
@@ -1381,7 +1361,7 @@ export default function ChatRoomScreen() {
                 userScrollingRef.current = false;
                 if (followingLatestRef.current) scrollToLatest();
               }}
-              maintainVisibleContentPosition={initialScrollDone && !followingLatest ? {
+              maintainVisibleContentPosition={!followingLatest ? {
                 minIndexForVisible: 0,
               } : undefined}
               onScrollToIndexFailed={(info) => {
@@ -1419,7 +1399,7 @@ export default function ChatRoomScreen() {
               contentContainerStyle={{
                 paddingVertical: 10,
                 flexGrow: 1,
-                justifyContent: "flex-end",
+                justifyContent: "flex-start",
               }}
             />
           )}

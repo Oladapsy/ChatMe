@@ -1,12 +1,42 @@
 import { retainAttachment } from "@/features/chats/utils/retainAttachment";
 import { Alert } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getSessionGeneration } from "@/services/authStorage";
 
 type Draft = { text: string; images: string[] };
 const empty: Draft = { text: "", images: [] };
 const writes = new Map<string, Promise<unknown>>();
+const previews = new Map<string, Draft>();
+const previewListeners = new Set<() => void>();
+const previewLoads = new Map<string, Promise<void>>();
+function publishPreview(key: string, draft: Draft) {
+  previews.set(key, draft);
+  previewListeners.forEach(listener => listener());
+}
+function subscribePreview(listener: () => void) {
+  previewListeners.add(listener);
+  return () => { previewListeners.delete(listener); };
+}
+export function useDraftPreview(userId: string | undefined, conversationId: string) {
+  const key = userId && conversationId ? `chatme.draft:${userId}:${conversationId}` : null;
+  const draft = useSyncExternalStore(subscribePreview, () => key ? previews.get(key) ?? empty : empty, () => empty);
+  useEffect(() => {
+    if (!key || previews.has(key)) return;
+    if (!previewLoads.has(key)) {
+      const load = (writes.get(key) ?? Promise.resolve()).then(() => AsyncStorage.getItem(key)).then(saved => {
+        // A newer composer update always wins over a slow storage read.
+        if (previews.has(key)) return;
+        const value = saved ? JSON.parse(saved) as Draft : empty;
+        if (typeof value.text === "string" && Array.isArray(value.images)) publishPreview(key, value);
+      }).catch(() => {}).finally(() => previewLoads.delete(key));
+      previewLoads.set(key, load);
+    }
+  }, [key]);
+  const text = draft.text.trim().replace(/\s+/g, " ");
+  return text || (draft.images.length ? "Photo" : null);
+}
+
 export function useComposerDraft(userId: string | undefined, conversationId: string) {
   const key = userId && conversationId ? `chatme.draft:${userId}:${conversationId}` : null;
   const [record, setRecord] = useState<{ key: string | null; draft: Draft }>({ key: null, draft: empty });
@@ -35,6 +65,7 @@ export function useComposerDraft(userId: string | undefined, conversationId: str
   }, [key]);
   useEffect(() => {
     if (!key || readyKey !== key || record.key !== key) return;
+    publishPreview(key, record.draft);
     const snapshot = JSON.stringify(record.draft);
     const next = (writes.get(key) ?? Promise.resolve()).catch(() => {}).then(() => AsyncStorage.setItem(key, snapshot));
     writes.set(key, next);
@@ -43,6 +74,7 @@ export function useComposerDraft(userId: string | undefined, conversationId: str
   function update(next: Draft) {
     version.current++;
     current.current = { key, draft: next };
+    if (key) publishPreview(key, next);
     setRecord(current.current);
   }
   const latest = () => current.current.key === key ? current.current.draft : empty;
