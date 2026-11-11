@@ -1,3 +1,7 @@
+import CheckMark from "@/assets/icons/chat/check.svg";
+import { useMe } from "@/features/auth/hooks/useMe";
+import { useReceiptFrontiers } from "@/features/chats/hooks/useReceiptFrontiers";
+import { latestMessageReceipt } from "@/features/chats/utils/latestMessageReceipt";
 import React from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { Typography } from "@/shared/components/Typography";
@@ -25,6 +29,11 @@ export function ChatListItem({
   onLongPress,
 }: ChatListItemProps) {
   const { themeColors } = useAppTheme();
+  const { data: user } = useMe();
+  const outgoing = !!user?.id && chat.latestMessage?.senderId === user.id;
+  const { data: receipts } = useReceiptFrontiers(outgoing ? chat.id : "");
+  const status = latestMessageReceipt(chat.latestMessage, user?.id, receipts?.items, chat.isGroup ? chat.members?.map(member => member.id) : undefined);
+  const receiptColor = status === "read" ? themeColors.blue : themeColors.textSecondary;
 
   return (
     <TouchableOpacity
@@ -100,6 +109,10 @@ export function ChatListItem({
         </View>
 
         <View style={styles.bottomRow}>
+          {status && <View style={styles.receipt} accessible accessibilityRole="image" accessibilityLabel={`Message ${status}`}>
+            <CheckMark width={18} height={18} color={receiptColor} />
+            {status !== "sent" && <CheckMark width={18} height={18} color={receiptColor} style={{ marginLeft: -9 }} />}
+          </View>}
           <Typography
             size={15}
             color={themeColors.textSecondary}
@@ -183,6 +196,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  receipt: { flexDirection: "row", alignItems: "center", marginRight: 6, flexShrink: 0 },
   lastMessage: {
     flex: 1,
     marginRight: 8,

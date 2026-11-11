@@ -13,7 +13,7 @@ export function ConversationRealtime({ authenticated }: { authenticated: boolean
     const socket = createChatSocket();
     const refresh = () => {
       if (disposed || generation !== getSessionGeneration()) return;
-      for (const key of ["conversations", "favorites", "archived-conversations", "conversation"]) void client.invalidateQueries({ queryKey: [key] });
+      for (const key of ["conversations", "favorites", "archived-conversations", "conversation", "receipts"]) void client.invalidateQueries({ queryKey: [key] });
     };
     socket.on("connect", refresh);
     socket.onAny((event: string) => { if (/^(message|reaction|receipt|conversation)\./.test(event)) refresh(); });

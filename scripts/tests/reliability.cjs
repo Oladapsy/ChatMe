@@ -321,3 +321,17 @@ test('delayed socket refresh cannot reconnect a different account or disposed ro
     assert.equal(app.connects(),0);assert.equal(app.timers.size,0);app.connection.dispose();
   }
 });
+
+test('chat list shows receipts only for outgoing latest messages and requires all group recipients',()=>{
+  const {latestMessageReceipt:status}=load('src/features/chats/utils/latestMessageReceipt.ts',{});
+  const message={id:'latest',senderId:'me'};
+  const frontier=(userId,delivered,read)=>({userId,delivered:delivered?{messageId:delivered,at:'future'}:null,read:read?{messageId:read,at:'future'}:null});
+  assert.equal(status(message,'other',[]),null);assert.equal(status(null,'me',[]),null);
+  assert.equal(status(message,'me',[]),'sent');
+  assert.equal(status(message,'me',[frontier('other','older',null)]),'sent');
+  assert.equal(status(message,'me',[frontier('other','latest',null)]),'delivered');
+  assert.equal(status(message,'me',[frontier('other','latest','latest')]),'read');
+  assert.equal(status(message,'me',[frontier('other','latest','latest')],['me','other','missing']),'sent');
+  assert.equal(status(message,'me',[frontier('other','latest','latest'),frontier('second','latest',null)],['me','other','second']),'delivered');
+  assert.equal(status(message,'me',[frontier('other',null,'latest'),frontier('second',null,'latest')],['me','other','second']),'read');
+});

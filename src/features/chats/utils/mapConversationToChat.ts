@@ -10,6 +10,7 @@ export const mapConversationToChat = (conversation: Conversation): Chat => {
       name: conversation.otherParticipant.displayName ?? "Unknown",
       avatar: conversation.otherParticipant.avatarUrl ?? "",
       lastMessage: conversation.latestMessage?.preview ?? "",
+      latestMessage: conversation.latestMessage,
       time:
         conversation.latestMessage?.createdAt ?? conversation.lastActivityAt,
       unreadCount: conversation.unreadCount,
@@ -27,6 +28,7 @@ export const mapConversationToChat = (conversation: Conversation): Chat => {
     name: conversation.name,
     avatar: conversation.avatarUrl ?? "",
     lastMessage: conversation.latestMessage?.preview ?? "",
+      latestMessage: conversation.latestMessage,
     time: conversation.latestMessage?.createdAt ?? conversation.lastActivityAt,
     isFavorited: conversation.settings.favorited,
     unreadCount: conversation.unreadCount,
