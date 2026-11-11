@@ -78,10 +78,10 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     maxWidth: "100%",
     gap: 6,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 16,
-    marginTop: 2,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 20,
+    marginTop: -9,
   },
 
   reaction: {
