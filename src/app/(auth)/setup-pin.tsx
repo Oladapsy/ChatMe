@@ -1,8 +1,8 @@
 import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React, { useState } from "react";
-import { Alert, StyleSheet, View} from "react-native";
+import { Alert, ScrollView, StyleSheet, View} from "react-native";
 import { usePinStore } from "@/store/pinStore";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
@@ -14,7 +14,7 @@ const PIN_LENGTH = 4;
 
 export default function SetupPinScreen() {
   const router = useRouter();
-      const { isDark, themeColors } = useAppTheme();
+      const { themeColors } = useAppTheme();
 
 
   const [pin, setPin] = useState<string[]>([]);
@@ -25,7 +25,7 @@ export default function SetupPinScreen() {
   const [busy, setBusy] = useState(false);
   const disabling = mode === "disable";
   const handleDigitPress = async (digit: string) => {
-    if (busy || pin.length >= PIN_LENGTH) return;
+    if (!security.ready || busy || pin.length >= PIN_LENGTH) return;
     const next = [...pin, digit];
     setPin(next);
     if (next.length !== PIN_LENGTH) return;
@@ -51,18 +51,21 @@ export default function SetupPinScreen() {
     setPin((prev) => prev.slice(0, -1));
   };
 
+  if (security.ready && security.enabled && !disabling) return <Redirect href="/(tabs)" />;
+  if (security.ready && !security.enabled && disabling) return <Redirect href="/(tabs)" />;
+
   return (
     <MySafeAreaView color={themeColors.background}>
-      <View style={styles.container}>
-        {/* Header Section */}
+      <View style={styles.backButtonWrapper}>
+        <BackButton />
+      </View>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <View style={styles.backButtonWrapper}>
-            <BackButton />
-          </View>
 
           <Typography
             variant="h1"
             size={24}
+            lineHeight={32}
             weight="bold"
             align="center"
             color={themeColors.text}
@@ -77,11 +80,11 @@ export default function SetupPinScreen() {
             color={themeColors.textSecondary}
             style={styles.subtitle}
           >
-            Make sure the code is safe and no one{"\n"}else knows.
+            {disabling ? "Enter your current PIN to turn off app locking." : firstPin ? "Enter the same four digits again." : "Choose a four-digit PIN to protect your chats."}
           </Typography>
 
           {/* 4 PIN Indicator Dots */}
-          <View style={styles.dotContainer}>
+          <View style={styles.dotContainer} accessible accessibilityLabel={`${pin.length} of ${PIN_LENGTH} PIN digits entered`}>
             {Array.from({ length: PIN_LENGTH }).map((_, index) => {
               const isFilled = index < pin.length;
               return (
@@ -108,25 +111,24 @@ export default function SetupPinScreen() {
         <View style={styles.keypadWrapper}>
           <Keypad onPressDigit={handleDigitPress} onDelete={handleDelete} />
         </View>
-      </View>
+      </ScrollView>
     </MySafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    flexGrow: 1,
+    justifyContent: "center",
+    padding: 24,
+    gap: 32,
   },
   header: {
-    paddingTop: 16,
     alignItems: "center",
   },
   backButtonWrapper: {
-    alignSelf: "flex-start",
-    marginBottom: 32,
+    paddingHorizontal: 24,
+    paddingTop: 12,
   },
   subtitle: {
     marginTop: 8,
@@ -135,7 +137,8 @@ const styles = StyleSheet.create({
   dotContainer: {
     flexDirection: "row",
     gap: 16,
-    marginTop: 32,
+    marginTop: 24,
+    paddingVertical: 8,
   },
   dot: {
     width: 14,

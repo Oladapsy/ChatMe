@@ -92,13 +92,9 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)/upload-photo" />
           </Stack.Protected>
 
-          {/* <Stack.Protected guard={isAuthenticated}>
-            <Stack.Screen name="(auth)/setup-pin" />
-          </Stack.Protected> */}
-
           <Stack.Protected guard={isAuthenticated && profileComplete}>
-            <Stack.Screen name="(auth)/setup-pin" />
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)/setup-pin" />
             <Stack.Screen name="chat-room" />
             <Stack.Screen name="(settings)" />
             <Stack.Screen name="archived-chats" />
