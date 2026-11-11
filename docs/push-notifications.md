@@ -30,6 +30,8 @@ Example Expo push message (sent by the backend):
 }
 ```
 
+Tap listeners stay mounted while signed out so a tapped destination survives login and PIN unlock. Local logout cancels registration work immediately and performs server revocation in the background; an in-flight registration never delays local sign-out.
+
 The app refreshes conversation/message caches on receipt, suppresses foreground banners for the current chat and while PIN-locked, and defers tap navigation until authentication, profile completion and PIN unlock. OS-displayed background notifications are controlled by the server payload and system notification-preview preferences; the PIN does not conceal an already displayed system notification.
 
 ## Verify

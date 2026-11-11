@@ -62,6 +62,8 @@ import { useConversations } from "@/features/chats/hooks/useConversations";
 import { useSearchMessages } from "@/features/chats/hooks/useSearchMessages";
 import { useUpdateReceipts } from "@/features/chats/hooks/useUpdateReceipts";
 import { useReceiptFrontiers } from "@/features/chats/hooks/useReceiptFrontiers";
+import { useComposerDraft } from "@/features/chats/hooks/useComposerDraft";
+import { RecoveryState } from "@/shared/components/RecoveryState";
 import { useMarkConversationAsRead } from "@/features/chats/hooks/useMarkConversationAsRead";
 // edit msg and delete
 import { useMessageActions } from "@/features/chats/hooks/useMessageActions";
@@ -395,8 +397,7 @@ export default function ChatRoomScreen() {
     isScreenFocused && isAppActive && !isSearching && isAtLatest;
   activeChatIdRef.current = activeChatId;
 
-  const [messageText, setMessageText] = useState("");
-  const [selectedImageUris, setSelectedImageUris] = useState<string[]>([]);
+  const { text: messageText, images: selectedImageUris, setText: setMessageText, setImages: setSelectedImageUris, ready: draftReady } = useComposerDraft(currentUser?.id, activeChatId);
   const [attachmentVisible, setAttachmentVisible] = useState(false);
 
   const { takePhoto, pickImages } = useCameraHandler();
@@ -719,7 +720,7 @@ export default function ChatRoomScreen() {
   // Send text handler with comprehensive status checks and error logging
   const handleSend = async () => {
     // Prevent overlapping send and edit operations
-    if (sendInFlightRef.current || isSending || isEditingMessage) {
+    if (!draftReady || sendInFlightRef.current || isSending || isEditingMessage) {
       return;
     }
 
@@ -921,7 +922,7 @@ export default function ChatRoomScreen() {
     if (isContactBlocked || isBlockStatusLoading) return;
     const photoUri = await takePhoto();
     if (photoUri) {
-      setSelectedImageUris((prev) => [...prev, photoUri]);
+      setSelectedImageUris((prev) => [...prev, photoUri].slice(0, 10));
     }
   };
 
@@ -1017,13 +1018,13 @@ export default function ChatRoomScreen() {
     if (isContactBlocked || isBlockStatusLoading) return;
     const imageUris = await pickImages();
     if (imageUris.length > 0) {
-      setSelectedImageUris((prev) => [...prev, ...imageUris]);
+      setSelectedImageUris((prev) => [...new Set([...prev, ...imageUris])].slice(0, 10));
     }
   };
 
   const handleSelectRecentPhoto = (uri: string) => {
     setSelectedImageUris((prev) =>
-      prev.includes(uri) ? prev.filter((item) => item !== uri) : [...prev, uri],
+      prev.includes(uri) ? prev.filter((item) => item !== uri) : [...prev, uri].slice(0, 10),
     );
   };
 
@@ -1202,6 +1203,8 @@ export default function ChatRoomScreen() {
       },
     });
   };
+
+  if (!activeChatId) return <RecoveryState message="Invalid destination: this link has no conversation ID." back={() => router.replace("/(tabs)")} />;
 
   return (
     <MySafeAreaView
@@ -1452,7 +1455,7 @@ export default function ChatRoomScreen() {
             onSendAudio={handleSendAudio}
             onOpenAttachment={() => setAttachmentVisible(true)}
             hasAttachments={selectedImageUris.length > 0}
-            isSending={isSending || isEditingMessage}
+            isSending={!draftReady || isSending || isEditingMessage}
             isEditing={Boolean(editingMessage)}
             onCancelEdit={handleCancelEdit}
             replyingToMessage={replyingToMessage}

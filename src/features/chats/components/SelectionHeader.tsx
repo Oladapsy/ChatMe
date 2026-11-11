@@ -18,19 +18,11 @@ import { useAppTheme } from "@/shared/hooks/useAppTheme";
 interface SelectionHeaderProps {
   selectedCount: number;
   onClearSelection: () => void;
-  onPin: () => void;
-  onMute: () => void;
-  onArchive: () => void;
-  onDelete: () => void;
 }
 
 export function SelectionHeader({
   selectedCount,
   onClearSelection,
-  onPin,
-  onMute,
-  onArchive,
-  onDelete,
 }: SelectionHeaderProps) {
   const { isDark, themeColors } = useAppTheme();
 
@@ -52,16 +44,16 @@ export function SelectionHeader({
       </View>
 
       <View style={styles.rightActions}>
-        <TouchableOpacity onPress={onPin} activeOpacity={0.7}>
+        <TouchableOpacity disabled accessibilityRole="button" accessibilityLabel="Bulk pin unavailable" accessibilityState={{ disabled: true }} style={{ opacity: 0.35 }}>
           <PinIcon width={20} height={20} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={onMute} activeOpacity={0.7}>
+        <TouchableOpacity disabled accessibilityRole="button" accessibilityLabel="Bulk mute unavailable" accessibilityState={{ disabled: true }} style={{ opacity: 0.35 }}>
           <MuteIcon width={20} height={20} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={onArchive} activeOpacity={0.7}>
+        <TouchableOpacity disabled accessibilityRole="button" accessibilityLabel="Bulk archive unavailable" accessibilityState={{ disabled: true }} style={{ opacity: 0.35 }}>
           <ArchiveIcon width={20} height={20} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={onDelete} activeOpacity={0.7}>
+        <TouchableOpacity disabled accessibilityRole="button" accessibilityLabel="Bulk delete unavailable" accessibilityState={{ disabled: true }} style={{ opacity: 0.35 }}>
           <TrashIcon width={20} height={20} color="white" />
         </TouchableOpacity>
       </View>

@@ -6,12 +6,10 @@ export async function uploadChatImage(uri: string, clientUploadId?: string, prog
   const file = new File(uri);
   const extension = file.name.split(".").pop()?.toLowerCase();
 
-  const mimeType =
-    extension === "webp"
-      ? "image/webp"
-      : extension === "png"
-        ? "image/png"
-        : "image/jpeg";
+  const formats: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", heic: "image/heic", heif: "image/heif" };
+  const mimeType = formats[extension ?? ""];
+  if (!file.exists || file.size <= 0) throw new Error("Image is missing or empty");
+  if (!mimeType) throw new Error("Unsupported image format. Choose JPEG, PNG, WebP or HEIF.");
 
   const media = await uploadMedia({
     uri,

@@ -16,11 +16,11 @@ export function PushNotifications({ authenticated, profileComplete }: { authenti
   const locked = usePinStore(state => !state.ready || state.locked);
   const [pending, setPending] = useState<string | null>(null);
   useEffect(() => {
-    if (!authenticated || !pushSupported) { setPending(null); return; }
+    if (!pushSupported) return;
     let disposed = false;
     const subscriptions: {remove: () => void}[] = [];
-    beginPushSession();
-    const sync = () => { void syncPushRegistration(false).catch(() => {}); };
+    if (authenticated) beginPushSession();
+    const sync = () => { if (authenticated) void syncPushRegistration(false).catch(() => {}); };
     void (async () => {
       await loadPushPreference();
       if (disposed) return;
@@ -33,8 +33,9 @@ export function PushNotifications({ authenticated, profileComplete }: { authenti
         return { shouldShowBanner: show, shouldShowList: show, shouldPlaySound: show, shouldSetBadge: false };
       }});
       const onResponse = (response: import("expo-notifications").NotificationResponse) => {
+        if (disposed) return;
         const id = response.notification.request.content.data?.conversationId;
-        if (typeof id === "string" && id.length > 0) setPending(id);
+        if (typeof id === "string" && id.trim().length > 0) setPending(id);
         void Notifications.clearLastNotificationResponseAsync();
       };
       subscriptions.push(Notifications.addNotificationResponseReceivedListener(onResponse));

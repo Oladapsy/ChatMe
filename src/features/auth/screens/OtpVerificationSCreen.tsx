@@ -1,3 +1,4 @@
+import { RecoveryState } from "@/shared/components/RecoveryState";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -22,18 +23,20 @@ import { useResendOtp } from "@/features/auth/hooks/useResendOtp";
 import { useVerifyOtp } from "@/features/auth/hooks/useVerifyOtp";
 
 // storage
-import { saveSession } from "@/services/authStorage";
+
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
-const OTP_LENGTH = 4;
+
 
 export default function OtpVerificationScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
     phone?: string;
+    codeLength?: string;
     challengeId?: string;
     resendInSeconds?: string;
   }>();
+  const [codeLength, setCodeLength] = useState(Number(params.codeLength) || 0);
   const phone = params.phone || "unknown number";
   const [currentChallengeId, setCurrentChallengeId] = useState(
     params.challengeId,
@@ -45,7 +48,8 @@ export default function OtpVerificationScreen() {
   const { themeColors } = useAppTheme();
 
 
-  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [otp, setOtp] = useState<string[]>(Array(codeLength).fill(""));
+  const [verificationError, setVerificationError] = useState<string | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number>(0);
   const [timer, setTimer] = useState(Number(params.resendInSeconds ?? 0));
 
@@ -65,10 +69,10 @@ export default function OtpVerificationScreen() {
     const cleanText = text.replace(/[^0-9]/g, "");
 
     // Handle complete code paste
-    if (cleanText.length >= OTP_LENGTH) {
-      const codeArray = cleanText.slice(0, OTP_LENGTH).split("");
+    if (cleanText.length >= codeLength) {
+      const codeArray = cleanText.slice(0, codeLength).split("");
       setOtp(codeArray);
-      inputRefs.current[OTP_LENGTH - 1]?.focus();
+      inputRefs.current[codeLength - 1]?.focus();
       return;
     }
 
@@ -76,7 +80,7 @@ export default function OtpVerificationScreen() {
     newOtp[index] = cleanText.slice(-1);
     setOtp(newOtp);
 
-    if (cleanText && index < OTP_LENGTH - 1) {
+    if (cleanText && index < codeLength - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -96,7 +100,7 @@ export default function OtpVerificationScreen() {
   const handleResendCode = () => {
     if (timer > 0 || !currentChallengeId) return;
 
-    console.log("Resending with challengeId:", currentChallengeId);
+
 
     resendOtpMutation.mutate(
       {
@@ -104,29 +108,28 @@ export default function OtpVerificationScreen() {
       },
       {
         onSuccess: (data) => {
-          console.log("OTP resent successfully:", data);
+
 
           setCurrentChallengeId(data.challengeId);
           setTimer(data.resendInSeconds);
-          setOtp(Array(OTP_LENGTH).fill(""));
+          setCodeLength(data.codeLength);
+          setOtp(Array(data.codeLength).fill(""));
           inputRefs.current[0]?.focus();
         },
         onError: (error) => {
-          console.error("OTP resend failed:", error);
+          setVerificationError("A new code could not be sent. Please try again.");
         },
       },
     );
   };
 
   const handleVerify = () => {
-    if (!isComplete || !currentChallengeId) return;
+    if (verifyOtpMutation.isPending || !isComplete || !currentChallengeId) return;
 
+    setVerificationError(null);
     const code = otp.join("");
 
-    console.log("Verifying OTP:", {
-      challengeId: currentChallengeId,
-      code,
-    });
+
 
     verifyOtpMutation.mutate(
       {
@@ -139,22 +142,16 @@ export default function OtpVerificationScreen() {
       },
       {
         onSuccess: async (data) => {
-          await saveSession({
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
-            accessTokenExpiresAt:
-              Date.now() + data.accessTokenExpiresInSeconds * 1000,
-            refreshTokenExpiresAt:
-              Date.now() + data.refreshTokenExpiresInSeconds * 1000,
-          });
-          router.replace("/(auth)/setup-profile");
+          router.replace(data.user.profileComplete ? "/(tabs)" : "/(auth)/setup-profile");
         },
         onError: (error) => {
-          console.error("OTP verification failed:", error);
+          setVerificationError("This code could not be verified. Check the code and your connection, then try again.");
         },
       },
     );
   };
+
+  if (!currentChallengeId || !Number.isInteger(codeLength) || codeLength < 1 || codeLength > 10) return <RecoveryState message="This verification link is incomplete. Request a new code." back={() => router.replace("/")} />;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -197,6 +194,8 @@ export default function OtpVerificationScreen() {
               </Typography>
             </Typography>
 
+            {verificationError && <Typography accessibilityRole="alert" color={themeColors.text}>{verificationError}</Typography>}
+
             {/* OTP Input Fields */}
             <View style={styles.otpContainer}>
               {otp.map((digit, index) => {
@@ -220,7 +219,8 @@ export default function OtpVerificationScreen() {
                       }}
                       style={[styles.otpInput, { color: themeColors.text }]}
                       keyboardType="number-pad"
-                      maxLength={1}
+                      maxLength={codeLength}
+                      accessibilityLabel={`Verification code digit ${index + 1}`}
                       value={digit}
                       onChangeText={(text) => handleChangeText(text, index)}
                       onKeyPress={(e) => handleKeyPress(e, index)}

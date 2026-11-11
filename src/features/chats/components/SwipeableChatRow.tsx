@@ -23,10 +23,10 @@ interface SwipeableChatRowProps {
   isSelected?: boolean;
   onPress: () => void;
   onLongPress: () => void;
-  onPin: (chat: Chat) => void;
-  onMute: (chat: Chat) => void;
-  onArchive: (chat: Chat) => void;
-  onDelete: (chat: Chat) => void;
+  onPin?: (chat: Chat) => void;
+  onMute?: (chat: Chat) => void;
+  onArchive?: (chat: Chat) => void;
+  onDelete?: (chat: Chat) => void;
   onFav?: (chat: Chat) => void;
 }
 
@@ -70,6 +70,7 @@ export function SwipeableChatRow({
         icon={MuteIcon}
         backgroundColor="#E8A13A"
         isCompact={chat.isArchived}
+        disabled={!onMute}
         onPress={() => handleAction(onMute)}
       />
       <SwipeActionButton
@@ -77,6 +78,7 @@ export function SwipeableChatRow({
         icon={PinIcon}
         backgroundColor={isDark ? "#2D4B63" : "#9CA3AF"}
         isCompact={chat.isArchived}
+        disabled={!onPin}
         onPress={() => handleAction(onPin)}
       />
     </View>
@@ -93,6 +95,7 @@ export function SwipeableChatRow({
         icon={TrashIcon}
         backgroundColor="#DD524C"
         isCompact={chat.isArchived}
+        disabled={!onDelete}
         onPress={() => handleAction(onDelete)}
       />
       <SwipeActionButton
@@ -100,6 +103,7 @@ export function SwipeableChatRow({
         icon={ArchiveIcon}
         backgroundColor={isDark ? "#3A566A" : "#9CA3AF"}
         isCompact={chat.isArchived}
+        disabled={!onArchive}
         onPress={() => handleAction(onArchive)}
       />
       <SwipeActionButton
@@ -108,6 +112,7 @@ export function SwipeableChatRow({
         backgroundColor={isDark ? "#163043" : "#DDE2E8"}
         textColor={themeColors.text}
         isCompact={chat.isArchived}
+        disabled={!onFav}
         onPress={() => handleAction(onFav)}
       />
     </View>

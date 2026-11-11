@@ -68,9 +68,9 @@ export function syncPushRegistration(requestPermission = false): Promise<void> {
       const failure = error as { response?: {status?: number}; message?: string };
       const status = failure.response?.status;
       const message = status === 503 ? "Push notifications are currently disabled on the server." : status === 429 ? "This account has reached its device limit." : failure.message ?? "Notification registration failed.";
-      usePushState.setState({ registered: false, error: message });
+      if (generation === getSessionGeneration() && revision === currentRevision && !loggingOut) usePushState.setState({ registered: false, error: message });
       throw new Error(message);
-    } finally { usePushState.setState({ busy: false }); }
+    } finally { if (generation === getSessionGeneration() && revision === currentRevision) usePushState.setState({ busy: false }); }
   });
 }
 export async function setPushEnabled(enabled: boolean) {
@@ -99,7 +99,7 @@ export function unregisterPushForLogout(): Promise<void> {
   loggingOut = true;
   revision++;
   const generation = getSessionGeneration();
-  usePushState.setState({ registered: false });
+  usePushState.setState({ registered: false, busy: false, error: null });
   return serialized(async () => {
     if (!pushSupported) return;
     const id = await getInstallationId();

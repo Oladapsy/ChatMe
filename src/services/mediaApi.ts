@@ -1,3 +1,4 @@
+import type { AxiosRequestConfig } from "axios";
 import { api } from "@/services/api";
 
 export type MediaPurpose =
@@ -60,10 +61,12 @@ export type CreateMediaUploadResponse = {
 // create the upload request
 export async function createMediaUpload(
   payload: CreateMediaUploadPayload,
+  generation?: number,
 ): Promise<CreateMediaUploadResponse> {
   const response = await api.post<CreateMediaUploadResponse>(
     "/media/uploads",
     payload,
+    { _session: generation } as AxiosRequestConfig,
   );
 
   return response.data;
@@ -71,9 +74,12 @@ export async function createMediaUpload(
 
 export async function completeMediaUpload(
   mediaId: string,
+  generation?: number,
 ): Promise<Media> {
   const response = await api.post<Media>(
     `/media/uploads/${mediaId}/complete`,
+    undefined,
+    { _session: generation } as AxiosRequestConfig,
   );
 
   return response.data;

@@ -1,3 +1,5 @@
+import type { StarredMessage } from "@/features/chats/types/starredMsg";
+import { Typography } from "@/shared/components/Typography";
 import React from "react";
 import {
   StyleSheet,
@@ -51,7 +53,8 @@ export default function StarredMessagesScreen() {
         style={styles.bodySafeArea}
       >
         <FlatList
-          data={MOCK_STARRED_MESSAGES}
+          ListEmptyComponent={<Typography align="center" style={{ padding: 24 }}>Starred messages are currently unavailable.</Typography>}
+          data={[] as StarredMessage[]}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}

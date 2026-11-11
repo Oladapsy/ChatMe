@@ -39,7 +39,7 @@ export const mapConversationToChat = (conversation: Conversation): Chat => {
       id: participant.id,
       name: participant.displayName ?? "Unknown",
       avatarUri: participant.avatarUrl ?? undefined,
-      role: participant.role === "admin" ? "admin" : "member",
+      role: participant.role,
     })),
   };
 };

@@ -10,6 +10,7 @@ export const useConversationPin = () => {
   const pinMutation = useMutation({
     mutationFn: pinConversation,
     onSuccess: () => {
+      for (const key of ["favorites", "archived-conversations", "conversation", "group-details"]) void queryClient.invalidateQueries({ queryKey: [key] });
       queryClient.invalidateQueries({
         queryKey: ["conversations"],
       });
@@ -19,6 +20,7 @@ export const useConversationPin = () => {
   const unpinMutation = useMutation({
     mutationFn: unpinConversation,
     onSuccess: () => {
+      for (const key of ["favorites", "archived-conversations", "conversation", "group-details"]) void queryClient.invalidateQueries({ queryKey: [key] });
       queryClient.invalidateQueries({
         queryKey: ["conversations"],
       });

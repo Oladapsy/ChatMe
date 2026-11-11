@@ -1,6 +1,8 @@
+import { RecoveryState } from "@/shared/components/RecoveryState";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import {
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -30,7 +32,7 @@ export default function SetupProfileScreen() {
 
   const isValidName = name.trim().length >= 2;
   //data fetching
-  const { data: user, isPending, isError, error } = useMe();
+  const { data: user, isPending, isError, error, refetch } = useMe();
   const updateMeMutation = useUpdateMe();
 
   useEffect(() => {
@@ -39,13 +41,10 @@ export default function SetupProfileScreen() {
     }
   }, [user]);
 
-  if (isPending) {
-    return null;
-  }
+  if (isPending) return <RecoveryState loading message="Loading your profile…" />;
 
   if (isError) {
-    console.log("Failed to fetch user:", error);
-    return null;
+    return <RecoveryState message="Your profile couldn't be loaded. Check your connection and retry." retry={() => { void refetch(); }} />;
   }
   console.log("USER:", user);
 
@@ -61,7 +60,7 @@ export default function SetupProfileScreen() {
           router.replace("/(auth)/upload-photo");
         },
         onError: (error) => {
-          console.error("Failed to update profile:", error);
+          Alert.alert("Profile couldn't be saved", "Your name is still here. Please try again.");
         },
       },
     );

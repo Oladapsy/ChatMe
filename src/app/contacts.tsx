@@ -2,6 +2,7 @@
 // contact first...
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
+import { RecoveryState } from "@/shared/components/RecoveryState";
 import { Alert, ActivityIndicator, SectionList, StyleSheet, View } from "react-native";
 
 import { ContactItemRow } from "@/features/contacts/components/ContactItemRow";
@@ -20,7 +21,7 @@ export default function ContactsScreen() {
   const { isDark, themeColors } = useAppTheme();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const { contacts, loading } = useContacts();
+  const { contacts, loading, permissionGranted, refetch } = useContacts();
 
   const { mutateAsync: startConversation } = useStartDirectConversation();
 
@@ -85,6 +86,8 @@ export default function ContactsScreen() {
       console.error("FAILED TO START CONVERSATION:", error);
     }
   };
+
+  if (!loading && !permissionGranted) return <RecoveryState message="Contacts access is unavailable. Allow access in device Settings, then try again." retry={() => { void refetch(); }} back={() => router.replace("/(tabs)")} />;
 
   return (
     <MySafeAreaView color={topSafeAreaColor} edges={["top"]}>

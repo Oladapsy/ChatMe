@@ -18,6 +18,7 @@ export const useConversationMute = () => {
     }) => muteConversation(conversationId, duration),
 
     onSuccess: () => {
+      for (const key of ["favorites", "archived-conversations", "conversation", "group-details"]) void queryClient.invalidateQueries({ queryKey: [key] });
       queryClient.invalidateQueries({
         queryKey: ["conversations"],
       });
@@ -28,6 +29,7 @@ export const useConversationMute = () => {
     mutationFn: unmuteConversation,
 
     onSuccess: () => {
+      for (const key of ["favorites", "archived-conversations", "conversation", "group-details"]) void queryClient.invalidateQueries({ queryKey: [key] });
       queryClient.invalidateQueries({
         queryKey: ["conversations"],
       });

@@ -98,6 +98,7 @@ export function ChatStarredMessagesScreen({
 
         {/* Starred Messages List */}
         <FlatList
+          ListEmptyComponent={<Typography align="center" style={{ padding: 24 }}>Starred messages are currently unavailable.</Typography>}
           data={starredMessages}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}

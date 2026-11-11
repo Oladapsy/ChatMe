@@ -19,7 +19,7 @@ test('delayed refresh cannot overwrite another login or logout', async () => {
   for (const action of ['login','logout']) {
     const auth = storage(); await auth.saveSession(session('A'));
     const network = deferred();
-    const {refreshSession} = load('src/services/refreshSession.ts', { '@/services/authStorage': auth, '@/services/refreshApi': {refreshApi:{post:()=>network.promise}} });
+    const {refreshSession} = load('src/services/refreshSession.ts', { '@/services/sessionLifecycle':{endSession:()=>assert.fail('unexpected session rejection')}, '@/services/authStorage': auth, '@/services/refreshApi': {refreshApi:{post:()=>network.promise}} });
     const pending = refreshSession(); await new Promise(setImmediate);
     if(action==='login') await auth.saveSession(session('B')); else await auth.clearSession();
     network.resolve({data:{...session('old-A'),accessTokenExpiresInSeconds:60,refreshTokenExpiresInSeconds:600}});
@@ -32,7 +32,7 @@ test('temporary refresh failure preserves credentials and next request can recov
   let requestInterceptor, errorInterceptor, attempts=0;
   const instance = async request => request;
   instance.interceptors={request:{use:fn=>requestInterceptor=fn},response:{use:(_,fn)=>errorInterceptor=fn}};
-  load('src/services/api.ts', {axios:{create:()=>instance,isAxiosError:e=>!!e.isAxiosError},'@/services/authStorage':auth,'@/store/authStore':{useAuthStore:{getState:()=>({setAuthenticated:()=>assert.fail('signed out')})}},'@/services/refreshSession':{refreshSession:async()=>{if(++attempts===1) throw {isAxiosError:true}; await auth.saveSessionIfCurrent(session('renewed'),auth.getSessionGeneration());}}});
+  load('src/services/api.ts', {axios:{create:()=>instance,isAxiosError:e=>!!e.isAxiosError},'@/services/authStorage':auth,'@/services/sessionLifecycle':{endSession:()=>assert.fail('signed out')},'@/services/refreshSession':{refreshSession:async()=>{if(++attempts===1) throw {isAxiosError:true}; await auth.saveSessionIfCurrent(session('renewed'),auth.getSessionGeneration());}}});
   const request = () => requestInterceptor({headers:{}});
   await assert.rejects(errorInterceptor({config:await request(),response:{status:401}}));
   assert.equal(await auth.getAccessToken(),'A');
@@ -45,36 +45,53 @@ test('recovery pages through more than 50 missed messages to a cached anchor', a
   const items=await recoverMessages(new Set(['old']),async cursor=>{calls++;return cursor?{items:[{id:'old'}],pageInfo:{hasNextPage:false}}:{items:Array.from({length:50},(_,i)=>({id:String(i)})),pageInfo:{hasNextPage:true,nextCursor:'next'}};});
   assert.equal(calls,2); assert.equal(items.length,51);
 });
-test('accepted timeout retry preserves message payload and completed media IDs', async()=>{
-  let states=[], index=0, ids=0, uploads=0, sends=[];
-  const react={useSyncExternalStore:(_,snapshot)=>snapshot(),useRef:value=>{const i=index++;return states[i]??=( {current:value} );},useState:value=>{const i=index++;if(!(i in states))states[i]=value;return [states[i],v=>states[i]=typeof v==='function'?v(states[i]):v];}};
-  const {useMessageDelivery}=load('src/features/chats/hooks/useMessageDelivery.ts',{
-    react,'react-native':{Alert:{alert:()=>{}}},'expo-crypto':{randomUUID:()=>String(++ids)},'@tanstack/react-query':{useQueryClient:()=>({invalidateQueries:async()=>{}})},'@/services/authStorage':{getSessionGeneration:()=>0},'@/features/chats/api/chatApi':{sendMessage:async(_,payload)=>{sends.push(JSON.stringify(payload));if(sends.length===1)throw Error('response timeout');}},'@/features/chats/utils/uploadChatMedia':{uploadChatImage:async()=>{uploads++;return 'media-1';}}});
-  const render=()=>{index=0;return useMessageDelivery('conversation');};
-  await render().submit('original draft',['image']);
-  assert.equal(render().failedCount,1);
-  await render().retry();
-  assert.equal(uploads,1);assert.equal(sends.length,2);assert.equal(sends[0],sends[1]);assert.equal(render().failedCount,0);
+function hooks() {
+  let state=[],index=0,effects=[];
+  const react={
+    useSyncExternalStore:(_,snapshot)=>snapshot(),
+    useRef:value=>{const i=index++;return state[i]??=({current:value});},
+    useState:value=>{const i=index++;if(!(i in state))state[i]=value;return [state[i],v=>state[i]=typeof v==='function'?v(state[i]):v];},
+    useEffect:(fn,deps)=>{const i=index++;if(!state[i] || deps.some((d,j)=>d!==state[i][j])) {state[i]=deps;effects.push(fn);}}
+  };
+  return {react,render:fn=>{index=0;const value=fn();effects.splice(0).forEach(fn=>fn());return value;}};
+}
+function deliveryHarness({saved=new Map(),send=async()=>{},upload=async()=> 'media-1',generation=()=>0}={}) {
+  const h=hooks(); let ids=0;
+  const module=load('src/features/chats/hooks/useMessageDelivery.ts',{
+    react:h.react,
+    '@/features/chats/utils/retainAttachment':{retainAttachment:uri=>uri},
+    '@react-native-async-storage/async-storage':{getItem:async key=>saved.get(key)??null,setItem:async(key,value)=>{saved.set(key,value);}},
+    'react-native':{Alert:{alert:()=>{}}},'expo-crypto':{randomUUID:()=>String(++ids)},
+    '@tanstack/react-query':{useQueryClient:()=>({getQueryData:()=>({id:'account-A'}),invalidateQueries:async()=>{}})},
+    '@/services/authStorage':{getSessionGeneration:generation},
+    '@/features/chats/api/chatApi':{sendMessage:send},
+    '@/features/chats/utils/uploadChatMedia':{uploadChatImage:upload}
+  });
+  return {render:()=>h.render(()=>module.useMessageDelivery('conversation')),saved};
+}
+const settle=()=>new Promise(setImmediate);
+test('accepted timeout retry preserves payload and media IDs across app restart',async()=>{
+  let uploads=0,sends=[];
+  const options={saved:new Map(),upload:async()=>{uploads++;return 'media-1';},send:async(_,payload)=>{sends.push(JSON.stringify(payload));if(sends.length===1)throw Error('timeout');}};
+  let app=deliveryHarness(options);app.render();await settle();
+  await app.render().submit('original draft',['image']);await settle();
+  assert.equal(app.render().failedCount,1);
+  app=deliveryHarness(options);app.render();await settle();
+  assert.equal(app.render().failedCount,1);
+  await app.render().retry();await settle();
+  assert.equal(uploads,1);assert.equal(sends.length,2);assert.equal(sends[0],sends[1]);assert.equal(app.render().failedCount,0);
 });
 test('upload completion retry reuses authorization and skips completed transfer', async()=>{
   let creates=0, transfers=0, completes=0;
-  const {uploadMedia}=load('src/services/mediaUpload.ts',{'expo-crypto':{randomUUID:()=> 'upload-id'},'@/services/cloudinary':{uploadToCloudinary:async()=>{transfers++;}},'@/services/mediaApi':{createMediaUpload:async()=>{creates++;return {media:{id:'media'},upload:{url:'url',fields:{}}};},completeMediaUpload:async id=>{if(++completes===1)throw Error('offline');return {id};}}});
+  const {uploadMedia}=load('src/services/mediaUpload.ts',{'@/services/authStorage':{getSessionGeneration:()=>0},'expo-crypto':{randomUUID:()=> 'upload-id'},'@/services/cloudinary':{uploadToCloudinary:async()=>{transfers++;}},'@/services/mediaApi':{createMediaUpload:async()=>{creates++;return {media:{id:'media'},upload:{url:'url',fields:{}}};},completeMediaUpload:async id=>{if(++completes===1)throw Error('offline');return {id};}}});
   const params={uri:'file',progress:{}};
   await assert.rejects(uploadMedia(params));await uploadMedia(params);
   assert.equal(creates,1);assert.equal(transfers,1);assert.equal(completes,2);
 });
 
-test('text-only delivery omits attachmentMediaIds', async () => {
-  let sent;
-  const {useMessageDelivery} = load('src/features/chats/hooks/useMessageDelivery.ts', {
-    react: {useRef: value => ({current:value}), useState: value => [value,()=>{}], useSyncExternalStore: (_,snapshot)=>snapshot()},
-    'react-native': {Alert:{alert:()=>{}}}, 'expo-crypto': {randomUUID:()=> 'text-id'},
-    '@tanstack/react-query': {useQueryClient:()=>({invalidateQueries:async()=>{}})},
-    '@/services/authStorage': {getSessionGeneration:()=>0},
-    '@/features/chats/api/chatApi': {sendMessage:async (_,payload)=>{sent=payload;}},
-    '@/features/chats/utils/uploadChatMedia': {}
-  });
-  assert.equal(await useMessageDelivery('text-room').submit('hello',[]),true);
+test('text-only delivery omits attachmentMediaIds',async()=>{
+  let sent;const app=deliveryHarness({send:async(_,payload)=>{sent=payload;}});
+  app.render();await settle();assert.equal(await app.render().submit('hello',[]),true);
   assert.equal('attachmentMediaIds' in sent,false);
 });
 
@@ -175,4 +192,87 @@ test('logout cancels registration while token acquisition is in flight', async (
   const logout=push.unregisterPushForLogout(); token.resolve({data:'ExpoPushToken[test]'});
   await pending; await logout;
   assert.deepEqual(calls,['DELETE']);
+});
+
+test('session cleanup immediately clears caches and profile flags and ignores obsolete sessions',async()=>{
+  const auth=storage();await auth.saveSession(session('A'));let cleared=0,cancelled=0,state;
+  const lifecycle=load('src/services/sessionLifecycle.ts',{
+    '@/services/authStorage':auth,
+    '@/services/queryClient':{queryClient:{cancelQueries:()=>{cancelled++;return Promise.resolve();},clear:()=>{cleared++;}}},
+    '@/store/authStore':{useAuthStore:{setState:value=>{state=value;}}}
+  });
+  const generation=auth.getSessionGeneration();const pending=lifecycle.endSession(generation);
+  assert.equal(cleared,1);assert.equal(cancelled,1);assert.equal(state.isAuthenticated,false);assert.equal(state.profileComplete,false);assert.equal(state.avatarUrl,null);
+  await pending;assert.equal(await auth.getAccessToken(),null);
+  await auth.saveSession(session('B'));await lifecycle.endSession(generation);assert.equal(await auth.getAccessToken(),'B');assert.equal(cleared,1);
+});
+test('logout completes locally while push queue and revocation are unresolved',async()=>{
+  const push=deferred(),revoke=deferred();let local=false;
+  const {useLogout}=load('src/features/auth/hooks/useLogout.ts',{
+    '@tanstack/react-query':{useMutation:options=>options},
+    '@/features/notifications/pushDevices':{unregisterPushForLogout:()=>push.promise},
+    '@/services/authStorage':{getRefreshToken:async()=> 'old-refresh'},
+    '@/services/sessionLifecycle':{endSession:async()=>{local=true;}},
+    '@/services/refreshApi':{refreshApi:{post:()=>revoke.promise}}
+  });
+  await useLogout().mutationFn();assert.equal(local,true);push.resolve();revoke.resolve();
+});
+test('account switch during transfer prevents completion and reuse under the new login',async()=>{
+  let generation=1,completions=0;const transfer=deferred();
+  const {uploadMedia}=load('src/services/mediaUpload.ts',{
+    '@/services/authStorage':{getSessionGeneration:()=>generation},'expo-crypto':{randomUUID:()=> 'id'},
+    '@/services/cloudinary':{uploadToCloudinary:()=>transfer.promise},
+    '@/services/mediaApi':{createMediaUpload:async(_,bound)=>{assert.equal(bound,1);return {media:{id:'A-media'},upload:{url:'url',fields:{}}};},completeMediaUpload:async()=>{completions++;}}
+  });
+  const params={uri:'file',progress:{}};const pending=uploadMedia(params);await settle();generation=2;transfer.resolve();
+  await assert.rejects(pending,/Account changed/);await assert.rejects(uploadMedia(params),/Account changed/);assert.equal(completions,0);
+});
+test('recovery continues beyond a known ID to older edits and deletion tombstones',async()=>{
+  const {recoverMessages}=load('src/features/chats/utils/recoverMessages.ts',{});let calls=0;
+  const result=await recoverMessages(new Set(['known','old']),async cursor=>{calls++;return cursor?{items:[{id:'old',version:3,deletedAt:'now'}],pageInfo:{hasNextPage:false}}:{items:[{id:'known'}],pageInfo:{hasNextPage:true,nextCursor:'older'}};});
+  assert.equal(calls,2);assert.equal(result.find(item=>item.id==='old').version,3);
+});
+
+test('rejected refresh clears all session state through the API interceptor',async()=>{
+  const auth=storage();await auth.saveSession(session('A'));let state,cleared=0,intercept;
+  const lifecycle=load('src/services/sessionLifecycle.ts',{'@/services/authStorage':auth,'@/services/queryClient':{queryClient:{cancelQueries:async()=>{},clear:()=>{cleared++;}}},'@/store/authStore':{useAuthStore:{setState:value=>{state=value;}}}});
+  const api={interceptors:{request:{use:()=>{}},response:{use:(_,fn)=>{intercept=fn;}}}};
+  load('src/services/api.ts',{axios:{create:()=>api,isAxiosError:()=>true},'@/services/authStorage':auth,'@/services/sessionLifecycle':lifecycle,'@/services/refreshSession':{refreshSession:async()=>{throw {response:{status:401}};}}});
+  await assert.rejects(intercept({config:{_session:auth.getSessionGeneration()},response:{status:401}}));
+  assert.equal(cleared,1);assert.equal(state.profileComplete,false);assert.equal(state.avatarUrl,null);assert.equal(await auth.getRefreshToken(),null);
+});
+test('returning-user OTP saves one session and restores returned profile',async()=>{
+  const auth=storage();let writes=0,state,cached;
+  const {useVerifyOtp}=load('src/features/auth/hooks/useVerifyOtp.ts',{
+    '@tanstack/react-query':{useMutation:options=>options},
+    '@/features/auth/api/authApi':{verifyOtp:async()=>({...session('A'),accessTokenExpiresInSeconds:60,refreshTokenExpiresInSeconds:600,user:{id:'A',profileComplete:true,avatarUrl:'avatar'}})},
+    '@/services/authStorage':{...auth,saveSession:async value=>{writes++;await auth.saveSession(value);}},
+    '@/services/sessionLifecycle':{endSession:()=>auth.clearSession()},
+    '@/services/queryClient':{queryClient:{setQueryData:(_,user)=>{cached=user;}}},
+    '@/store/authStore':{useAuthStore:{setState:value=>{state=value;}}}
+  });
+  await useVerifyOtp().mutationFn({code:'123456'});assert.equal(writes,1);assert.equal(cached.id,'A');assert.equal(state.profileComplete,true);assert.equal(state.avatarUrl,'avatar');
+});
+test('draft recovery preserves newer input and isolates conversation keys',async()=>{
+  const h=hooks(),read=deferred(),saved=new Map();let first=true;
+  const {useComposerDraft}=load('src/features/chats/hooks/useComposerDraft.ts',{
+    react:h.react,'react-native':{Alert:{alert:()=>{}}},
+    '@/features/chats/utils/retainAttachment':{retainAttachment:uri=>uri},
+    '@/services/authStorage':{getSessionGeneration:()=>0},
+    '@react-native-async-storage/async-storage':{getItem:async key=>{if(first){first=false;return read.promise;}return saved.get(key)??null;},setItem:async(key,value)=>{saved.set(key,value);}}
+  });
+  let room='room-A';const render=()=>h.render(()=>useComposerDraft('account-A',room));
+  render();await settle();render().setText('new input');render();read.resolve(JSON.stringify({text:'older saved draft',images:[]}));await settle();render();await settle();
+  assert.equal(render().text,'new input');assert.equal(JSON.parse(saved.get('chatme.draft:account-A:room-A')).text,'new input');
+  room='room-B';assert.equal(render().text,'');await settle();render();await settle();assert.equal(render().text,'');assert.equal(JSON.parse(saved.get('chatme.draft:account-A:room-A')).text,'new input');
+});
+test('repeated submission while a request is pending sends once',async()=>{
+  let sends=0;const pending=deferred();const app=deliveryHarness({send:()=>{sends++;return pending.promise;}});
+  app.render();await settle();const first=app.render().submit('first',[]);await settle();
+  assert.equal(await app.render().submit('second',[]),null);assert.equal(sends,1);pending.resolve();await first;
+});
+test('conversation mapper preserves group owners',()=>{
+  const {mapConversationToChat}=load('src/features/chats/utils/mapConversationToChat.ts',{});
+  const chat=mapConversationToChat({type:'group',settings:{},participants:[{id:'owner',displayName:'Owner',role:'owner'}]});
+  assert.equal(chat.members[0].role,'owner');assert.equal(chat.members[0].name,'Owner');
 });

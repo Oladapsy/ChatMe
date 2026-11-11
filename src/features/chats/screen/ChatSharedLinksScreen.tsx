@@ -115,6 +115,7 @@ export function ChatSharedLinksScreen({
 
         {/* Date-Grouped Links List */}
         <SectionList
+          ListEmptyComponent={<Typography align="center" style={{ padding: 24 }}>Shared links are currently unavailable.</Typography>}
           sections={sections}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}

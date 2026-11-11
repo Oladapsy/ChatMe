@@ -48,9 +48,8 @@ export async function getAccessToken(): Promise<string | null> {
   await writes;
   return SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
 }
-export async function getRefreshToken(): Promise<string | null> {
-  await writes;
-  return SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+export function getRefreshToken(): Promise<string | null> {
+  return serialize(() => SecureStore.getItemAsync(REFRESH_TOKEN_KEY));
 }
 export function clearSessionIfCurrent(expected: number): Promise<boolean> {
   if (generation !== expected) return Promise.resolve(false);

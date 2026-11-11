@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Contact, ContactField, requestPermissionsAsync } from "expo-contacts";
 
-import { MOCK_CONTACTS } from "@/features/contacts/data/mockContacts";
+
 import { matchContacts } from "@/features/contacts/api/discoveryApi";
 
 export interface ContactItem {
@@ -88,13 +88,7 @@ export function useContacts() {
         setPermissionGranted(false);
 
         // These are mock contacts, not verified ChatMe users.
-        setContacts(
-          MOCK_CONTACTS.map((contact) => ({
-            ...contact,
-            userId: undefined,
-            isOnApp: false,
-          })),
-        );
+        setContacts([]);
 
         return;
       }
@@ -183,13 +177,7 @@ export function useContacts() {
       if (deviceContacts.length > 0) {
         setContacts(deviceContacts);
       } else {
-        setContacts(
-          MOCK_CONTACTS.map((contact) => ({
-            ...contact,
-            userId: undefined,
-            isOnApp: false,
-          })),
-        );
+        setContacts([]);
       }
     } finally {
       setLoading(false);

@@ -1,3 +1,4 @@
+import type { AxiosRequestConfig } from "axios";
 import { api } from "@/services/api";
 import type {
   ConversationListResponse,
@@ -153,10 +154,12 @@ export const getReceiptFrontiers = async (
 export const sendMessage = async (
   conversationId: string,
   payload: SendMessagePayload,
+  generation?: number,
 ): Promise<Message> => {
   const response = await api.post<Message>(
     `/conversations/${conversationId}/messages`,
     payload,
+    { _session: generation } as AxiosRequestConfig,
   );
 
   return response.data;
