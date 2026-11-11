@@ -48,6 +48,7 @@ test('recovery pages through more than 50 missed messages to a cached anchor', a
 function hooks() {
   let state=[],index=0,effects=[];
   const react={
+    useMemo:fn=>fn(),
     useSyncExternalStore:(_,snapshot)=>snapshot(),
     useRef:value=>{const i=index++;return state[i]??=({current:value});},
     useState:value=>{const i=index++;if(!(i in state))state[i]=value;return [state[i],v=>state[i]=typeof v==='function'?v(state[i]):v];},
@@ -57,17 +58,19 @@ function hooks() {
 }
 function deliveryHarness({saved=new Map(),send=async()=>{},upload=async()=> 'media-1',generation=()=>0}={}) {
   const h=hooks(); let ids=0;
+  const cache=new Map();
+  const queryClient={getQueryData:key=>key[0]==='me'?{id:'account-A'}:cache.get(JSON.stringify(key)),setQueryData:(key,update)=>{const value=typeof update==='function'?update(cache.get(JSON.stringify(key))):update;cache.set(JSON.stringify(key),value);},invalidateQueries:async()=>{}};
   const module=load('src/features/chats/hooks/useMessageDelivery.ts',{
     react:h.react,
     '@/features/chats/utils/retainAttachment':{retainAttachment:uri=>uri},
     '@react-native-async-storage/async-storage':{getItem:async key=>saved.get(key)??null,setItem:async(key,value)=>{saved.set(key,value);}},
     'react-native':{Alert:{alert:()=>{}}},'expo-crypto':{randomUUID:()=>String(++ids)},
-    '@tanstack/react-query':{useQueryClient:()=>({getQueryData:()=>({id:'account-A'}),invalidateQueries:async()=>{}})},
+    '@tanstack/react-query':{useQueryClient:()=>queryClient},
     '@/services/authStorage':{getSessionGeneration:generation},
     '@/features/chats/api/chatApi':{sendMessage:send},
     '@/features/chats/utils/uploadChatMedia':{uploadChatImage:upload}
   });
-  return {render:()=>h.render(()=>module.useMessageDelivery('conversation')),saved};
+  return {render:()=>h.render(()=>module.useMessageDelivery('conversation')),saved,cache};
 }
 const settle=()=>new Promise(setImmediate);
 test('accepted timeout retry preserves payload and media IDs across app restart',async()=>{
@@ -334,4 +337,38 @@ test('chat list shows receipts only for outgoing latest messages and requires al
   assert.equal(status(message,'me',[frontier('other','latest','latest')],['me','other','missing']),'sent');
   assert.equal(status(message,'me',[frontier('other','latest','latest'),frontier('second','latest',null)],['me','other','second']),'delivered');
   assert.equal(status(message,'me',[frontier('other',null,'latest'),frontier('second',null,'latest')],['me','other','second']),'read');
+});
+
+
+test('queued message appears pending, then failed, and retry keeps its bubble and payload',async()=>{
+  const pending=deferred();let calls=0,queued=0,payloads=[];
+  const app=deliveryHarness({send:async(_,payload)=>{payloads.push(JSON.stringify(payload));if(++calls===1)return pending.promise;}});
+  app.render();await settle();const sending=app.render().submit('offline message',[],undefined,undefined,()=>{queued++;});await settle();
+  let state=app.render();assert.equal(queued,1);assert.equal(state.pendingMessages.length,1);assert.equal(state.pendingMessages[0].localDelivery,'pending');assert.equal(state.failedCount,0);
+  const id=state.pendingMessages[0].clientMessageId;
+  pending.reject(Error('offline'));await sending;
+  state=app.render();assert.equal(state.pendingMessages[0].localDelivery,'failed');assert.equal(state.pendingMessages[0].text,'offline message');assert.equal(state.failedCount,1);
+  await state.retry(id);assert.equal(app.render().pendingMessages.length,0);assert.equal(payloads[0],payloads[1]);
+});
+test('server echo replaces the pending bubble using sender and client message ID',()=>{
+  const {mergePendingMessages}=load('src/features/chats/utils/mergePendingMessages.ts',{});
+  const local={id:'local:id',senderId:'me',clientMessageId:'id',localDelivery:'pending'};
+  const server={id:'server-id',senderId:'me',clientMessageId:'id'};
+  const merged=mergePendingMessages([server],[local]);assert.equal(merged.length,1);assert.equal(merged[0].id,'server-id');
+  assert.equal(mergePendingMessages([{...server,senderId:'other'}],[local]).length,2);
+});
+test('late timeout after a confirmed server echo does not restore a failed bubble',async()=>{
+  const pending=deferred();const app=deliveryHarness({send:()=>pending.promise});app.render();await settle();
+  const sending=app.render().submit('message',[]);await settle();const state=app.render();
+  state.confirmMessages([{senderId:'account-A',clientMessageId:state.pendingMessages[0].clientMessageId}]);
+  pending.reject(Error('response lost'));assert.equal(await sending,true);assert.equal(app.render().pendingMessages.length,0);
+});
+
+
+test('confirmed send enters the server cache before its pending bubble is removed',async()=>{
+  const confirmed={id:'server-id',senderId:'account-A',clientMessageId:'sent-id',conversationId:'conversation',text:'hello'};
+  const app=deliveryHarness({send:async()=>confirmed});app.render();await settle();
+  await app.render().submit('hello',[]);
+  assert.equal(app.render().pendingMessages.length,0);
+  assert.equal(app.cache.get(JSON.stringify(['messages','conversation'])).pages[0].items[0].id,'server-id');
 });

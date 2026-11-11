@@ -11,7 +11,7 @@ log access tokens, refresh tokens, signed upload fields, or private message text
 
 1. Account A sends text plus a photo to B. Let the message POST reach the server,
    then drop its response. Type a new draft during the delay. Show that the new
-   draft remains and that the failure banner appears. Tap Retry. Compare both
+   draft remains and that the outgoing bubble shows a spinner, then an inline failure action. Tap Retry on that bubble. Compare both
    requests: identical clientMessageId, text, reply target and attachmentMediaIds.
    Confirm one server message and one recipient bubble on B. This requires the
    backend to enforce idempotency for clientMessageId within the sender's scope.
@@ -37,7 +37,7 @@ log access tokens, refresh tokens, signed upload fields, or private message text
    show the returned conversation; select an unmatched contact and show its alert.
 6. With VoiceOver/TalkBack enabled, navigate Message draft, Attach photos, Remove
    attached photo, Send message, Record voice message, Discard recording, Send
-   voice message and the failed-message Retry action. Type a second text draft
+   voice message and the failed-message Retry action inside its bubble. Type a second text draft
    while text/photo/edit requests are slow; their completion must preserve it.
 
 ## Current boundaries

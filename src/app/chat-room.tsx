@@ -1,3 +1,4 @@
+import { mergePendingMessages } from "@/features/chats/utils/mergePendingMessages";
 import React, {
   useState,
   useRef,
@@ -134,7 +135,7 @@ export default function ChatRoomScreen() {
   const { mutateAsync: markConversationAsRead } =
     useMarkConversationAsRead(activeChatId);
 
-  const { submit, retry, failedCount, isSending } = useMessageDelivery(activeChatId);
+  const { submit, retry, pendingMessages, confirmMessages, isSending } = useMessageDelivery(activeChatId);
 
   // Pagination properties from useMessages
   const {
@@ -289,17 +290,22 @@ export default function ChatRoomScreen() {
       ]),
     );
 
-    return Array.from(uniqueMessages.values()).sort(
+    return mergePendingMessages(Array.from(uniqueMessages.values()), pendingMessages).sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
   }, [
     messagesData?.pages,
+    pendingMessages,
     serverSearchData?.pages,
     isSearching,
     searchQuery,
     debouncedSearchQuery,
   ]);
+
+  useEffect(() => {
+    confirmMessages(messagesData?.pages.flatMap(page => page.items) ?? []);
+  }, [messagesData, pendingMessages]);
 
   const latestMessageId = messages[messages.length - 1]?.id;
   // Calculate receipt status for messages sent by the current user.
@@ -899,12 +905,11 @@ export default function ChatRoomScreen() {
 
     const submittedImages = [...selectedImageUris];
     realtime.setTyping(false);
-    const accepted = await submit(text, submittedImages, replyAtSubmit?.id);
-    if (accepted === null) return;
-    // The operation owns failed payloads too, so the composer can move on.
-    setMessageText(current => current === draftTextAtSubmit ? "" : current);
-    setSelectedImageUris(current => current.filter(uri => !submittedImages.includes(uri)));
-    setReplyingToMessage(current => current?.id === replyAtSubmit?.id ? null : current);
+    await submit(text, submittedImages, replyAtSubmit?.id, undefined, () => {
+      setMessageText(current => current === draftTextAtSubmit ? "" : current);
+      setSelectedImageUris(current => current.filter(uri => !submittedImages.includes(uri)));
+      setReplyingToMessage(current => current?.id === replyAtSubmit?.id ? null : current);
+    });
   };
 
   const handleCancelEdit = () => {
@@ -1338,8 +1343,10 @@ export default function ChatRoomScreen() {
                     isGroup={isGroupChat}
                     searchQuery={isSearching ? searchQuery : undefined}
                     receiptStatus={receiptStatusByMessageId.get(item.id)}
+                    onRetry={() => { void retry(item.clientMessageId); }}
+                    retryDisabled={isSending || isContactBlocked || isBlockStatusUnavailable || isBlockStatusLoading}
                     onLongPress={
-                      !item.deletedAt
+                      !item.deletedAt && !item.localDelivery
                         ? (position) => handleMessageLongPress(item, position)
                         : undefined
                     }
@@ -1360,11 +1367,6 @@ export default function ChatRoomScreen() {
           )}
         </View>
 
-        {failedCount > 0 && (
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Retry failed message. ${failedCount} pending`} disabled={isSending || isContactBlocked || isBlockStatusUnavailable || isBlockStatusLoading} onPress={() => void retry()} style={{ padding: 16 }}>
-            <Typography accessibilityLiveRegion="polite">{failedCount} message(s) awaiting confirmation. Tap to retry.</Typography>
-          </TouchableOpacity>
-        )}
         {/* Selected Images Strip */}
         {selectedImageUris.length > 0 && !isSearching && !isContactBlocked && (
           <View style={styles.previewWrapper}>
