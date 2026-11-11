@@ -372,3 +372,37 @@ test('confirmed send enters the server cache before its pending bubble is remove
   assert.equal(app.render().pendingMessages.length,0);
   assert.equal(app.cache.get(JSON.stringify(['messages','conversation'])).pages[0].items[0].id,'server-id');
 });
+
+function listTypingHarness() {
+  const {QueryClient,QueryObserver}=require('@tanstack/react-query');
+  const client=new QueryClient({defaultOptions:{queries:{gcTime:Infinity}}});
+  const observer=new QueryObserver(client,{queryKey:['typing','room'],enabled:false,initialData:[]});
+  const unobserve=observer.subscribe(()=>{});
+  const handlers=new Map(),emits=[],timers=new Map();let nextTimer=0,current=true;
+  const socket={connected:true,on:(event,fn)=>handlers.set(event,fn),off:event=>handlers.delete(event),emit:(event,data,ack)=>emits.push({event,data,ack})};
+  const {installListTyping}=load('src/features/chats/services/listTyping.ts',{}, {setTimeout:fn=>{timers.set(++nextTimer,fn);return nextTimer;},clearTimeout:id=>timers.delete(id)});
+  const dispose=installListTyping(socket,client,'me',()=>current);
+  return {client,emits,timers,dispose,unobserve,event:(event,data)=>handlers.get(event)?.(data),users:()=>client.getQueryData(['typing','room']),switchAccount:()=>{current=false;},expire:()=>{for(const fn of [...timers.values()])fn();}};
+}
+test('list typing ignores own events, supports several users, and expires without a stop event',()=>{
+  const app=listTypingHarness();const event=userId=>({conversationId:'room',userId,expiresAt:new Date(Date.now()+5000).toISOString()});
+  assert.equal(app.emits[0].event,'presence.subscribe');
+  app.event('typing.started',event('me'));assert.equal(app.users().length,0);
+  app.event('typing.started',event('A'));app.event('typing.started',event('B'));assert.equal(app.users().length,2);
+  app.event('typing.stopped',event('A'));assert.equal(app.users()[0],'B');
+  app.expire();assert.equal(app.users().length,0);assert.equal(app.timers.size,0);
+  app.dispose();app.unobserve();app.client.clear();
+});
+test('list typing clears on message and disconnect, ignores stale snapshots, and unsubscribes hidden rows',()=>{
+  const app=listTypingHarness();const event={conversationId:'room',userId:'A',expiresAt:new Date(Date.now()+5000).toISOString()};
+  const snapshot=app.emits[0].ack;
+  app.event('typing.started',event);app.event('typing.stopped',event);snapshot({ok:true,data:{typing:[event]}});assert.equal(app.users().length,0);
+  app.event('typing.started',event);app.event('message.created',{message:{conversationId:'room',senderId:'A'}});assert.equal(app.users().length,0);
+  app.event('typing.started',event);app.event('disconnect');assert.equal(app.users().length,0);assert.equal(app.timers.size,0);
+  app.event('connect');app.event('typing.started',event);app.unobserve();assert.equal(app.users().length,0);assert.equal(app.emits.at(-1).event,'presence.unsubscribe');
+  app.dispose();app.client.clear();
+});
+test('list typing cannot update a new account from an older socket',()=>{
+  const app=listTypingHarness();app.switchAccount();app.event('typing.started',{conversationId:'room',userId:'A',expiresAt:new Date(Date.now()+5000).toISOString()});assert.equal(app.users().length,0);
+  app.dispose();app.unobserve();app.client.clear();
+});

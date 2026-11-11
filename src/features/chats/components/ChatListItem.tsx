@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import CheckMark from "@/assets/icons/chat/check.svg";
 import { useMe } from "@/features/auth/hooks/useMe";
 import { useReceiptFrontiers } from "@/features/chats/hooks/useReceiptFrontiers";
@@ -30,6 +31,10 @@ export function ChatListItem({
 }: ChatListItemProps) {
   const { themeColors } = useAppTheme();
   const { data: user } = useMe();
+  const { data: typingUsers = [] } = useQuery<string[]>({ queryKey: ["typing", chat.id], initialData: [], enabled: false });
+  const otherTypingUsers = typingUsers.filter(id => id !== user?.id);
+  const typingNames = otherTypingUsers.map(id => chat.members?.find(member => member.id === id)?.name).filter(Boolean);
+  const typingLabel = !otherTypingUsers.length ? null : !chat.isGroup ? "Typing…" : otherTypingUsers.length > 1 ? `${otherTypingUsers.length} people are typing…` : `${typingNames[0] ?? "Someone"} is typing…`;
   const outgoing = !!user?.id && chat.latestMessage?.senderId === user.id;
   const { data: receipts } = useReceiptFrontiers(outgoing ? chat.id : "");
   const status = latestMessageReceipt(chat.latestMessage, user?.id, receipts?.items, chat.isGroup ? chat.members?.map(member => member.id) : undefined);
@@ -109,17 +114,18 @@ export function ChatListItem({
         </View>
 
         <View style={styles.bottomRow}>
-          {status && <View style={styles.receipt} accessible accessibilityRole="image" accessibilityLabel={`Message ${status}`}>
+          {status && !typingLabel && <View style={styles.receipt} accessible accessibilityRole="image" accessibilityLabel={`Message ${status}`}>
             <CheckMark width={18} height={18} color={receiptColor} />
             {status !== "sent" && <CheckMark width={18} height={18} color={receiptColor} style={{ marginLeft: -9 }} />}
           </View>}
           <Typography
             size={15}
-            color={themeColors.textSecondary}
+            color={typingLabel ? themeColors.primary : themeColors.textSecondary}
+            accessibilityLiveRegion="polite"
             numberOfLines={1}
             style={styles.lastMessage}
           >
-            {chat.lastMessage}
+            {typingLabel ?? chat.lastMessage}
           </Typography>
 
           {/* Badges: Unread Counter or Pin Icon */}
