@@ -15,6 +15,9 @@ import {
   TouchableOpacity,
   FlatList,
   KeyboardAvoidingView,
+  Keyboard,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
   Platform,
   Alert,
 } from "react-native";
@@ -307,7 +310,6 @@ export default function ChatRoomScreen() {
     confirmMessages(messagesData?.pages.flatMap(page => page.items) ?? []);
   }, [messagesData, pendingMessages]);
 
-  const latestMessageId = messages[messages.length - 1]?.id;
   // Calculate receipt status for messages sent by the current user.
 
   const receiptStatusByMessageId = useMemo(() => {
@@ -410,11 +412,47 @@ export default function ChatRoomScreen() {
   const flatListRef = useRef<FlatList>(null);
   const isLoadingOlderRef = useRef(false);
   const openingAtLatest = useRef(true);
+  const followingLatestRef = useRef(true);
+  const [followingLatest, setFollowingLatest] = useState(true);
+  const userScrollingRef = useRef(false);
+  const listSize = useRef({ content: 0, viewport: 0 });
+  const bottomFrame = useRef<number | null>(null);
+  const searchingRef = useRef(isSearching);
+  searchingRef.current = isSearching;
+  const followLatest = useCallback((follow: boolean) => {
+    followingLatestRef.current = follow;
+    setFollowingLatest(follow);
+  }, []);
+  const scrollToLatest = useCallback(() => {
+    if (bottomFrame.current !== null) cancelAnimationFrame(bottomFrame.current);
+    const scroll = () => {
+      if (!followingLatestRef.current || searchingRef.current || userScrollingRef.current) return;
+      const { content, viewport } = listSize.current;
+      if (viewport > 0) flatListRef.current?.scrollToOffset({ offset: Math.max(0, content - viewport), animated: false });
+    };
+    bottomFrame.current = requestAnimationFrame(() => {
+      scroll();
+      // Re-check after native layout/composer resizing reaches the next frame.
+      bottomFrame.current = requestAnimationFrame(() => { bottomFrame.current = null; scroll(); });
+    });
+  }, []);
+  useEffect(() => {
+    const shown = Keyboard.addListener("keyboardDidShow", scrollToLatest);
+    const hidden = Keyboard.addListener("keyboardDidHide", scrollToLatest);
+    return () => {
+      shown.remove(); hidden.remove();
+      if (bottomFrame.current !== null) cancelAnimationFrame(bottomFrame.current);
+    };
+  }, [scrollToLatest]);
   const [initialScrollDone, setInitialScrollDone] = useState(false);
   useEffect(() => {
     openingAtLatest.current = true;
+    userScrollingRef.current = false;
+    followLatest(true);
+    setIsAtLatest(true);
     setInitialScrollDone(false);
-  }, [activeChatId]);
+    scrollToLatest();
+  }, [activeChatId, followLatest, scrollToLatest]);
   const sendInFlightRef = useRef(false);
   const isJumpingToMessageRef = useRef(false);
 
@@ -424,6 +462,7 @@ export default function ChatRoomScreen() {
 
   useEffect(() => {
     if (!pendingJumpMessageId) return;
+    followLatest(false);
 
     const targetIndex = processedMessages.findIndex(
       (item) => item.type === "message" && item.id === pendingJumpMessageId,
@@ -443,13 +482,18 @@ export default function ChatRoomScreen() {
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [pendingJumpMessageId, processedMessages]);
+  }, [pendingJumpMessageId, processedMessages, followLatest]);
 
+  const latestScrollMessage = messages[messages.length - 1];
+  const latestScrollIdentity = latestScrollMessage?.clientMessageId || latestScrollMessage?.id;
+  const previousScrollIdentity = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!isSearching && latestMessageId) {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }
-  }, [latestMessageId, isSearching]);
+    if (isSearching || !latestScrollIdentity) return;
+    const newMessage = previousScrollIdentity.current !== latestScrollIdentity;
+    previousScrollIdentity.current = latestScrollIdentity;
+    if (newMessage && latestScrollMessage?.senderId === currentUser?.id) followLatest(true);
+    if (followingLatestRef.current) scrollToLatest();
+  }, [latestScrollIdentity, isSearching, latestScrollMessage?.senderId, currentUser?.id, followLatest, scrollToLatest]);
 
   // Calculate indices of messages that match current search query
   const matchingIndices = useMemo(() => {
@@ -621,14 +665,16 @@ export default function ChatRoomScreen() {
   }, [currentMatchIndex, matchingIndices, isSearching]);
 
   // Scroll handler for older messages pagination (reaching the top)
-  const handleMessageScroll = (event: any) => {
+  const handleMessageScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
 
     // Check whether the user is near the latest message.
     const distanceFromBottom =
       contentSize.height - layoutMeasurement.height - contentOffset.y;
 
-    setIsAtLatest(distanceFromBottom <= 80);
+    setIsAtLatest(distanceFromBottom <= 24);
+    // Layout-driven scroll events must not turn off bottom following.
+    if (userScrollingRef.current) followLatest(distanceFromBottom <= 24);
     if (openingAtLatest.current && distanceFromBottom <= 1) {
       openingAtLatest.current = false;
       setInitialScrollDone(true);
@@ -906,6 +952,8 @@ export default function ChatRoomScreen() {
     const submittedImages = [...selectedImageUris];
     realtime.setTyping(false);
     await submit(text, submittedImages, replyAtSubmit?.id, undefined, () => {
+      followLatest(true);
+      scrollToLatest();
       setMessageText(current => current === draftTextAtSubmit ? "" : current);
       setSelectedImageUris(current => current.filter(uri => !submittedImages.includes(uri)));
       setReplyingToMessage(current => current?.id === replyAtSubmit?.id ? null : current);
@@ -1311,19 +1359,29 @@ export default function ChatRoomScreen() {
               keyExtractor={(item) => item.id}
               onScroll={handleMessageScroll}
               scrollEventThrottle={16}
-              onContentSizeChange={() => {
-                if (!isSearching && processedMessages.length && (openingAtLatest.current || isAtLatest)) {
-                  flatListRef.current?.scrollToEnd({ animated: false });
-                }
+              contentInsetAdjustmentBehavior="never"
+              onContentSizeChange={(_width, height) => {
+                listSize.current.content = height;
+                if (followingLatestRef.current) scrollToLatest();
               }}
-              onLayout={() => {
-                if (openingAtLatest.current && !isSearching) flatListRef.current?.scrollToEnd({ animated: false });
+              onLayout={event => {
+                listSize.current.viewport = event.nativeEvent.layout.height;
+                if (followingLatestRef.current) scrollToLatest();
               }}
               onScrollBeginDrag={() => {
+                userScrollingRef.current = true;
+                followLatest(false);
                 openingAtLatest.current = false;
                 setInitialScrollDone(true);
               }}
-              maintainVisibleContentPosition={initialScrollDone ? {
+              onScrollEndDrag={() => { userScrollingRef.current = false; }}
+              onMomentumScrollBegin={() => { userScrollingRef.current = true; }}
+              onMomentumScrollEnd={event => {
+                handleMessageScroll(event);
+                userScrollingRef.current = false;
+                if (followingLatestRef.current) scrollToLatest();
+              }}
+              maintainVisibleContentPosition={initialScrollDone && !followingLatest ? {
                 minIndexForVisible: 0,
               } : undefined}
               onScrollToIndexFailed={(info) => {
