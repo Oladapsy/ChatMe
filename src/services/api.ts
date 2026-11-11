@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { clearSessionIfCurrent, getAccessToken, getSessionGeneration } from "@/services/authStorage";
+import { getAccessToken, getSessionGeneration } from "@/services/authStorage";
 import { refreshSession } from "@/services/refreshSession";
-import { useAuthStore } from "@/store/authStore";
+import { endSession } from "@/services/sessionLifecycle";
 
 type SessionRequest = InternalAxiosRequestConfig & { _retry?: boolean; _session?: number };
 export const api = axios.create({
@@ -36,9 +36,7 @@ api.interceptors.response.use(response => response, async (error: AxiosError) =>
   } catch (refreshError) {
     // Network errors, rate limits and server outages leave credentials available for retry.
     if (axios.isAxiosError(refreshError) && [400, 401, 403].includes(refreshError.response?.status ?? 0)) {
-      if (await clearSessionIfCurrent(generation)) {
-        useAuthStore.getState().setAuthenticated(false);
-      }
+      await endSession(generation);
     }
     throw refreshError;
   }

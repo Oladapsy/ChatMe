@@ -7,10 +7,6 @@ interface HeaderSectionProps {
   searchQuery: string;
   onSearchChange: (text: string) => void;
   onClearSelection: () => void;
-  onPin: () => void;
-  onMute: () => void;
-  onArchive: () => void;
-  onDelete: () => void;
 }
 
 export function HeaderSection({
@@ -18,20 +14,12 @@ export function HeaderSection({
   searchQuery,
   onSearchChange,
   onClearSelection,
-  onPin,
-  onMute,
-  onArchive,
-  onDelete,
 }: HeaderSectionProps) {
   if (selectedCount > 0) {
     return (
       <SelectionHeader
         selectedCount={selectedCount}
         onClearSelection={onClearSelection}
-        onPin={onPin}
-        onMute={onMute}
-        onArchive={onArchive}
-        onDelete={onDelete}
       />
     );
   }

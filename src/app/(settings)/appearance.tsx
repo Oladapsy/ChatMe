@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -89,7 +90,7 @@ export default function AppearanceScreen() {
         color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
-        <SubScreenHeader title="Appearance" onBack={() => router.back()} />
+        <SubScreenHeader title="Appearance" onBack={() => goBackOrHome(router)} />
       </MySafeAreaView>
 
       {/* Main Body */}

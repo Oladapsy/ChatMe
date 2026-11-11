@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React from "react";
 import {
   StyleSheet,
@@ -33,7 +34,7 @@ export default function LastCallScreen() {
       >
         <SubScreenHeader
           title="Last Call"
-          onBack={() => router.back()}
+          onBack={() => goBackOrHome(router)}
           rightAction={
             <TouchableOpacity
               style={styles.iconBtn}

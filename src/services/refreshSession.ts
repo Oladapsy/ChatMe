@@ -1,3 +1,4 @@
+import { endSession } from "@/services/sessionLifecycle";
 import { refreshApi } from "@/services/refreshApi";
 import {
   getRefreshToken,
@@ -26,7 +27,11 @@ export function refreshSession(): Promise<RefreshResponse> {
   const generation = getSessionGeneration();
   const existing = pendingRefreshes.get(generation);
   if (existing) return existing;
-  const pending = performRefresh().finally(() => pendingRefreshes.delete(generation));
+  const pending = performRefresh().catch(async error => {
+    const status = (error as { response?: { status?: number } }).response?.status;
+    if (status && [400, 401, 403].includes(status)) await endSession(generation);
+    throw error;
+  }).finally(() => pendingRefreshes.delete(generation));
   pendingRefreshes.set(generation, pending);
   return pending;
 }

@@ -1,3 +1,5 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
+import { RecoveryState } from "@/shared/components/RecoveryState";
 import React from "react";
 import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -5,10 +7,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { UserInfoFlowContainer } from "@/features/chats/components/user/UserInfoFlowContainer";
 import { useConversation } from "@/features/chats/hooks/useConversation";
 
-import {
-  MOCK_STARRED_MESSAGES,
-  MOCK_SHARED_LINK_SECTIONS,
-} from "@/features/chats/data/mockGroupDetails";
+
 import { Typography } from "@/shared/components/Typography";
 
 export default function UserDetailsRoute() {
@@ -27,6 +26,8 @@ export default function UserDetailsRoute() {
     isError,
     refetch,
   } = useConversation(params.conversationId);
+
+  if (!params.conversationId) return <RecoveryState message="Invalid destination: this link has no conversation ID." back={() => router.replace("/(tabs)")} />;
 
   if (isLoading) {
     return (
@@ -50,8 +51,7 @@ export default function UserDetailsRoute() {
   }
 
   if (conversation.type !== "direct") {
-    router.back();
-    return null;
+    return <RecoveryState message="Invalid destination: use group details for this conversation." back={() => router.replace("/(tabs)")} />;
   }
 
   const participant = conversation.otherParticipant;
@@ -89,9 +89,9 @@ export default function UserDetailsRoute() {
     <UserInfoFlowContainer
       profile={profile}
       conversationId={conversation.id}
-      starredMessages={MOCK_STARRED_MESSAGES}
-      sharedLinkSections={MOCK_SHARED_LINK_SECTIONS}
-      onBack={() => router.back()}
+      starredMessages={[]}
+      sharedLinkSections={[]}
+      onBack={() => goBackOrHome(router)}
       onQrPress={() =>
         router.push({
           pathname: "/user-qr",

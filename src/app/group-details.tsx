@@ -1,3 +1,5 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
+import { RecoveryState } from "@/shared/components/RecoveryState";
 import React, { useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -12,10 +14,7 @@ import { useDeleteGroup } from "@/features/chats/hooks/useDeleteGroup";
 import type { SelectedImage } from "@/features/contacts/components/AvatarPicker";
 
 import { GroupInfoFlowContainer } from "@/features/chats/components/group/GroupInfoFlowContainer";
-import {
-  MOCK_SHARED_LINK_SECTIONS,
-  MOCK_STARRED_MESSAGES,
-} from "@/features/chats/data/mockGroupDetails";
+
 import { mapGroupConversationToDetails } from "@/features/chats/utils/mapGroupConversationToDetails";
 import { useClearConversationMessages } from "@/features/chats/hooks/useClearConversationMessages";
 
@@ -23,7 +22,7 @@ export default function GroupDetailsRoute() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const { data, isPending, isError, error } = useGroupDetails(id);
+  const { data, isPending, isError, error, refetch } = useGroupDetails(id);
 
   const { clearMessages, isClearingMessages } =
     useClearConversationMessages(id);
@@ -183,6 +182,8 @@ export default function GroupDetailsRoute() {
     );
   };
 
+  if (!id) return <RecoveryState message="Invalid destination: this link has no group ID." back={() => router.replace("/(tabs)")} />;
+
   if (isPending) {
     return (
       <View
@@ -198,13 +199,11 @@ export default function GroupDetailsRoute() {
   }
 
   if (isError || !data) {
-    console.error("Failed to fetch group details:", error);
-    return null;
+    return <RecoveryState message="This group couldn't be loaded. It may be unavailable, or you may be offline." retry={() => { void refetch(); }} back={() => router.replace("/(tabs)")} />;
   }
 
   if (data.type !== "group") {
-    console.error("The requested conversation is not a group.");
-    return null;
+    return <RecoveryState message="Invalid destination: this conversation is not a group." back={() => router.replace("/(tabs)")} />;
   }
 
   const groupDetails = mapGroupConversationToDetails(data);
@@ -213,9 +212,9 @@ export default function GroupDetailsRoute() {
     <GroupInfoFlowContainer
       groupDetails={groupDetails}
       currentUserRole={data.role}
-      starredMessages={MOCK_STARRED_MESSAGES}
-      sharedLinkSections={MOCK_SHARED_LINK_SECTIONS}
-      onBack={() => router.back()}
+      starredMessages={[]}
+      sharedLinkSections={[]}
+      onBack={() => goBackOrHome(router)}
       savingGroup={saving}
       onSaveGroup={handleSaveGroup}
       onLeaveGroup={handleLeaveGroup}

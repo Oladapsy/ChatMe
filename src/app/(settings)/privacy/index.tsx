@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import { usePinStore } from "@/store/pinStore";
 import React from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
@@ -25,7 +26,7 @@ export default function PrivacyScreen() {
         color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
-        <SubScreenHeader title="Privacy" onBack={() => router.back()} />
+        <SubScreenHeader title="Privacy" onBack={() => goBackOrHome(router)} />
       </MySafeAreaView>
 
       <MySafeAreaView

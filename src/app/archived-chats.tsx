@@ -55,9 +55,7 @@ export default function ArchivedChatsScreen() {
             />
           }
           renderItem={({ item }) => {
-            const groupMembersText = Array.isArray((item as any).members)
-              ? (item as any).members.join(", ")
-              : ((item as any).membersText ?? "");
+            const groupMembersText = item.members?.map(member => member.name).join(", ") ?? "";
 
             return (
               <SwipeableChatRow
@@ -69,16 +67,13 @@ export default function ArchivedChatsScreen() {
                       id: item.id,
                       name: item.name,
                       avatar: item.avatar ?? "",
-                      isGroup: (item as any).isGroup ? "true" : "false",
+                      isGroup: item.isGroup ? "true" : "false",
                       membersText: groupMembersText,
                     },
                   });
                 }}
                 onLongPress={() => {}}
-                onPin={() => {}}
-                onMute={() => {}}
                 onArchive={handleUnarchive}
-                onDelete={() => {}}
               />
             );
           }}

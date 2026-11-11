@@ -10,6 +10,7 @@ interface SwipeActionButtonProps {
   backgroundColor: string;
   textColor?: string;
   isCompact?: boolean;
+  disabled?: boolean;
   onPress: () => void;
   style?: ViewStyle;
 }
@@ -21,11 +22,16 @@ export function SwipeActionButton({
   textColor = "white",
   isCompact = false,
   onPress,
+  disabled = false,
   style,
 }: SwipeActionButtonProps) {
   return (
     <TouchableOpacity
-      style={[styles.actionButton, { backgroundColor }, style]}
+      style={[styles.actionButton, { backgroundColor, opacity: disabled ? 0.35 : 1 }, style]}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={disabled ? `${label} unavailable` : label}
+      accessibilityState={{ disabled }}
       onPress={onPress}
       activeOpacity={0.7}
     >

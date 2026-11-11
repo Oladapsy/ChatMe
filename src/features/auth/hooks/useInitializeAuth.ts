@@ -1,61 +1,29 @@
 import { useEffect, useState } from "react";
-
 import { getRefreshToken, getSessionGeneration } from "@/services/authStorage";
 import { getMe } from "@/features/auth/api/authApi";
 import { useAuthStore } from "@/store/authStore";
 import { queryClient } from "@/services/queryClient";
-
 export function useInitializeAuth() {
   const [isInitializing, setIsInitializing] = useState(true);
-
+  const [initializationError, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    async function initialize() {
-      const generation = getSessionGeneration();
-      let hadSession = false;
+    let disposed = false;
+    const generation = getSessionGeneration();
+    setIsInitializing(true);
+    setError(null);
+    void (async () => {
       try {
-        console.log("AUTH INIT: checking session...");
-
-        const refreshToken = await getRefreshToken();
-
-        console.log("AUTH INIT: refresh token exists?", !!refreshToken);
-
-        if (!refreshToken) {
-          console.log("AUTH INIT: no refresh token");
-
-          useAuthStore.getState().setAuthenticated(false);
-          return;
-        }
-
-        hadSession = true;
-        console.log("AUTH INIT: calling /me...");
-
+        if (!await getRefreshToken()) return;
         const user = await getMe();
-
-        console.log("AUTH INIT: /me successful", user);
-
-        if (generation !== getSessionGeneration()) return;
+        if (disposed || generation !== getSessionGeneration()) return;
         queryClient.setQueryData(["me"], user);
-        
-        useAuthStore.getState().setAuthenticated(true);
-        useAuthStore.getState().setProfileComplete(user.profileComplete);
-        useAuthStore.getState().setAvatarUrl(user.avatarUrl);
-
-        console.log("AUTH INIT: authenticated = true");
-      } catch (error) {
-        console.log("AUTH INIT: failed", error);
-
-        if (generation === getSessionGeneration()) {
-          useAuthStore.getState().setAuthenticated(hadSession);
-        }
-      } finally {
-        setIsInitializing(false);
-      }
-    }
-
-    initialize();
-  }, []);
-
-  return {
-    isInitializing,
-  };
+        useAuthStore.setState({ isAuthenticated: true, profileComplete: user.profileComplete, avatarUrl: user.avatarUrl });
+      } catch {
+        if (!disposed && generation === getSessionGeneration()) setError("We couldn't restore your profile. Check your connection and try again. Your saved login is still available.");
+      } finally { if (!disposed) setIsInitializing(false); }
+    })();
+    return () => { disposed = true; };
+  }, [attempt]);
+  return { isInitializing, initializationError, retryInitialization: () => setAttempt(value => value + 1) };
 }

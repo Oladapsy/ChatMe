@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
@@ -79,7 +80,7 @@ export default function NewContactScreen() {
 
       await contact.addPhone({ label: "mobile", number: phone.trim() });
 
-      router.back();
+      goBackOrHome(router);
     } catch (error) {
       console.warn("Failed to save contact:", error);
       Alert.alert("Couldn't save contact", "Please try again.");

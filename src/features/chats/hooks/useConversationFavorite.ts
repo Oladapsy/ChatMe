@@ -11,6 +11,7 @@ export const useConversationFavorite = () => {
     mutationFn: favoriteConversation,
 
     onSuccess: () => {
+      for (const key of ["favorites", "archived-conversations", "conversation", "group-details"]) void queryClient.invalidateQueries({ queryKey: [key] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
     },
@@ -20,6 +21,7 @@ export const useConversationFavorite = () => {
     mutationFn: unfavoriteConversation,
 
     onSuccess: () => {
+      for (const key of ["favorites", "archived-conversations", "conversation", "group-details"]) void queryClient.invalidateQueries({ queryKey: [key] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
     },

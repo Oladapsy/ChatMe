@@ -88,6 +88,8 @@ export function AttachmentModal({
                     styles.cameraTile,
                     { backgroundColor: isDark ? "#254156" : "#EAEEF2" },
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Take photo"
                   onPress={() => {
                     onClose();
                     onOpenCamera();
@@ -104,6 +106,8 @@ export function AttachmentModal({
                 {previews.map((item) => (
                   <TouchableOpacity
                     key={item.id}
+                    accessibilityRole="button"
+                    accessibilityLabel="Attach recent photo"
                     onPress={() => {
                       onSelectImage(item.uri);
                       onClose(); // Closes the modal sheet so the image preview is visible
@@ -137,16 +141,15 @@ export function AttachmentModal({
                     color={themeColors.modalText}
                     style={styles.label}
                   >
-                    Photo or Gallery
+                    Photos (up to 10)
                   </Typography>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.optionRow}
-                  onPress={() => {
-                    onClose();
-                    onSelectDocument();
-                  }}
+                  disabled
+                  accessibilityState={{ disabled: true }}
+                  accessibilityLabel="Documents unavailable"
+                  style={[styles.optionRow, { opacity: 0.4 }]}
                 >
                   <DocumentIcon
                     width={20}
@@ -159,7 +162,7 @@ export function AttachmentModal({
                     color={themeColors.modalText}
                     style={styles.label}
                   >
-                    Document
+                    Document (unavailable)
                   </Typography>
                 </TouchableOpacity>
 

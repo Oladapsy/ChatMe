@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { ConversationRealtime } from "@/features/chats/components/ConversationRealtime";
+import { RecoveryState } from "@/shared/components/RecoveryState";
+import { useEffect } from "react";
 import { PushNotifications } from "@/features/notifications/PushNotifications";
 import { PinLock } from "@/features/security/components/PinLock";
 import { Stack } from "expo-router";
@@ -20,7 +22,7 @@ import { useAppTheme } from "@/shared/hooks/useAppTheme";
 export default function RootLayout() {
   const { themeColors } = useAppTheme();
 
-  const { isInitializing } = useInitializeAuth();
+  const { isInitializing, initializationError, retryInitialization } = useInitializeAuth();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const profileComplete = useAuthStore((state) => state.profileComplete);
   const avatarUrl = useAuthStore((state) => state.avatarUrl);
@@ -63,6 +65,8 @@ export default function RootLayout() {
     return null;
   }
 
+  if (initializationError) return <RecoveryState message={initializationError} retry={retryInitialization} />;
+
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -88,16 +92,21 @@ export default function RootLayout() {
             <Stack.Screen name="(auth)/upload-photo" />
           </Stack.Protected>
 
-          {/* <Stack.Protected guard={isAuthenticated}>
-            <Stack.Screen name="(auth)/setup-pin" />
-          </Stack.Protected> */}
-
           <Stack.Protected guard={isAuthenticated && profileComplete}>
-            <Stack.Screen name="(auth)/setup-pin" />
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)/setup-pin" />
             <Stack.Screen name="chat-room" />
+            <Stack.Screen name="(settings)" />
+            <Stack.Screen name="archived-chats" />
+            <Stack.Screen name="contacts" />
+            <Stack.Screen name="group-details" />
+            <Stack.Screen name="new-contact" />
+            <Stack.Screen name="qr-scanner" />
+            <Stack.Screen name="user-details" />
+            <Stack.Screen name="user-qr" />
           </Stack.Protected>
         </Stack>
+        <ConversationRealtime authenticated={isAuthenticated} />
         <PushNotifications authenticated={isAuthenticated} profileComplete={profileComplete} />
         <PinLock authenticated={isAuthenticated} />
       </GestureHandlerRootView>

@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React from "react";
 import {
   ActivityIndicator,
@@ -71,7 +72,7 @@ export default function BlockedContactsScreen() {
       >
         <SubScreenHeader
           title="Blocked Contacts"
-          onBack={() => router.back()}
+          onBack={() => goBackOrHome(router)}
         />
       </MySafeAreaView>
 

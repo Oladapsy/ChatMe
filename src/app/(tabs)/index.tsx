@@ -55,8 +55,7 @@ import { useSearchUsers } from "@/features/contacts/hooks/useSearchUsers";
 import { useStartDirectConversation } from "@/features/chats/hooks/useStartDirectConversation";
 
 import { SearchUserRow } from "@/features/chats/components/SearchUserRow";
-import { useCreateGroup } from "@/features/chats/hooks/useCreateGroup";
-import { uploadMedia } from "@/services/mediaUpload";
+import { useCreateGroupWithAvatar } from "@/features/chats/hooks/useCreateGroupWithAvatar";
 import { useDeleteDirectChat } from "@/features/chats/hooks/useDeleteDirectChat";
 
 export default function HomeScreen() {
@@ -81,7 +80,7 @@ export default function HomeScreen() {
   }, [data]);
 
   // create group
-  const createGroupMutation = useCreateGroup();
+  const createGroupWithAvatar = useCreateGroupWithAvatar();
   // for pining and unpin
   const { pin, unpin, isPending: isPinPending } = useConversationPin();
   // mute
@@ -259,10 +258,6 @@ export default function HomeScreen() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onClearSelection={() => setSelectedIds([])}
-          onPin={() => console.log()}
-          onMute={() => console.log()}
-          onArchive={() => console.log()}
-          onDelete={() => console.log()}
         />
       </SafeAreaView>
 
@@ -430,36 +425,9 @@ export default function HomeScreen() {
       <NewGroupModal
         visible={isGroupModalOpen}
         onClose={() => setIsGroupModalOpen(false)}
-        onGroupCreated={async (groupData) => {
-          try {
-            let avatarMediaId: string | undefined;
-
-            if (groupData.image) {
-              const media = await uploadMedia({
-                uri: groupData.image.uri,
-                purpose: "group_avatar",
-                contentType: groupData.image.mimeType,
-                sizeBytes: groupData.image.fileSize,
-                originalFilename: groupData.image.fileName,
-              });
-
-              avatarMediaId = media.id;
-            }
-
-            const participantIds = [
-              ...new Set(groupData.members.map((member) => member.id)),
-            ];
-
-            await createGroupMutation.mutateAsync({
-              name: groupData.name.trim(),
-              participantIds,
-              ...(avatarMediaId ? { avatarMediaId } : {}),
-            });
-
-            setIsGroupModalOpen(false);
-          } catch (error: any) {
-            console.log("GROUP CREATION ERROR:", error?.message);
-          }
+        onGroupCreated={async groupData => {
+          await createGroupWithAvatar(groupData);
+          setIsGroupModalOpen(false);
         }}
       />
 

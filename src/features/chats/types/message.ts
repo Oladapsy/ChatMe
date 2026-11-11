@@ -72,6 +72,8 @@ export interface MessageReaction {
 }
 
 export interface Message {
+  localDelivery?: "pending" | "failed";
+  failureReason?: string;
   id: string;
   conversationId: string;
   clientMessageId: string;

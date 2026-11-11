@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React from "react";
 import {
   StyleSheet,
@@ -31,7 +32,7 @@ export function ArchivedHeader({
     if (onBackPress) {
       onBackPress();
     } else {
-      router.back();
+      goBackOrHome(router);
     }
   };
 

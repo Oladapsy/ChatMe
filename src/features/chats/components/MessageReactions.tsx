@@ -76,11 +76,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-end",
     flexWrap: "wrap",
+    maxWidth: "100%",
     gap: 6,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 16,
-    marginTop: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 20,
+    marginTop: -9,
   },
 
   reaction: {

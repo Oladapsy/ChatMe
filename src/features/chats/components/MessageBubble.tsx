@@ -5,6 +5,7 @@ import { Message } from "@/features/chats/types/message";
 
 // Icons
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import PendingClock from "@/assets/icons/chat/pendingClock.svg";
 import CheckMark from "@/assets/icons/chat/check.svg";
 
 import AudioMessagePlayer from "@/features/chats/components/AudioMessagePlayer";
@@ -15,6 +16,8 @@ import UserPlaceholderIcon from "@/assets/icons/shared/user.svg";
 import { MessageReactions } from "@/features/chats/components/MessageReactions";
 
 interface Props {
+  onRetry?: () => void;
+  retryDisabled?: boolean;
   message: Message;
   isGroup?: boolean;
   searchQuery?: string;
@@ -34,6 +37,8 @@ interface Props {
 
 export function MessageBubble({
   message,
+  onRetry,
+  retryDisabled,
   isGroup = false,
   searchQuery,
   receiptStatus = "sent",
@@ -143,7 +148,11 @@ export function MessageBubble({
                   {formatMessageTime(message.createdAt)}
                 </Typography>
 
-                {isMe && !isDeleted && (
+                {isMe && message.localDelivery === "pending" && <PendingClock width={14} height={14} color="rgba(255,255,255,0.7)" accessibilityRole="image" accessibilityLabel="Sending message" />}
+                {isMe && message.localDelivery === "failed" && <TouchableOpacity onPress={onRetry} disabled={retryDisabled} accessibilityRole="button" accessibilityLabel="Message failed. Tap to resend" accessibilityHint={message.failureReason} accessibilityState={{ disabled: retryDisabled }} style={{ paddingHorizontal: 8, paddingVertical: 6 }}>
+                  <Typography size={12} lineHeight={16} color="white" weight="bold">! Retry</Typography>
+                </TouchableOpacity>}
+                {isMe && !isDeleted && !message.localDelivery && (
                   <View style={styles.receiptContainer}>
                     {receiptStatus === "sent" ? (
                       <CheckMark width={14} height={14} color={receiptColor} />

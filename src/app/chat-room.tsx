@@ -1,3 +1,4 @@
+import { mergePendingMessages } from "@/features/chats/utils/mergePendingMessages";
 import React, {
   useState,
   useRef,
@@ -14,6 +15,9 @@ import {
   TouchableOpacity,
   FlatList,
   KeyboardAvoidingView,
+  Keyboard,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
   Platform,
   Alert,
 } from "react-native";
@@ -62,6 +66,8 @@ import { useConversations } from "@/features/chats/hooks/useConversations";
 import { useSearchMessages } from "@/features/chats/hooks/useSearchMessages";
 import { useUpdateReceipts } from "@/features/chats/hooks/useUpdateReceipts";
 import { useReceiptFrontiers } from "@/features/chats/hooks/useReceiptFrontiers";
+import { useComposerDraft } from "@/features/chats/hooks/useComposerDraft";
+import { RecoveryState } from "@/shared/components/RecoveryState";
 import { useMarkConversationAsRead } from "@/features/chats/hooks/useMarkConversationAsRead";
 // edit msg and delete
 import { useMessageActions } from "@/features/chats/hooks/useMessageActions";
@@ -132,7 +138,7 @@ export default function ChatRoomScreen() {
   const { mutateAsync: markConversationAsRead } =
     useMarkConversationAsRead(activeChatId);
 
-  const { submit, retry, failedCount, isSending } = useMessageDelivery(activeChatId);
+  const { submit, retry, pendingMessages, confirmMessages, isSending } = useMessageDelivery(activeChatId);
 
   // Pagination properties from useMessages
   const {
@@ -287,19 +293,23 @@ export default function ChatRoomScreen() {
       ]),
     );
 
-    return Array.from(uniqueMessages.values()).sort(
+    return mergePendingMessages(Array.from(uniqueMessages.values()), pendingMessages).sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
   }, [
     messagesData?.pages,
+    pendingMessages,
     serverSearchData?.pages,
     isSearching,
     searchQuery,
     debouncedSearchQuery,
   ]);
 
-  const latestMessageId = messages[messages.length - 1]?.id;
+  useEffect(() => {
+    confirmMessages(messagesData?.pages.flatMap(page => page.items) ?? []);
+  }, [messagesData, pendingMessages]);
+
   // Calculate receipt status for messages sent by the current user.
 
   const receiptStatusByMessageId = useMemo(() => {
@@ -395,28 +405,58 @@ export default function ChatRoomScreen() {
     isScreenFocused && isAppActive && !isSearching && isAtLatest;
   activeChatIdRef.current = activeChatId;
 
-  const [messageText, setMessageText] = useState("");
-  const [selectedImageUris, setSelectedImageUris] = useState<string[]>([]);
+  const { text: messageText, images: selectedImageUris, setText: setMessageText, setImages: setSelectedImageUris, ready: draftReady } = useComposerDraft(currentUser?.id, activeChatId);
   const [attachmentVisible, setAttachmentVisible] = useState(false);
 
   const { takePhoto, pickImages } = useCameraHandler();
   const flatListRef = useRef<FlatList>(null);
   const isLoadingOlderRef = useRef(false);
-  const openingAtLatest = useRef(true);
-  const [initialScrollDone, setInitialScrollDone] = useState(false);
+  const followingLatestRef = useRef(true);
+  const [followingLatest, setFollowingLatest] = useState(true);
+  const userScrollingRef = useRef(false);
+  const bottomFrame = useRef<number | null>(null);
+  const searchingRef = useRef(isSearching);
+  searchingRef.current = isSearching;
+  const followLatest = useCallback((follow: boolean) => {
+    followingLatestRef.current = follow;
+    setFollowingLatest(follow);
+  }, []);
+  const scrollToLatest = useCallback(() => {
+    if (bottomFrame.current !== null) cancelAnimationFrame(bottomFrame.current);
+    const scroll = () => {
+      if (!followingLatestRef.current || searchingRef.current || userScrollingRef.current) return;
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    };
+    bottomFrame.current = requestAnimationFrame(() => {
+      scroll();
+      // Re-check after native layout/composer resizing reaches the next frame.
+      bottomFrame.current = requestAnimationFrame(() => { bottomFrame.current = null; scroll(); });
+    });
+  }, []);
   useEffect(() => {
-    openingAtLatest.current = true;
-    setInitialScrollDone(false);
-  }, [activeChatId]);
+    const shown = Keyboard.addListener("keyboardDidShow", scrollToLatest);
+    const hidden = Keyboard.addListener("keyboardDidHide", scrollToLatest);
+    return () => {
+      shown.remove(); hidden.remove();
+      if (bottomFrame.current !== null) cancelAnimationFrame(bottomFrame.current);
+    };
+  }, [scrollToLatest]);
+  useEffect(() => {
+    userScrollingRef.current = false;
+    followLatest(true);
+    setIsAtLatest(true);
+    scrollToLatest();
+  }, [activeChatId, followLatest, scrollToLatest]);
   const sendInFlightRef = useRef(false);
   const isJumpingToMessageRef = useRef(false);
 
   const processedMessages = useMemo(() => {
-    return processMessages(messages, currentUser?.id);
+    return processMessages(messages, currentUser?.id).reverse();
   }, [messages, currentUser?.id]);
 
   useEffect(() => {
     if (!pendingJumpMessageId) return;
+    followLatest(false);
 
     const targetIndex = processedMessages.findIndex(
       (item) => item.type === "message" && item.id === pendingJumpMessageId,
@@ -436,13 +476,18 @@ export default function ChatRoomScreen() {
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [pendingJumpMessageId, processedMessages]);
+  }, [pendingJumpMessageId, processedMessages, followLatest]);
 
+  const latestScrollMessage = messages[messages.length - 1];
+  const latestScrollIdentity = latestScrollMessage?.clientMessageId || latestScrollMessage?.id;
+  const previousScrollIdentity = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!isSearching && latestMessageId) {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }
-  }, [latestMessageId, isSearching]);
+    if (isSearching || !latestScrollIdentity) return;
+    const newMessage = previousScrollIdentity.current !== latestScrollIdentity;
+    previousScrollIdentity.current = latestScrollIdentity;
+    if (newMessage && latestScrollMessage?.senderId === currentUser?.id) followLatest(true);
+    if (followingLatestRef.current) scrollToLatest();
+  }, [latestScrollIdentity, isSearching, latestScrollMessage?.senderId, currentUser?.id, followLatest, scrollToLatest]);
 
   // Calculate indices of messages that match current search query
   const matchingIndices = useMemo(() => {
@@ -614,23 +659,21 @@ export default function ChatRoomScreen() {
   }, [currentMatchIndex, matchingIndices, isSearching]);
 
   // Scroll handler for older messages pagination (reaching the top)
-  const handleMessageScroll = (event: any) => {
+  const handleMessageScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
 
     // Check whether the user is near the latest message.
-    const distanceFromBottom =
-      contentSize.height - layoutMeasurement.height - contentOffset.y;
+    const distanceFromBottom = Math.max(0, contentOffset.y);
+    const distanceFromOldest = contentSize.height - layoutMeasurement.height - contentOffset.y;
 
-    setIsAtLatest(distanceFromBottom <= 80);
-    if (openingAtLatest.current && distanceFromBottom <= 1) {
-      openingAtLatest.current = false;
-      setInitialScrollDone(true);
-    }
+    setIsAtLatest(distanceFromBottom <= 24);
+    // Layout-driven scroll events must not turn off bottom following.
+    if (userScrollingRef.current) followLatest(distanceFromBottom <= 24);
 
     // Load older messages when the user reaches the top.
     if (
-      !openingAtLatest.current &&
-      contentOffset.y <= 50 &&
+      userScrollingRef.current &&
+      distanceFromOldest <= 50 &&
       hasNextPage &&
       !isFetchingNextPage &&
       !isLoadingOlderRef.current &&
@@ -719,7 +762,7 @@ export default function ChatRoomScreen() {
   // Send text handler with comprehensive status checks and error logging
   const handleSend = async () => {
     // Prevent overlapping send and edit operations
-    if (sendInFlightRef.current || isSending || isEditingMessage) {
+    if (!draftReady || sendInFlightRef.current || isSending || isEditingMessage) {
       return;
     }
 
@@ -898,12 +941,13 @@ export default function ChatRoomScreen() {
 
     const submittedImages = [...selectedImageUris];
     realtime.setTyping(false);
-    const accepted = await submit(text, submittedImages, replyAtSubmit?.id);
-    if (accepted === null) return;
-    // The operation owns failed payloads too, so the composer can move on.
-    setMessageText(current => current === draftTextAtSubmit ? "" : current);
-    setSelectedImageUris(current => current.filter(uri => !submittedImages.includes(uri)));
-    setReplyingToMessage(current => current?.id === replyAtSubmit?.id ? null : current);
+    await submit(text, submittedImages, replyAtSubmit?.id, undefined, () => {
+      followLatest(true);
+      scrollToLatest();
+      setMessageText(current => current === draftTextAtSubmit ? "" : current);
+      setSelectedImageUris(current => current.filter(uri => !submittedImages.includes(uri)));
+      setReplyingToMessage(current => current?.id === replyAtSubmit?.id ? null : current);
+    });
   };
 
   const handleCancelEdit = () => {
@@ -921,7 +965,7 @@ export default function ChatRoomScreen() {
     if (isContactBlocked || isBlockStatusLoading) return;
     const photoUri = await takePhoto();
     if (photoUri) {
-      setSelectedImageUris((prev) => [...prev, photoUri]);
+      setSelectedImageUris((prev) => [...prev, photoUri].slice(0, 10));
     }
   };
 
@@ -929,6 +973,7 @@ export default function ChatRoomScreen() {
     if (isJumpingToMessageRef.current) return;
 
     isJumpingToMessageRef.current = true;
+    followLatest(false);
 
     try {
       // First check the messages already loaded.
@@ -976,7 +1021,7 @@ export default function ChatRoomScreen() {
         const updatedProcessedMessages = processMessages(
           allMessages,
           currentUser?.id,
-        );
+        ).reverse();
 
         targetIndex = updatedProcessedMessages.findIndex(
           (item) => item.type === "message" && item.id === messageId,
@@ -991,16 +1036,8 @@ export default function ChatRoomScreen() {
         return;
       }
 
-      // Allow React Native to render the newly fetched messages.
-      requestAnimationFrame(() => {
-        flatListRef.current?.scrollToIndex({
-          index: targetIndex,
-          animated: true,
-          viewPosition: 0.5,
-        });
-
-        setHighlightedMessageId(messageId);
-      });
+      // The effect waits for the actual rendered feed before jumping once.
+      setPendingJumpMessageId(messageId);
     } catch (error) {
       console.error("JUMP TO MESSAGE ERROR:", error);
 
@@ -1009,7 +1046,7 @@ export default function ChatRoomScreen() {
         "Could not load the original message. Please try again.",
       );
     } finally {
-      setPendingJumpMessageId(messageId);
+      isJumpingToMessageRef.current = false;
     }
   };
 
@@ -1017,13 +1054,13 @@ export default function ChatRoomScreen() {
     if (isContactBlocked || isBlockStatusLoading) return;
     const imageUris = await pickImages();
     if (imageUris.length > 0) {
-      setSelectedImageUris((prev) => [...prev, ...imageUris]);
+      setSelectedImageUris((prev) => [...new Set([...prev, ...imageUris])].slice(0, 10));
     }
   };
 
   const handleSelectRecentPhoto = (uri: string) => {
     setSelectedImageUris((prev) =>
-      prev.includes(uri) ? prev.filter((item) => item !== uri) : [...prev, uri],
+      prev.includes(uri) ? prev.filter((item) => item !== uri) : [...prev, uri].slice(0, 10),
     );
   };
 
@@ -1203,6 +1240,8 @@ export default function ChatRoomScreen() {
     });
   };
 
+  if (!activeChatId) return <RecoveryState message="Invalid destination: this link has no conversation ID." back={() => router.replace("/(tabs)")} />;
+
   return (
     <MySafeAreaView
       color={isDark ? themeColors.cardBackground : themeColors.primary}
@@ -1299,23 +1338,30 @@ export default function ChatRoomScreen() {
           ) : (
             <FlatList
               ref={flatListRef}
+              inverted
               data={processedMessages}
               keyExtractor={(item) => item.id}
               onScroll={handleMessageScroll}
               scrollEventThrottle={16}
+              contentInsetAdjustmentBehavior="never"
               onContentSizeChange={() => {
-                if (!isSearching && processedMessages.length && (openingAtLatest.current || isAtLatest)) {
-                  flatListRef.current?.scrollToEnd({ animated: false });
-                }
+                if (followingLatestRef.current) scrollToLatest();
               }}
               onLayout={() => {
-                if (openingAtLatest.current && !isSearching) flatListRef.current?.scrollToEnd({ animated: false });
+                if (followingLatestRef.current) scrollToLatest();
               }}
               onScrollBeginDrag={() => {
-                openingAtLatest.current = false;
-                setInitialScrollDone(true);
+                userScrollingRef.current = true;
+                followLatest(false);
               }}
-              maintainVisibleContentPosition={initialScrollDone ? {
+              onScrollEndDrag={() => { userScrollingRef.current = false; }}
+              onMomentumScrollBegin={() => { userScrollingRef.current = true; }}
+              onMomentumScrollEnd={event => {
+                handleMessageScroll(event);
+                userScrollingRef.current = false;
+                if (followingLatestRef.current) scrollToLatest();
+              }}
+              maintainVisibleContentPosition={!followingLatest ? {
                 minIndexForVisible: 0,
               } : undefined}
               onScrollToIndexFailed={(info) => {
@@ -1335,8 +1381,10 @@ export default function ChatRoomScreen() {
                     isGroup={isGroupChat}
                     searchQuery={isSearching ? searchQuery : undefined}
                     receiptStatus={receiptStatusByMessageId.get(item.id)}
+                    onRetry={() => { void retry(item.clientMessageId); }}
+                    retryDisabled={isSending || isContactBlocked || isBlockStatusUnavailable || isBlockStatusLoading}
                     onLongPress={
-                      !item.deletedAt
+                      !item.deletedAt && !item.localDelivery
                         ? (position) => handleMessageLongPress(item, position)
                         : undefined
                     }
@@ -1351,17 +1399,12 @@ export default function ChatRoomScreen() {
               contentContainerStyle={{
                 paddingVertical: 10,
                 flexGrow: 1,
-                justifyContent: "flex-end",
+                justifyContent: "flex-start",
               }}
             />
           )}
         </View>
 
-        {failedCount > 0 && (
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Retry failed message. ${failedCount} pending`} disabled={isSending || isContactBlocked || isBlockStatusUnavailable || isBlockStatusLoading} onPress={() => void retry()} style={{ padding: 16 }}>
-            <Typography accessibilityLiveRegion="polite">{failedCount} message(s) awaiting confirmation. Tap to retry.</Typography>
-          </TouchableOpacity>
-        )}
         {/* Selected Images Strip */}
         {selectedImageUris.length > 0 && !isSearching && !isContactBlocked && (
           <View style={styles.previewWrapper}>
@@ -1452,7 +1495,7 @@ export default function ChatRoomScreen() {
             onSendAudio={handleSendAudio}
             onOpenAttachment={() => setAttachmentVisible(true)}
             hasAttachments={selectedImageUris.length > 0}
-            isSending={isSending || isEditingMessage}
+            isSending={!draftReady || isSending || isEditingMessage}
             isEditing={Boolean(editingMessage)}
             onCancelEdit={handleCancelEdit}
             replyingToMessage={replyingToMessage}

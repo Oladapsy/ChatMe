@@ -11,6 +11,7 @@ export const useConversationArchive = () => {
     mutationFn: archiveConversation,
 
     onSuccess: () => {
+      for (const key of ["favorites", "archived-conversations", "conversation", "group-details"]) void queryClient.invalidateQueries({ queryKey: [key] });
       queryClient.invalidateQueries({
         queryKey: ["conversations"],
       });
@@ -25,6 +26,7 @@ export const useConversationArchive = () => {
     mutationFn: unarchiveConversation,
 
     onSuccess: () => {
+      for (const key of ["favorites", "archived-conversations", "conversation", "group-details"]) void queryClient.invalidateQueries({ queryKey: [key] });
       queryClient.invalidateQueries({
         queryKey: ["conversations"],
       });

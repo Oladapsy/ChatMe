@@ -1,5 +1,5 @@
 import { io, type Socket } from "socket.io-client";
-import { getAccessToken } from "@/services/authStorage";
+import { getAccessToken, getSessionGeneration } from "@/services/authStorage";
 
 const API_ORIGIN = process.env.EXPO_PUBLIC_API_ORIGIN;
 
@@ -13,15 +13,15 @@ if (!API_ORIGIN) {
  * or reconnects, rather than permanently capturing an old access token.
  */
 export function createChatSocket(): Socket {
+  const generation = getSessionGeneration();
   return io(`${API_ORIGIN}/chat`, {
     autoConnect: false,
     auth: (callback) => {
       void getAccessToken()
         .then((token) => {
-          callback({ token });
+          callback({ token: generation === getSessionGeneration() ? token : "" });
         })
-        .catch((error) => {
-          console.error("SOCKET: unable to retrieve access token", error);
+        .catch(() => {
           callback({ token: "" });
         });
     },

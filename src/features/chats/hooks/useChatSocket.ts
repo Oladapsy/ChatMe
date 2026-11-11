@@ -1,7 +1,8 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AppState } from "react-native";
-import { refreshSession } from "@/services/refreshSession";
+import { getSessionGeneration } from "@/services/authStorage";
+import { installSocketRecovery } from "@/features/chats/services/socketRecovery";
 import { getMessages } from "@/features/chats/api/chatApi";
 import { recoverMessages } from "@/features/chats/utils/recoverMessages";
 import {
@@ -52,6 +53,7 @@ export function useChatSocket(conversationId: string, userId?: string) {
   useEffect(() => {
     if (!conversationId) return;
 
+    const generation = getSessionGeneration();
     const socket = createChatSocket();
     socketRef.current = socket;
     setParticipants({});
@@ -87,14 +89,14 @@ export function useChatSocket(conversationId: string, userId?: string) {
           const current = queryClient.getQueryData<InfiniteData<MessageHistoryResponse>>(key);
           const known = new Set(current?.pages.flatMap(page => page.items.map(item => item.id)) ?? []);
           const missed = await recoverMessages(known, cursor => getMessages(conversationId, { cursor, limit: 50 }));
-          if (disposed) return;
+          if (disposed || generation !== getSessionGeneration()) return;
           queryClient.setQueryData<InfiniteData<MessageHistoryResponse>>(key, latest => {
             if (!latest) return latest;
             const updates = new Map(missed.map(message => [message.id, message]));
             const existing = new Set(latest.pages.flatMap(page => page.items.map(message => message.id)));
             return { ...latest, pages: latest.pages.map((page, index) => ({
               ...page,
-              items: [...(index === 0 ? missed.filter(message => !existing.has(message.id)) : []), ...page.items.map(message => updates.get(message.id) ?? message)],
+              items: [...(index === 0 ? missed.filter(message => !existing.has(message.id)) : []), ...page.items.filter(message => updates.has(message.id) || !known.has(message.id)).map(message => { const update = updates.get(message.id); return update && update.version >= message.version ? update : message; })],
             })) };
           });
           void queryClient.invalidateQueries({ queryKey: ["conversations"] });
@@ -124,33 +126,19 @@ export function useChatSocket(conversationId: string, userId?: string) {
       typingTimers.clear();
       lastStart.current = 0;
     };
+    const connection = installSocketRecovery(socket, () => AppState.currentState === "active", setStatus);
     const appState = AppState.addEventListener("change", state => {
       if (state === "active") {
-        if (!socket.connected) socket.connect();
+        if (!socket.connected) connection.start();
         else handleConnect();
       } else {
         setTyping(false);
-        socket.disconnect();
+        connection.stop();
       }
     });
 
-    let refreshingAuth = false;
-    const reconnectWithFreshToken = () => {
-      if (refreshingAuth || disposed) return;
-      refreshingAuth = true;
-      void refreshSession().then(() => {
-        if (!disposed && AppState.currentState === "active") socket.connect();
-      }).catch(() => {
-        if (!disposed) setStatus("Connection unavailable");
-      }).finally(() => { refreshingAuth = false; });
-    };
-    const handleConnectError = (error: Error & { data?: { code?: string } }) => {
-      if (error.data?.code === "AUTH_ACCESS_TOKEN_INVALID") reconnectWithFreshToken();
-      setStatus("Connection unavailable");
-      console.error("SOCKET: connection failed", error.message);
-    };
-
     const handleMessageCreated = (event: MessageCreatedEvent) => {
+      if (disposed || generation !== getSessionGeneration()) return;
       const incomingMessage = extractMessage(event);
 
       if (!incomingMessage?.conversationId) return;
@@ -202,7 +190,7 @@ export function useChatSocket(conversationId: string, userId?: string) {
 
     socket.on("disconnect", (reason: string) => {
       handleDisconnect();
-      if (reason === "io server disconnect") reconnectWithFreshToken();
+
     });
     socket.on("presence.changed", (event: { conversationId: string; userId: string; status: string }) => {
       if (event.conversationId === conversationId) setParticipants(current => ({ ...current, [event.userId]: event.status }));
@@ -218,13 +206,20 @@ export function useChatSocket(conversationId: string, userId?: string) {
     socket.on("receipt.delivered", refreshReceipts);
     socket.on("receipt.read", refreshReceipts);
     socket.on("connect", handleConnect);
-    socket.on("connect_error", handleConnectError);
     socket.on("message.created", handleMessageCreated);
+    const handleChanged = (event: { conversationId?: string; message?: { conversationId: string } }) => {
+      const id = event.conversationId ?? event.message?.conversationId;
+      if (!id || id === conversationId) void recover();
+    };
+    socket.onAny((event: string, payload: { conversationId?: string; message?: { conversationId: string } }) => {
+      if (event !== "message.created" && /^(message|reaction)\./.test(event)) handleChanged(payload ?? {});
+    });
 
-    socket.connect();
+    connection.start();
 
     return () => {
       disposed = true;
+      connection.dispose();
       setTyping(false);
       if (localTimer.current) clearTimeout(localTimer.current);
       typingTimers.forEach(clearTimeout);
@@ -233,8 +228,8 @@ export function useChatSocket(conversationId: string, userId?: string) {
       if (retryTimer) clearTimeout(retryTimer);
       appState.remove();
       socket.off("connect", handleConnect);
-      socket.off("connect_error", handleConnectError);
       socket.off("message.created", handleMessageCreated);
+      socket.offAny();
       socket.removeAllListeners();
       socket.disconnect();
     };

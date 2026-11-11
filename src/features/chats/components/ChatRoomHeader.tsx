@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React from "react";
 import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
@@ -51,7 +52,7 @@ export function ChatRoomHeader({
 
   return (
     <View style={[styles.header, { backgroundColor }]}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+      <TouchableOpacity onPress={() => goBackOrHome(router)} style={styles.backBtn}>
         <BackChevronIcon width={24} height={24} color="white" />
       </TouchableOpacity>
 

@@ -1,3 +1,4 @@
+import { useConversationMute } from "@/features/chats/hooks/useConversationMute";
 import React, { useState } from "react";
 import { Alert } from "react-native";
 import { UserProfile } from "@/features/chats/types/chat";
@@ -45,7 +46,8 @@ export function UserInfoFlowContainer({
   const [activeTab, setActiveTab] = useState<ActiveTab>("Main");
 
   // 1. Maintain local profile state (specifically tracking isMuted)
-  const [isMuted, setIsMuted] = useState(initialProfile.isMuted);
+  const isMuted = initialProfile.isMuted;
+  const { mute, unmute, isPending: changingMute } = useConversationMute();
 
   // 2. Block/Unblock hooks setup
   const { data: blockedData, isLoading: isLoadingBlocks } = useBlockedUsers();
@@ -140,7 +142,10 @@ export function UserInfoFlowContainer({
 
   // 3. Toggle handler: turning switch ON means notifications are active -> isMuted becomes false
   const handleToggleNotifications = (isNotificationsEnabled: boolean) => {
-    setIsMuted(!isNotificationsEnabled);
+    if (!conversationId || changingMute) return;
+    const options = { onError: () => Alert.alert("Notifications unchanged", "Couldn't save this setting. Please try again.") };
+    if (isNotificationsEnabled) unmute(conversationId, options);
+    else mute({ conversationId, duration: "always" }, options);
   };
 
   if (activeTab === "Photo") {
