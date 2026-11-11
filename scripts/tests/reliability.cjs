@@ -3,10 +3,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const ts = require('typescript');
-function load(path, mocks) {
+function load(path, mocks, globals = {}) {
   const exports = {};
   const js = ts.transpileModule(fs.readFileSync(path, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
-  vm.runInNewContext(js, { exports, require: name => { if (!(name in mocks)) throw Error(name); return mocks[name]; }, process, console, setTimeout, clearTimeout });
+  vm.runInNewContext(js, { exports, require: name => { if (!(name in mocks)) throw Error(name); return mocks[name]; }, process, console, setTimeout, clearTimeout, ...globals });
   return exports;
 }
 const deferred = () => { let resolve, reject; const promise = new Promise((a,b) => { resolve=a; reject=b; }); return {promise,resolve,reject}; };
@@ -287,4 +287,37 @@ test('back navigation falls back to the session entry route on cold starts',()=>
   state={isAuthenticated:true,profileComplete:true};goBackOrHome(router);
   assert.deepEqual(destinations,['/','/(auth)/setup-profile','/(tabs)']);
   let backs=0;goBackOrHome({...router,canGoBack:()=>true,back:()=>{backs++;}});assert.equal(backs,1);assert.equal(destinations.length,3);
+});
+
+
+function recoveryHarness(refreshSession) {
+  const handlers=new Map(),timers=new Map();let timerId=0,connects=0,generation=1,active=true;
+  const socket={on:(event,fn)=>handlers.set(event,fn),off:event=>handlers.delete(event),connect:()=>{connects++;},disconnect:()=>{}};
+  const {installSocketRecovery}=load('src/features/chats/services/socketRecovery.ts',{
+    '@/services/authStorage':{getSessionGeneration:()=>generation},'@/services/refreshSession':{refreshSession}
+  },{setTimeout:(fn,delay)=>{timers.set(++timerId,{fn,delay});return timerId;},clearTimeout:id=>timers.delete(id)});
+  const statuses=[];const connection=installSocketRecovery(socket,()=>active,status=>statuses.push(status));
+  return {connection,statuses,timers,connects:()=>connects,event:(event,payload)=>handlers.get(event)?.(payload),switchAccount:()=>{generation++;},background:()=>{active=false;connection.stop();},retry:()=>{const [id,timer]=timers.entries().next().value;timers.delete(id);timer.fn();}};
+}
+test('socket auth message refreshes once, then avoids a fresh-token rejection loop',async()=>{
+  let refreshes=0;const app=recoveryHarness(async()=>{refreshes++;});
+  app.connection.start();app.event('connect_error',new Error('A valid access token is required.'));await settle();
+  assert.equal(refreshes,1);assert.equal(app.connects(),2);
+  app.event('connect_error',new Error('A valid access token is required.'));await settle();assert.equal(refreshes,1);assert.match(app.statuses.at(-1),/authentication unavailable/);
+  app.event('connect');app.event('connect_error',{message:'expired',data:{code:'AUTH_ACCESS_TOKEN_EXPIRED'}});await settle();assert.equal(refreshes,2);
+  app.connection.dispose();
+});
+test('temporary socket refresh outage retries and stops scheduled work in background',async()=>{
+  let refreshes=0;const app=recoveryHarness(async()=>{if(++refreshes===1)throw Error('offline');});
+  app.event('connect_error',{message:'expired',data:{code:'AUTH_ACCESS_TOKEN_INVALID'}});await settle();assert.equal(app.timers.size,1);
+  app.retry();await settle();assert.equal(refreshes,2);assert.equal(app.connects(),1);
+  app.event('connect_error',new Error('network error'));assert.equal(app.timers.size,1);app.background();assert.equal(app.timers.size,0);app.connection.dispose();
+});
+test('delayed socket refresh cannot reconnect a different account or disposed room',async()=>{
+  for(const action of ['switch','dispose']) {
+    const pending=deferred();const app=recoveryHarness(()=>pending.promise);
+    app.event('connect_error',new Error('A valid access token is required.'));
+    if(action==='switch')app.switchAccount();else app.connection.dispose();pending.resolve();await settle();
+    assert.equal(app.connects(),0);assert.equal(app.timers.size,0);app.connection.dispose();
+  }
 });

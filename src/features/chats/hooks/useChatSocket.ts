@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AppState } from "react-native";
 import { getSessionGeneration } from "@/services/authStorage";
-import { refreshSession } from "@/services/refreshSession";
+import { installSocketRecovery } from "@/features/chats/services/socketRecovery";
 import { getMessages } from "@/features/chats/api/chatApi";
 import { recoverMessages } from "@/features/chats/utils/recoverMessages";
 import {
@@ -126,31 +126,16 @@ export function useChatSocket(conversationId: string, userId?: string) {
       typingTimers.clear();
       lastStart.current = 0;
     };
+    const connection = installSocketRecovery(socket, () => AppState.currentState === "active", setStatus);
     const appState = AppState.addEventListener("change", state => {
       if (state === "active") {
-        if (!socket.connected) socket.connect();
+        if (!socket.connected) connection.start();
         else handleConnect();
       } else {
         setTyping(false);
-        socket.disconnect();
+        connection.stop();
       }
     });
-
-    let refreshingAuth = false;
-    const reconnectWithFreshToken = () => {
-      if (refreshingAuth || disposed) return;
-      refreshingAuth = true;
-      void refreshSession().then(() => {
-        if (!disposed && AppState.currentState === "active") socket.connect();
-      }).catch(() => {
-        if (!disposed) setStatus("Connection unavailable");
-      }).finally(() => { refreshingAuth = false; });
-    };
-    const handleConnectError = (error: Error & { data?: { code?: string } }) => {
-      if (error.data?.code === "AUTH_ACCESS_TOKEN_INVALID") reconnectWithFreshToken();
-      setStatus("Connection unavailable");
-      console.error("SOCKET: connection failed", error.message);
-    };
 
     const handleMessageCreated = (event: MessageCreatedEvent) => {
       if (disposed || generation !== getSessionGeneration()) return;
@@ -205,7 +190,7 @@ export function useChatSocket(conversationId: string, userId?: string) {
 
     socket.on("disconnect", (reason: string) => {
       handleDisconnect();
-      if (reason === "io server disconnect") reconnectWithFreshToken();
+
     });
     socket.on("presence.changed", (event: { conversationId: string; userId: string; status: string }) => {
       if (event.conversationId === conversationId) setParticipants(current => ({ ...current, [event.userId]: event.status }));
@@ -221,7 +206,6 @@ export function useChatSocket(conversationId: string, userId?: string) {
     socket.on("receipt.delivered", refreshReceipts);
     socket.on("receipt.read", refreshReceipts);
     socket.on("connect", handleConnect);
-    socket.on("connect_error", handleConnectError);
     socket.on("message.created", handleMessageCreated);
     const handleChanged = (event: { conversationId?: string; message?: { conversationId: string } }) => {
       const id = event.conversationId ?? event.message?.conversationId;
@@ -231,10 +215,11 @@ export function useChatSocket(conversationId: string, userId?: string) {
       if (event !== "message.created" && /^(message|reaction)\./.test(event)) handleChanged(payload ?? {});
     });
 
-    socket.connect();
+    connection.start();
 
     return () => {
       disposed = true;
+      connection.dispose();
       setTyping(false);
       if (localTimer.current) clearTimeout(localTimer.current);
       typingTimers.forEach(clearTimeout);
@@ -243,7 +228,6 @@ export function useChatSocket(conversationId: string, userId?: string) {
       if (retryTimer) clearTimeout(retryTimer);
       appState.remove();
       socket.off("connect", handleConnect);
-      socket.off("connect_error", handleConnectError);
       socket.off("message.created", handleMessageCreated);
       socket.offAny();
       socket.removeAllListeners();

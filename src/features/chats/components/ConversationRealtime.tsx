@@ -3,7 +3,7 @@ import { AppState } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { createChatSocket } from "@/features/chats/services/chatSocket";
 import { getSessionGeneration } from "@/services/authStorage";
-import { refreshSession } from "@/services/refreshSession";
+import { installSocketRecovery } from "@/features/chats/services/socketRecovery";
 export function ConversationRealtime({ authenticated }: { authenticated: boolean }) {
   const client = useQueryClient();
   useEffect(() => {
@@ -17,17 +17,13 @@ export function ConversationRealtime({ authenticated }: { authenticated: boolean
     };
     socket.on("connect", refresh);
     socket.onAny((event: string) => { if (/^(message|reaction|receipt|conversation)\./.test(event)) refresh(); });
-    socket.on("connect_error", (error: Error & { data?: { code?: string } }) => {
-      if (error.data?.code === "AUTH_ACCESS_TOKEN_INVALID") void refreshSession().then(() => {
-        if (!disposed && generation === getSessionGeneration()) socket.connect();
-      }).catch(() => {});
-    });
+    const connection = installSocketRecovery(socket, () => AppState.currentState === "active");
     const subscription = AppState.addEventListener("change", state => {
-      if (state === "active") { socket.connect(); refresh(); }
-      else socket.disconnect();
+      if (state === "active") { connection.start(); refresh(); }
+      else connection.stop();
     });
-    socket.connect();
-    return () => { disposed = true; subscription.remove(); socket.offAny(); socket.removeAllListeners(); socket.disconnect(); };
+    connection.start();
+    return () => { disposed = true; connection.dispose(); subscription.remove(); socket.offAny(); socket.removeAllListeners(); socket.disconnect(); };
   }, [authenticated, client]);
   return null;
 }

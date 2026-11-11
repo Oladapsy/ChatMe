@@ -21,8 +21,7 @@ export function createChatSocket(): Socket {
         .then((token) => {
           callback({ token: generation === getSessionGeneration() ? token : "" });
         })
-        .catch((error) => {
-          console.error("SOCKET: unable to retrieve access token", error);
+        .catch(() => {
           callback({ token: "" });
         });
     },
