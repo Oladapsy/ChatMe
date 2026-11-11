@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import ChevronLeft from "@/assets/icons/auth/chevron-left.svg";
 import { Typography } from "@/shared/components/Typography";
 import { useRouter } from "expo-router";
@@ -25,7 +26,7 @@ export function BackButton({
     if (onPress) {
       onPress();
     } else {
-      router.back();
+      goBackOrHome(router);
     }
   };
 

@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React, { useState } from "react";
 import { StyleSheet, View, ScrollView, TextInput } from "react-native";
 import { useRouter } from "expo-router";
@@ -33,7 +34,7 @@ export default function FaqScreen() {
         color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
-        <SubScreenHeader title="FAQ" onBack={() => router.back()} />
+        <SubScreenHeader title="FAQ" onBack={() => goBackOrHome(router)} />
 
         <View style={styles.searchWrapper}>
           <View

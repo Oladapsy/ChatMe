@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
@@ -85,7 +86,7 @@ export default function EditProfileScreen() {
 
     return (
       <View style={styles.loadingContainer}>
-        <Button title="Go Back" onPress={() => router.back()} />
+        <Button title="Go Back" onPress={() => goBackOrHome(router)} />
       </View>
     );
   }
@@ -140,7 +141,7 @@ export default function EditProfileScreen() {
 
       console.log("8. PROFILE UPDATE SUCCESS");
 
-      router.back();
+      goBackOrHome(router);
     } catch (error: any) {
       console.log("========== UPDATE PROFILE ERROR ==========");
       console.log("ERROR OBJECT:", error);

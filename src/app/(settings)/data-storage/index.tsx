@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
@@ -21,7 +22,7 @@ export default function DataAndStorageScreen() {
       >
         <SubScreenHeader
           title="Data and Storage"
-          onBack={() => router.back()}
+          onBack={() => goBackOrHome(router)}
         />
       </MySafeAreaView>
 

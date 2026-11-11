@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import { RecoveryState } from "@/shared/components/RecoveryState";
 import React from "react";
 import { ActivityIndicator, TouchableOpacity, View } from "react-native";
@@ -50,8 +51,7 @@ export default function UserDetailsRoute() {
   }
 
   if (conversation.type !== "direct") {
-    router.back();
-    return null;
+    return <RecoveryState message="Invalid destination: use group details for this conversation." back={() => router.replace("/(tabs)")} />;
   }
 
   const participant = conversation.otherParticipant;
@@ -91,7 +91,7 @@ export default function UserDetailsRoute() {
       conversationId={conversation.id}
       starredMessages={[]}
       sharedLinkSections={[]}
-      onBack={() => router.back()}
+      onBack={() => goBackOrHome(router)}
       onQrPress={() =>
         router.push({
           pathname: "/user-qr",

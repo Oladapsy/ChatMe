@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import { RecoveryState } from "@/shared/components/RecoveryState";
 import React, { useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
@@ -213,7 +214,7 @@ export default function GroupDetailsRoute() {
       currentUserRole={data.role}
       starredMessages={[]}
       sharedLinkSections={[]}
-      onBack={() => router.back()}
+      onBack={() => goBackOrHome(router)}
       savingGroup={saving}
       onSaveGroup={handleSaveGroup}
       onLeaveGroup={handleLeaveGroup}

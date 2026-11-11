@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React, { useState } from "react";
 import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -28,7 +29,7 @@ export default function AutoDownloadOptionScreen() {
       >
         <SubScreenHeader
           title={title || "Photos"}
-          onBack={() => router.back()}
+          onBack={() => goBackOrHome(router)}
         />
       </MySafeAreaView>
 

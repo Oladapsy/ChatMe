@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React from "react";
 import {
   StyleSheet,
@@ -26,7 +27,7 @@ export default function ManageStorageScreen() {
         color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
-        <SubScreenHeader title="Manage Storage" onBack={() => router.back()} />
+        <SubScreenHeader title="Manage Storage" onBack={() => goBackOrHome(router)} />
       </MySafeAreaView>
 
       <MySafeAreaView

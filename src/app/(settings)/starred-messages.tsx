@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import type { StarredMessage } from "@/features/chats/types/starredMsg";
 import { Typography } from "@/shared/components/Typography";
 import React from "react";
@@ -34,7 +35,7 @@ export default function StarredMessagesScreen() {
       >
         <SubScreenHeader
           title="Star Message"
-          onBack={() => router.back()}
+          onBack={() => goBackOrHome(router)}
           rightAction={
             <TouchableOpacity
               style={styles.iconBtn}

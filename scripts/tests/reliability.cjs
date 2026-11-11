@@ -276,3 +276,15 @@ test('conversation mapper preserves group owners',()=>{
   const chat=mapConversationToChat({type:'group',settings:{},participants:[{id:'owner',displayName:'Owner',role:'owner'}]});
   assert.equal(chat.members[0].role,'owner');assert.equal(chat.members[0].name,'Owner');
 });
+
+test('back navigation falls back to the session entry route on cold starts',()=>{
+  let state={isAuthenticated:false,profileComplete:false};
+  const {goBackOrHome}=load('src/shared/utils/goBackOrHome.ts',{'@/store/authStore':{useAuthStore:{getState:()=>state}}});
+  const destinations=[];
+  const router={canGoBack:()=>false,back:()=>assert.fail('no history'),replace:path=>destinations.push(path)};
+  goBackOrHome(router);
+  state={isAuthenticated:true,profileComplete:false};goBackOrHome(router);
+  state={isAuthenticated:true,profileComplete:true};goBackOrHome(router);
+  assert.deepEqual(destinations,['/','/(auth)/setup-profile','/(tabs)']);
+  let backs=0;goBackOrHome({...router,canGoBack:()=>true,back:()=>{backs++;}});assert.equal(backs,1);assert.equal(destinations.length,3);
+});

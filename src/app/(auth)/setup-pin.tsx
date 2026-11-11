@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React, { useState } from "react";
 import { Alert, StyleSheet, View} from "react-native";
 import { usePinStore } from "@/store/pinStore";
@@ -40,7 +41,7 @@ export default function SetupPinScreen() {
         if (!await security.verify(code)) throw new Error("Incorrect PIN.");
         await security.disable();
       } else await security.setup(code);
-      router.back();
+      goBackOrHome(router);
     } catch (error) { Alert.alert("App PIN", error instanceof Error ? error.message : "Could not save PIN."); }
     finally { setBusy(false); setPin([]); }
   };

@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React, { useState } from "react";
 import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -79,7 +80,7 @@ export default function QRScannerScreen() {
       {/* Top Controls */}
       <View style={styles.topBar}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => goBackOrHome(router)}
           style={styles.iconCircle}
         >
           <BackIcon width={22} height={22} color="white" />

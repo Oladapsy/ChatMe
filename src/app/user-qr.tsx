@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { UserQrCodeScreen } from "@/features/chats/components/user/UserQrCodeScreen";
@@ -18,7 +19,7 @@ export default function UserQrRoute() {
       phone={params.phone || MOCK_USER_PROFILE.phone}
       avatarUri={params.avatarUri || MOCK_USER_PROFILE.avatarUri}
       qrValue={params.qrValue || MOCK_USER_PROFILE.qrValue}
-      onBack={() => router.back()}
+      onBack={() => goBackOrHome(router)}
       onScanQrPress={() => console.log("Open QR Scanner")}
     />
   );

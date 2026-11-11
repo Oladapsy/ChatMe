@@ -1,3 +1,4 @@
+import { goBackOrHome } from "@/shared/utils/goBackOrHome";
 import React, { useState } from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -25,7 +26,7 @@ export default function LastSeenScreen() {
         color={isDark ? themeColors.headBg : themeColors.primary}
         style={styles.topSafeArea}
       >
-        <SubScreenHeader title={headerTitle} onBack={() => router.back()} />
+        <SubScreenHeader title={headerTitle} onBack={() => goBackOrHome(router)} />
       </MySafeAreaView>
 
       <MySafeAreaView
