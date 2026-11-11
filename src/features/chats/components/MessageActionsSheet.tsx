@@ -44,11 +44,11 @@ export function MessageActionsSheet({
   const { themeColors } = useAppTheme();
   const { width, height } = useWindowDimensions();
 
-  const MENU_WIDTH = 260;
+  const SCREEN_PADDING = 16;
+  const MENU_WIDTH = Math.min(280, width - SCREEN_PADDING * 2);
   const baseHeight = isOwnMessage ? 168 : 56;
   const MENU_HEIGHT = baseHeight + 60;
   
-  const SCREEN_PADDING = 16;
   const TOP_PADDING = 60;
   const GAP = 8;
 
@@ -92,7 +92,7 @@ export function MessageActionsSheet({
                 Math.min(menuTop, height - MENU_HEIGHT - SCREEN_PADDING),
               ),
               left: menuLeft,
-              width: Math.min(MENU_WIDTH, width - SCREEN_PADDING * 2),
+              width: MENU_WIDTH,
             },
           ]}
         >
@@ -101,10 +101,12 @@ export function MessageActionsSheet({
             {REACTION_EMOJIS.map((emoji) => (
               <Pressable
                 key={emoji}
+                accessibilityRole="button"
+                accessibilityLabel={`React with ${emoji}`}
                 onPress={() => onReact(emoji)}
                 style={styles.reactionButton}
               >
-                <Text style={styles.emojiText}>{emoji}</Text>
+                <Text style={styles.emojiText} maxFontSizeMultiplier={1} numberOfLines={1} adjustsFontSizeToFit>{emoji}</Text>
               </Pressable>
             ))}
           </View>
@@ -181,10 +183,12 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   reactionButton: {
-    padding: 6,
+    flex: 1,
+    minWidth: 0,
+    minHeight: 44,
+    paddingVertical: 6,
     alignItems: "center",
     justifyContent: "center",
-    overflow: "visible",
   },
   emojiText: {
     fontSize: 26,
