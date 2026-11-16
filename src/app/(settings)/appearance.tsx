@@ -1,16 +1,16 @@
 import { goBackOrHome } from "@/shared/utils/goBackOrHome";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   StyleSheet,
   View,
   ScrollView,
   Alert,
-  NativeModules,
+  AppState,
   Appearance,
+  Platform,
 } from "react-native";
-import { useRouter } from "expo-router";
-
-// import ExpoDynamicAppIcon from "@variant-systems/expo-dynamic-app-icon";
+import { useFocusEffect, useRouter } from "expo-router";
+import { requireOptionalNativeModule } from "expo";
 
 import MySafeAreaView from "@/shared/components/MySafeAreaView";
 import { Typography } from "@/shared/components/Typography";
@@ -45,6 +45,21 @@ const THEME_OPTIONS: ThemeOption[] = (
   darkBg: ICON_CONFIGS[id].darkBg,
 }));
 
+// Expo modules are registered through Expo's registry, not NativeModules.
+type DynamicAppIconModule = {
+  getAppIcon: () => string;
+  setAppIcon: (icon: string) => string;
+};
+
+const appIconModule = Platform.OS === "web"
+  ? null
+  : requireOptionalNativeModule<DynamicAppIconModule>("ExpoDynamicAppIcon");
+
+function readAppIcon(): IconThemeId {
+  const name = appIconModule?.getAppIcon();
+  return THEME_OPTIONS.find((option) => option.id === name)?.id ?? "green";
+}
+
 export default function AppearanceScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
@@ -56,29 +71,54 @@ export default function AppearanceScreen() {
   );
 
   const [largeEmoji, setLargeEmoji] = useState(false);
-  const [selectedAppIcon, setSelectedAppIcon] = useState<IconThemeId>("green");
+  const [selectedAppIcon, setSelectedAppIcon] = useState<IconThemeId>(readAppIcon);
+  const [changingAppIcon, setChangingAppIcon] = useState(false);
+
+  useFocusEffect(useCallback(() => {
+    setSelectedAppIcon(readAppIcon());
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") setSelectedAppIcon(readAppIcon());
+    });
+    return () => subscription.remove();
+  }, []));
 
   const activeThemeColor = ICON_CONFIGS[selectedTheme].color;
 
   const handleAppIconChange = async (iconId: IconThemeId) => {
-    setSelectedAppIcon(iconId);
-
-    // 1. Guard against Expo Go environments safely
-    if (!NativeModules.ExpoDynamicAppIcon) {
+    if (changingAppIcon) return;
+    if (!appIconModule) {
       Alert.alert(
-        "Expo Go Notice",
-        "Dynamic app icons require a native development build. Run 'npx expo run:ios' or 'npx expo run:android'.",
+        "App icons unavailable",
+        Platform.OS === "web"
+          ? "App icons can be changed in the iOS or Android app."
+          : "Open the ChatMe development build to change the app icon.",
       );
       return;
     }
 
-    // 2. Dynamically require the package only when running native builds
+    setChangingAppIcon(true);
     try {
-      const ExpoDynamicAppIcon =
-        require("@variant-systems/expo-dynamic-app-icon").default;
-      await ExpoDynamicAppIcon.setAppIcon(iconId);
+      const result = appIconModule.setAppIcon(iconId);
+      if (result.startsWith("Error:")) throw new Error(result.slice(6).trim());
+
+      if (Platform.OS === "ios") {
+        // The native setter schedules a change; it doesn't return a promise.
+        for (let attempt = 0; attempt < 20; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          if (readAppIcon() === iconId) {
+            setSelectedAppIcon(iconId);
+            return;
+          }
+        }
+        throw new Error("iOS couldn't apply the selected icon. Please try again.");
+      }
+      // Android applies the scheduled launcher change when the app backgrounds.
+      setSelectedAppIcon(iconId);
     } catch (error) {
-      console.warn("Failed to set app icon:", error);
+      setSelectedAppIcon(readAppIcon());
+      Alert.alert("Couldn't change app icon", error instanceof Error ? error.message : "Please try again.");
+    } finally {
+      setChangingAppIcon(false);
     }
   };
 
