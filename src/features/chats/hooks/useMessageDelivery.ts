@@ -1,6 +1,6 @@
 import { retainAttachment } from "@/features/chats/utils/retainAttachment";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Alert } from "react-native";
 import * as Crypto from "expo-crypto";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,11 @@ type Operation = { payload: SendMessagePayload; attachments: Attachment[]; gener
 // Persist pending and failed operations across navigation and app restarts.
 const outboxes = new Map<string, Operation[]>();
 const storageWrites = new Map<string, Promise<unknown>>();
+const loadedGenerations = new Map<string, number>();
+const restorations = new Map<string, Promise<void>>();
+// Work survives screen unmounts. Only a fresh process treats persisted pending
+// operations as interrupted; navigation must keep the original operation alive.
+const activeOperations = new Map<string, Operation>();
 const listeners = new Set<() => void>();
 const empty: Operation[] = [];
 function updateOutbox(key: string, update: (items: Operation[]) => Operation[]) {
@@ -38,30 +43,43 @@ function subscribe(listener: () => void) {
 // and completed media IDs are never reconstructed from the current composer.
 export function useMessageDelivery(conversationId: string) {
   const queryClient = useQueryClient();
-  const busy = useRef(false);
-  const [isSending, setIsSending] = useState(false);
   const user = queryClient.getQueryData<{ id: string }>(["me"]);
   const generation = getSessionGeneration();
   const key = `${user?.id ?? "unavailable"}:${conversationId}`;
+  const ownerKey = `${generation}:${key}`;
+  const isSending = useSyncExternalStore(subscribe, () => activeOperations.has(ownerKey), () => false);
   const [restored, setRestored] = useState(false);
   useEffect(() => {
     let disposed = false;
     setRestored(false);
     if (!user?.id) return;
-    void (storageWrites.get(key) ?? Promise.resolve()).then(() => AsyncStorage.getItem(`chatme.outbox:${key}`)).then(saved => {
-      if (disposed || generation !== getSessionGeneration()) return;
-      const operations: Operation[] = saved ? JSON.parse(saved) : [];
-      outboxes.set(key, operations.map(operation => ({ ...operation, generation, state: "failed", createdAt: operation.createdAt ?? new Date().toISOString(), attachments: operation.attachments.map(attachment => ({ ...attachment, progress: { ...attachment.progress, generation } })) })));
-      listeners.forEach(listener => listener());
-      setRestored(true);
-    }).catch(() => { Alert.alert("Recovery unavailable", "Saved messages couldn't be loaded. Please reopen this chat to retry."); });
+    let restoration = restorations.get(ownerKey);
+    if (loadedGenerations.get(key) === generation) {
+      restoration = Promise.resolve();
+    } else if (!restoration) {
+      restoration = (async () => {
+        await (storageWrites.get(key) ?? Promise.resolve());
+        const saved = await AsyncStorage.getItem(`chatme.outbox:${key}`);
+        if (generation !== getSessionGeneration()) return;
+        const operations: Operation[] = saved ? JSON.parse(saved) : [];
+        outboxes.set(key, operations.map(operation => ({ ...operation, generation, state: "failed", createdAt: operation.createdAt ?? new Date().toISOString(), attachments: operation.attachments.map(attachment => ({ ...attachment, progress: { ...attachment.progress, generation } })) })));
+        loadedGenerations.set(key, generation);
+        listeners.forEach(listener => listener());
+      })().finally(() => { restorations.delete(ownerKey); });
+      restorations.set(ownerKey, restoration);
+    }
+    void restoration.then(() => {
+      if (!disposed && generation === getSessionGeneration()) setRestored(true);
+    }).catch(() => {
+      if (!disposed && generation === getSessionGeneration()) Alert.alert("Recovery unavailable", "Saved messages couldn't be loaded. Please reopen this chat to retry.");
+    });
     return () => { disposed = true; };
-  }, [key, generation, user?.id]);
+  }, [key, ownerKey, generation, user?.id]);
   const failed = useSyncExternalStore(subscribe, () => outboxes.get(key) ?? empty, () => empty);
   async function deliver(operation: Operation, onQueued?: () => void): Promise<boolean> {
-    if (busy.current) return false;
-    busy.current = true;
-    setIsSending(true);
+    if (activeOperations.has(ownerKey) || operation.generation !== getSessionGeneration()) return false;
+    activeOperations.set(ownerKey, operation);
+    listeners.forEach(listener => listener());
     const checkSession = () => {
       if (operation.generation !== getSessionGeneration()) throw new Error("Session changed");
     };
@@ -108,12 +126,12 @@ export function useMessageDelivery(conversationId: string) {
       }
       return false;
     } finally {
-      busy.current = false;
-      setIsSending(false);
+      activeOperations.delete(ownerKey);
+      listeners.forEach(listener => listener());
     }
   }
   function submit(text: string, images: string[], replyToMessageId?: string, audio?: { uri: string; duration: number }, onQueued?: () => void) {
-    if (busy.current || !restored) return Promise.resolve(null);
+    if (activeOperations.has(ownerKey) || !restored || generation !== getSessionGeneration()) return Promise.resolve(null);
     const attachments: Attachment[] = audio
       ? [{ ...audio, kind: "audio", uploadId: Crypto.randomUUID(), progress: {} }]
       : images.map(uri => ({ uri, kind: "image", uploadId: Crypto.randomUUID(), progress: {} }));
@@ -137,6 +155,7 @@ export function useMessageDelivery(conversationId: string) {
       : { type: "image", mediaId: attachment.mediaId ?? attachment.uploadId, contentType: "image/*", sizeBytes: 0, width: 0, height: 0, url: attachment.uri }),
   })), [failed, user?.id, conversationId]);
   const confirmMessages = (messages: Message[]) => {
+    if (generation !== getSessionGeneration()) return;
     const items = outboxes.get(key) ?? empty;
     const remaining = items.filter(operation => {
       if (!messages.some(message => message.senderId === user?.id && message.clientMessageId === operation.payload.clientMessageId)) return true;

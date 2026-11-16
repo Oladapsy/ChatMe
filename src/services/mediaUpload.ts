@@ -10,7 +10,7 @@ import { uploadToCloudinary } from "@/services/cloudinary";
 import { getSessionGeneration } from "@/services/authStorage";
 import * as Crypto from "expo-crypto";
 
-export type UploadProgress = { generation?: number; authorization?: CreateMediaUploadResponse; uploaded?: boolean };
+export type UploadProgress = { generation?: number; clientUploadId?: string; authorization?: CreateMediaUploadResponse; authorizationRejected?: boolean; uploaded?: boolean };
 
 type UploadMediaParams = {
   progress?: UploadProgress;
@@ -24,7 +24,7 @@ type UploadMediaParams = {
 
 export async function uploadMedia({
   progress = {},
-  clientUploadId = Crypto.randomUUID(),
+  clientUploadId,
   uri,
   purpose,
   contentType,
@@ -35,31 +35,62 @@ export async function uploadMedia({
   progress.generation = generation;
   const checkSession = () => { if (generation !== getSessionGeneration()) throw new Error("Account changed. Start this upload again in the original account."); };
   checkSession();
-  const response = progress.authorization ?? await createMediaUpload({
-    clientUploadId,
-    purpose,
-    contentType,
-    sizeBytes,
-    originalFilename,
-  }, generation);
-  checkSession();
+  if (progress.clientUploadId && clientUploadId && progress.clientUploadId !== clientUploadId) throw new Error("Upload identity changed");
+  progress.clientUploadId ??= clientUploadId ?? Crypto.randomUUID();
+  const expired = (authorization: CreateMediaUploadResponse) => {
+    const expiresAt = Date.parse(authorization.upload?.expiresAt ?? "");
+    return !Number.isFinite(expiresAt) || expiresAt <= Date.now();
+  };
+  const rejectedAuthorization = (error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    return /(expired|stale).*(signature|timestamp|authorization)|(signature|timestamp|authorization).*expir/i.test(message);
+  };
+  const authorize = async () => {
+    const previousMediaId = progress.authorization?.media.id;
+    // Repeat the idempotent creation request with the original upload ID.
+    // The backend must renew pending authorization for this same media record.
+    const response = await createMediaUpload({
+      clientUploadId: progress.clientUploadId!, purpose, contentType, sizeBytes, originalFilename,
+    }, generation);
+    checkSession();
+    if (previousMediaId && response.media.id !== previousMediaId) throw new Error("Upload renewal returned a different media record. Please retry later.");
+    progress.authorization = response;
+    progress.authorizationRejected = false;
+    return response;
+  };
+  let response = progress.authorization;
+  if (response?.media.status === "ready") return response.media;
+  if (!response || (!progress.uploaded && (progress.authorizationRejected || expired(response)))) response = await authorize();
 
-  progress.authorization = response;
   if (response.media.status === "ready") return response.media;
 
-  if (response.upload && !progress.uploaded) {
-    await uploadToCloudinary({
-      uri,
-      uploadUrl: response.upload.url,
-      fields: response.upload.fields,
-      contentType,
-      filename: originalFilename,
-    });
+  if (!progress.uploaded) {
+    const transfer = async (authorization: CreateMediaUploadResponse) => {
+      if (!authorization.upload) throw new Error("Upload authorization is unavailable. Please retry.");
+      if (authorization.upload.expiresAt && expired(authorization)) throw new Error("Upload authorization has expired. Please retry.");
+      await uploadToCloudinary({ uri, uploadUrl: authorization.upload.url, fields: authorization.upload.fields, contentType, filename: originalFilename });
+    };
+    try {
+      await transfer(response);
+    } catch (error) {
+      checkSession();
+      if (!rejectedAuthorization(error)) throw error;
+      progress.authorizationRejected = true;
+      response = await authorize();
+      if (response.media.status === "ready") return response.media;
+      // Only one renewal/transfer per attempt; repeated failures remain retryable.
+      try { await transfer(response); }
+      catch (retryError) {
+        if (expired(response) || rejectedAuthorization(retryError)) progress.authorizationRejected = true;
+        throw retryError;
+      }
+    }
   }
 
   checkSession();
   progress.uploaded = true;
   const media = await completeMediaUpload(response.media.id, generation);
   checkSession();
+  if (media.status === "ready") progress.authorization = { media, upload: null };
   return media;
 }

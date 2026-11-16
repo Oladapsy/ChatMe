@@ -1,4 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { applyMessageUpdate } from "@/features/chats/utils/reconcileMessageSearch";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 import { editMessage, deleteMessage } from "@/features/chats/api/chatApi";
 import type { EditMessagePayload } from "@/features/chats/api/chatApi";
 
@@ -6,7 +8,7 @@ export const useMessageActions = (conversationId: string) => {
   const queryClient = useQueryClient();
 
   // Edit message mutation
-  const editMutation = useMutation({
+  const editMutation = useSessionMutation({
     mutationFn: ({
       messageId,
       payload,
@@ -15,7 +17,8 @@ export const useMessageActions = (conversationId: string) => {
       payload: EditMessagePayload;
     }) => editMessage(conversationId, messageId, payload),
 
-    onSuccess: () => {
+    onSuccess: (message) => {
+      applyMessageUpdate(queryClient, conversationId, message);
       queryClient.invalidateQueries({
         queryKey: ["messages", conversationId],
       });
@@ -27,10 +30,11 @@ export const useMessageActions = (conversationId: string) => {
   });
 
   // Delete message mutation
-  const deleteMutation = useMutation({
+  const deleteMutation = useSessionMutation({
     mutationFn: (messageId: string) => deleteMessage(conversationId, messageId),
 
-    onSuccess: () => {
+    onSuccess: (message) => {
+      applyMessageUpdate(queryClient, conversationId, message);
       queryClient.invalidateQueries({
         queryKey: ["messages", conversationId],
       });

@@ -1,11 +1,12 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { clearConversationMessages } from "@/features/chats/api/chatApi";
 
 export const useClearConversationMessages = (conversationId: string) => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation({
+  const mutation = useSessionMutation({
     mutationFn: () => clearConversationMessages(conversationId),
 
     onSuccess: async () => {
@@ -15,15 +16,10 @@ export const useClearConversationMessages = (conversationId: string) => {
         exact: true,
       });
 
-      // Clear any cached message search results.
-      await queryClient.invalidateQueries({
-        queryKey: ["messageSearch", conversationId],
-      });
-
-      // Refresh the conversation list (last message/unread state).
-      await queryClient.invalidateQueries({
-        queryKey: ["conversations"],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["messages", "search", conversationId] }),
+        queryClient.invalidateQueries({ queryKey: ["conversations"] }),
+      ]);
     },
   });
 

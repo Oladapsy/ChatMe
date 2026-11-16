@@ -64,6 +64,7 @@ import { MessageDateSeparator } from "@/features/chats/components/MessageDateSep
 import { useChatSocket } from "@/features/chats/hooks/useChatSocket";
 import { useConversations } from "@/features/chats/hooks/useConversations";
 import { useSearchMessages } from "@/features/chats/hooks/useSearchMessages";
+import { mergeSearchWithHistory } from "@/features/chats/utils/reconcileMessageSearch";
 import { useUpdateReceipts } from "@/features/chats/hooks/useUpdateReceipts";
 import { useReceiptFrontiers } from "@/features/chats/hooks/useReceiptFrontiers";
 import { useComposerDraft } from "@/features/chats/hooks/useComposerDraft";
@@ -286,14 +287,7 @@ export default function ChatRoomScreen() {
       ? (serverSearchData?.pages.flatMap((page) => page.items) ?? [])
       : [];
 
-    const uniqueMessages = new Map(
-      [...historyMessages, ...searchMessages].map((message) => [
-        message.id,
-        message,
-      ]),
-    );
-
-    return mergePendingMessages(Array.from(uniqueMessages.values()), pendingMessages).sort(
+    return mergePendingMessages(mergeSearchWithHistory(historyMessages, searchMessages, query), pendingMessages).sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );

@@ -1,28 +1,20 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { markConversationAsRead } from "@/features/chats/api/chatApi";
 
 export const useMarkConversationAsRead = (conversationId: string) => {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useSessionMutation({
     mutationFn: () => markConversationAsRead(conversationId),
 
     onSuccess: async () => {
-      // Refresh the conversation list to update unread badges.
-      await queryClient.invalidateQueries({
-        queryKey: ["conversations"],
-      });
-
-      // Refresh this conversation's metadata.
-      await queryClient.invalidateQueries({
-        queryKey: ["conversation", conversationId],
-      });
-
-      // Refresh participant receipt frontiers.
-      await queryClient.invalidateQueries({
-        queryKey: ["receipts", conversationId],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["conversations"] }),
+        queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] }),
+        queryClient.invalidateQueries({ queryKey: ["receipts", conversationId] }),
+      ]);
     },
   });
 };

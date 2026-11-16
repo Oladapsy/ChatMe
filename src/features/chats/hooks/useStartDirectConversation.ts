@@ -1,10 +1,11 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 import { startDirectConversation } from "@/features/chats/api/chatApi";
 
 export function useStartDirectConversation() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useSessionMutation({
     mutationFn: startDirectConversation,
 
     onSuccess: async () => {

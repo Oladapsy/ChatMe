@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   pinConversation,
   unpinConversation,
@@ -7,7 +8,7 @@ import {
 export const useConversationPin = () => {
   const queryClient = useQueryClient();
 
-  const pinMutation = useMutation({
+  const pinMutation = useSessionMutation({
     mutationFn: pinConversation,
     onSuccess: () => {
       for (const key of ["favorites", "archived-conversations", "conversation", "group-details"]) void queryClient.invalidateQueries({ queryKey: [key] });
@@ -17,7 +18,7 @@ export const useConversationPin = () => {
     },
   });
 
-  const unpinMutation = useMutation({
+  const unpinMutation = useSessionMutation({
     mutationFn: unpinConversation,
     onSuccess: () => {
       for (const key of ["favorites", "archived-conversations", "conversation", "group-details"]) void queryClient.invalidateQueries({ queryKey: [key] });

@@ -11,7 +11,7 @@ export function findMatchingMessageIndices(
   }
 
   return messages.reduce<number[]>((matches, item, index) => {
-    if (item.type === "message" && item.text?.toLowerCase().includes(query)) {
+    if (item.type === "message" && !item.deletedAt && item.text?.toLowerCase().includes(query)) {
       matches.push(index);
     }
 

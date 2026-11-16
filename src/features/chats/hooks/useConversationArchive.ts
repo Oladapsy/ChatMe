@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   archiveConversation,
   unarchiveConversation,
@@ -7,7 +8,7 @@ import {
 export const useConversationArchive = () => {
   const queryClient = useQueryClient();
 
-  const archiveMutation = useMutation({
+  const archiveMutation = useSessionMutation({
     mutationFn: archiveConversation,
 
     onSuccess: () => {
@@ -22,7 +23,7 @@ export const useConversationArchive = () => {
     },
   });
 
-  const unarchiveMutation = useMutation({
+  const unarchiveMutation = useSessionMutation({
     mutationFn: unarchiveConversation,
 
     onSuccess: () => {

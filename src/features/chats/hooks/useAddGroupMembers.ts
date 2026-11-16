@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 import { addGroupMembers, AddGroupMembersPayload } from "../api/chatApi";
 
 interface AddGroupMembersVariables {
@@ -9,7 +10,7 @@ interface AddGroupMembersVariables {
 export function useAddGroupMembers() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useSessionMutation({
     mutationFn: ({ conversationId, payload }: AddGroupMembersVariables) =>
       addGroupMembers(conversationId, payload),
 

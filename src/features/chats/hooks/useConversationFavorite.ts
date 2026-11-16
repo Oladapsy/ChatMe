@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   favoriteConversation,
   unfavoriteConversation,
@@ -7,7 +8,7 @@ import {
 export const useConversationFavorite = () => {
   const queryClient = useQueryClient();
 
-  const favoriteMutation = useMutation({
+  const favoriteMutation = useSessionMutation({
     mutationFn: favoriteConversation,
 
     onSuccess: () => {
@@ -17,7 +18,7 @@ export const useConversationFavorite = () => {
     },
   });
 
-  const unfavoriteMutation = useMutation({
+  const unfavoriteMutation = useSessionMutation({
     mutationFn: unfavoriteConversation,
 
     onSuccess: () => {

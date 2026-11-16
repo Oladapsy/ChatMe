@@ -10,7 +10,10 @@ export async function recoverMessages(
   const cursors = new Set<string>();
   do {
     const page = await fetchPage(cursor);
-    for (const message of page.items) recovered.set(message.id, message);
+    for (const message of page.items) {
+      const previous = recovered.get(message.id);
+      if (!previous || message.version >= previous.version) recovered.set(message.id, message);
+    }
     if (!page.pageInfo.hasNextPage) break;
     cursor = page.pageInfo.nextCursor ?? undefined;
     if (!cursor || cursors.has(cursor)) break;

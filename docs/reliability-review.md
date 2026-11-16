@@ -120,3 +120,88 @@ Extend the recording above with these review-specific steps:
    Tap a notification signed out, sign in, unlock PIN, and verify its destination.
    Use VoiceOver/TalkBack for composing, attachments, busy controls, and failure
    recovery. Confirm focus order and spoken labels on actual devices.
+
+## F1–F5 follow-up (2026-11-16)
+
+Run `npm run test:reliability` and `npx tsc --noEmit`. Regression checks extend the
+original 32 checks and execute production modules with mocked I/O. Profile and
+reaction regressions use real TanStack mutation observers. Search checks execute
+the room's actual `useMemo` selector, the production socket recovery handler, and
+the search query function. These checks are client evidence, not live backend or
+device evidence.
+
+Local validation: **52/52 checks pass**, TypeScript passes, and a web static
+export succeeds with a placeholder API origin. The Android development build
+also compiles and installs successfully on the Pixel 9a emulator. Account login
+and the two-account recording remain pending.
+
+- **F1:** Account-owned profile/avatar, chat/group, contact and reaction mutations
+  use `useSessionMutation`. A generation belongs to each mutation execution,
+  including its retries and paused work. Successful responses, optimistic setup,
+  success callbacks and error/rollback callbacks cannot apply to a later session.
+  Stale successes reject rather than invoking the caller's success/navigation
+  callback. Cache removals happen before awaited refetches. Tests release A's
+  successful profile save after logout and after establishing B and verify B's
+  profile, flags and both credentials; stale avatar responses and reaction
+  rollbacks are covered too.
+- **F2:** Active send/upload ownership is held outside screen instances under
+  account, room and session keys. Returning to a room reuses its in-memory outbox
+  objects and active lock instead of restoring them as failed. A process restart
+  still restores persisted interrupted work as retryable. Held text and photo
+  operations are tested across unmount/reopen/retry, followed by both successful
+  and failed responses.
+- **F3:** Search and history merge by newest version; authoritative history wins
+  ties. Completed recovery reconciles every cached search page and removes server
+  removals, deleted items and text that no longer matches. Local edit/delete/
+  reaction responses update both caches. Search queries finishing after a change
+  reconcile against the latest history before returning. Remote events and
+  reconnects invalidate the actual `["messages", "search", conversationId]` keys.
+  Tests include search-only results outside initial history and held search
+  responses finishing after mutations.
+- **F4:** Unfinished transfers renew expired/rejected authorization using the same
+  `clientUploadId` and metadata. Renewal must return the same media ID; a different
+  identity fails visibly. Ready media and completed transfers remain reusable.
+  Tests cover transient failures, expiry after a persisted outbox restart,
+  signature-expiry rejection, completion-only retry and identity mismatch.
+  **Backend confirmation remains required:** the current client uses repeated
+  `POST /v1/media/uploads` as the idempotent renewal flow. The repository contains
+  the client request/response types, but no backend implementation or renewal
+  contract. Confirm that the same ID returns fresh signed fields for the same
+  pending media, or adapt `authorize` in `mediaUpload.ts` to the documented renewal
+  endpoint. Mocked renewal tests do not establish that contract.
+- **F5:** OTP route length is validated before allocating input state. Hooks remain
+  unconditional. The screen and resend handler reject fractional, negative,
+  non-finite, missing, array-valued and oversized lengths; valid lengths 1–10 are
+  retained. Tests render the production OTP screen for malformed and valid links.
+
+### Recording additions and outstanding evidence
+
+Use account A in the iOS development build and account B in an Android development
+build. Sign in on each device without putting OTPs or tokens in test logs. A local
+Android emulator has been prepared for this workflow. Push delivery still needs
+an actual supported device/environment plus the configured Expo project and native
+push credentials described in `push-notifications.md`.
+
+1. Hold A's profile-save response. Log A out; release it and show no restored
+   profile/private state. Repeat, signing B in on the same device before releasing
+   A's response. Verify B's displayed profile and completion state; inspect token
+   ownership privately without recording credentials.
+2. Hold a text-send response, leave and reopen the room, and try Retry. Show one
+   request still in progress. Release it and show one confirmed message on both
+   devices. Repeat during a held photo transfer, then with a rejection followed
+   by a successful explicit retry. Restart the app and verify drafts/outbox IDs
+   survive without copying another account's content.
+3. Keep search open on A. Edit, delete and react from B, including an older result
+   outside A's initially loaded history. Repeat after reconnect. Show deleted or
+   nonmatching text disappearing from matches and updated reactions remaining.
+4. Fail a transfer, let signed authorization expire, terminate/relaunch, and retry.
+   Verify a renewed authorization request retains clientUploadId and media ID,
+   then verify the sent message retains clientMessageId and ready media IDs.
+5. Record create-group success/failure and relaunch/reopen, settings consistency
+   across All/Favourites/Archived/Details, denied permissions, received audio
+   playback, private routes and malformed OTP links, notification routing through
+   login/PIN, and VoiceOver/TalkBack labels/focus as described above.
+
+The final submission still needs the live backend renewal result, two-account
+recording link, device/push/accessibility evidence and final committed SHA. No
+recording or backend verification is implied by passing the local checks.

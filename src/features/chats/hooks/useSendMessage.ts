@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   sendMessage,
   type SendMessagePayload,
@@ -7,7 +8,7 @@ import {
 export const useSendMessage = (conversationId: string) => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation({
+  const mutation = useSessionMutation({
     mutationFn: (payload: SendMessagePayload) =>
       sendMessage(conversationId, payload),
 

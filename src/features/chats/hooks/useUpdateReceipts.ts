@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   markMessagesDelivered,
   markMessagesRead,
@@ -8,7 +9,7 @@ import type { UpdateReceiptPayload } from "@/features/chats/types/message";
 export const useUpdateReceipts = (conversationId: string) => {
   const queryClient = useQueryClient();
 
-  const deliveredMutation = useMutation({
+  const deliveredMutation = useSessionMutation({
     mutationFn: (payload: UpdateReceiptPayload) =>
       markMessagesDelivered(conversationId, payload),
 
@@ -23,7 +24,7 @@ export const useUpdateReceipts = (conversationId: string) => {
     },
   });
 
-  const readMutation = useMutation({
+  const readMutation = useSessionMutation({
     mutationFn: (payload: UpdateReceiptPayload) =>
       markMessagesRead(conversationId, payload),
 

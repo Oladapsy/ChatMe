@@ -1,11 +1,12 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 import { unblockUser } from "@/features/contacts/api/blocksApi";
 import { BLOCKED_USERS_QUERY_KEY } from "@/features/contacts/hooks/useBlockedUsers";
 
 export function useUnblockUser() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useSessionMutation({
     mutationFn: unblockUser,
 
     onSuccess: async () => {

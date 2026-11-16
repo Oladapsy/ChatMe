@@ -1,5 +1,8 @@
+import { applyMessageUpdate, messageSearchKey } from "@/features/chats/utils/reconcileMessageSearch";
+import { getSessionGeneration } from "@/services/authStorage";
+import { SessionChangedError, useSessionMutation } from "@/shared/hooks/useSessionMutation";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { setMessageReaction } from "@/features/chats/api/chatApi";
 import type { MessagesCache } from "@/features/chats/utils/reactionCache";
@@ -16,12 +19,14 @@ export const useSetMessageReaction = (conversationId: string) => {
 
   const queryKey = ["messages", conversationId] as const;
 
-  const mutation = useMutation({
+  const mutation = useSessionMutation({
     mutationFn: ({ messageId, emoji }: SetReactionVariables) =>
       setMessageReaction(conversationId, messageId, { emoji }),
 
     onMutate: async ({ messageId, emoji, userId }) => {
+      const generation = getSessionGeneration();
       await queryClient.cancelQueries({ queryKey });
+      if (generation !== getSessionGeneration()) throw new SessionChangedError();
 
       const previousData =
         queryClient.getQueryData<MessagesCache>(queryKey);
@@ -41,6 +46,10 @@ export const useSetMessageReaction = (conversationId: string) => {
       return { previousData };
     },
 
+    onSuccess: (message) => {
+      applyMessageUpdate(queryClient, conversationId, message);
+    },
+
     onError: (_error, _variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(queryKey, context.previousData);
@@ -49,6 +58,7 @@ export const useSetMessageReaction = (conversationId: string) => {
 
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: messageSearchKey(conversationId) });
     },
   });
 

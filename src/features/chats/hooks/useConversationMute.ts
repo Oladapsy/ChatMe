@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   muteConversation,
   unmuteConversation,
@@ -8,7 +9,7 @@ import {
 export const useConversationMute = () => {
   const queryClient = useQueryClient();
 
-  const muteMutation = useMutation({
+  const muteMutation = useSessionMutation({
     mutationFn: ({
       conversationId,
       duration,
@@ -25,7 +26,7 @@ export const useConversationMute = () => {
     },
   });
 
-  const unmuteMutation = useMutation({
+  const unmuteMutation = useSessionMutation({
     mutationFn: unmuteConversation,
 
     onSuccess: () => {

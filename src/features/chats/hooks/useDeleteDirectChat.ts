@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSessionMutation } from "@/shared/hooks/useSessionMutation";
+import { useQueryClient } from "@tanstack/react-query";
 import { deleteDirectChatForMe } from "../api/conversationsApi";
 
 // Replace this import with the actual location of your API function.
@@ -6,11 +7,16 @@ import { deleteDirectChatForMe } from "../api/conversationsApi";
 export function useDeleteDirectChat() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useSessionMutation({
     mutationFn: (conversationId: string) =>
       deleteDirectChatForMe(conversationId),
 
     onSuccess: async (_result, conversationId) => {
+      queryClient.removeQueries({
+        queryKey: ["conversation", conversationId],
+        exact: true,
+      });
+
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["conversations"],
@@ -23,10 +29,7 @@ export function useDeleteDirectChat() {
         }),
       ]);
 
-      queryClient.removeQueries({
-        queryKey: ["conversation", conversationId],
-        exact: true,
-      });
+
     },
   });
 }

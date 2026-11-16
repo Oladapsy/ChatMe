@@ -25,6 +25,7 @@ import { useVerifyOtp } from "@/features/auth/hooks/useVerifyOtp";
 // storage
 
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
+import { parseOtpLength } from "@/features/auth/utils/otpLength";
 
 
 
@@ -36,7 +37,7 @@ export default function OtpVerificationScreen() {
     challengeId?: string;
     resendInSeconds?: string;
   }>();
-  const [codeLength, setCodeLength] = useState(Number(params.codeLength) || 0);
+  const [codeLength, setCodeLength] = useState(() => parseOtpLength(params.codeLength));
   const phone = params.phone || "unknown number";
   const [currentChallengeId, setCurrentChallengeId] = useState(
     params.challengeId,
@@ -48,7 +49,7 @@ export default function OtpVerificationScreen() {
   const { themeColors } = useAppTheme();
 
 
-  const [otp, setOtp] = useState<string[]>(Array(codeLength).fill(""));
+  const [otp, setOtp] = useState<string[]>(() => Array(codeLength).fill(""));
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number>(0);
   const [timer, setTimer] = useState(Number(params.resendInSeconds ?? 0));
@@ -108,12 +109,15 @@ export default function OtpVerificationScreen() {
       },
       {
         onSuccess: (data) => {
-
-
+          const nextLength = parseOtpLength(data.codeLength);
+          if (!nextLength) {
+            setVerificationError("The new verification code was invalid. Please request another code.");
+            return;
+          }
           setCurrentChallengeId(data.challengeId);
           setTimer(data.resendInSeconds);
-          setCodeLength(data.codeLength);
-          setOtp(Array(data.codeLength).fill(""));
+          setCodeLength(nextLength);
+          setOtp(Array(nextLength).fill(""));
           inputRefs.current[0]?.focus();
         },
         onError: (error) => {
