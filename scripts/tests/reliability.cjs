@@ -549,24 +549,38 @@ test('F3: recovery reconciles search-only edits, deletions, reactions and server
 });
 
 function uploadHarness({create,transfer,complete,generation=()=>1,now=()=>Date.now()}) {
+  let uuid=0;
   return load('src/services/mediaUpload.ts',{
-    '@/services/authStorage':{getSessionGeneration:generation},'expo-crypto':{randomUUID:()=> 'stable-upload'},
+    '@/services/authStorage':{getSessionGeneration:generation},'expo-crypto':{randomUUID:()=>++uuid===1?'stable-upload':`fresh-upload-${uuid}`},
     '@/services/mediaApi':{createMediaUpload:create,completeMediaUpload:complete??(async id=>({id,status:'ready'}))},
     '@/services/cloudinary':{uploadToCloudinary:transfer},
   },{Date:class extends Date {static now(){return now();}}}).uploadMedia;
 }
 const uploadAuthorization=(expiresAt,signature='signature')=>({media:{id:'media',status:'pending'},upload:{url:'https://upload.test',expiresAt:new Date(expiresAt).toISOString(),fields:{signature}}});
-test('F4: expired authorization is renewed with stable upload/message IDs after persisted outbox restart',async()=>{
+const mediaUploadExpired = () => ({response:{status:410,data:{error:{code:'MEDIA_UPLOAD_EXPIRED'}}}});
+test('F4: expired pending attempt is replaced after restart while the message ID and submitted payload remain stable',async()=>{
   let now=Date.now(),creates=[],transfers=0,sends=[];
-  const upload=uploadHarness({now:()=>now,create:async payload=>{creates.push({...payload});return uploadAuthorization(now+1000,`signature-${creates.length}`);},transfer:async()=>{if(++transfers===1)throw Error('temporary failure');}});
-  const options={generation:()=>1,saved:new Map(),upload:async(uri,clientUploadId,progress)=>(await upload({uri,clientUploadId,progress,purpose:'message_attachment',contentType:'image/png',sizeBytes:10,originalFilename:'image.png'})).id,send:async(_,payload)=>{sends.push({...payload});}};
+  const upload=uploadHarness({now:()=>now,create:async payload=>{
+    creates.push({...payload});
+    if(creates.length===2)throw mediaUploadExpired();
+    const authorization=uploadAuthorization(now+1000,`signature-${creates.length}`);
+    if(creates.length===3)authorization.media.id='fresh-media';
+    return authorization;
+  },transfer:async()=>{if(++transfers===1)throw Error('temporary failure');}});
+  const options={generation:()=>1,saved:new Map(),upload:async(uri,clientUploadId,progress,onProgress)=>(await upload({uri,clientUploadId,progress,onProgress,purpose:'message_attachment',contentType:'image/png',sizeBytes:10,originalFilename:'image.png'})).id,send:async(_,payload)=>{sends.push(JSON.stringify(payload));if(sends.length===1)throw Error('message response lost');}};
   let app=deliveryHarness(options);app.render();await settle();await app.render().submit('original',['image']);await settle();
   assert.equal(app.render().failedCount,1);const original=app.render().pendingMessages[0].clientMessageId;
   assert.equal(creates.length,1);now+=2000;
   app=deliveryHarness(options);app.render();await settle();assert.equal(app.render().failedCount,1);
-  assert.equal(await app.render().retry(original),true);
-  assert.equal(creates.length,2);assert.equal(creates[0].clientUploadId,creates[1].clientUploadId);assert.equal(transfers,2);
-  assert.equal(sends.length,1);assert.equal(sends[0].clientMessageId,original);assert.equal(sends[0].attachmentMediaIds[0],'media');
+  assert.equal(await app.render().retry(original),false);await settle();
+  assert.equal(creates.length,3);assert.equal(creates[0].clientUploadId,creates[1].clientUploadId);assert.notEqual(creates[1].clientUploadId,creates[2].clientUploadId);assert.equal(transfers,2);
+  const operation=JSON.parse([...options.saved.values()][0])[0];
+  assert.equal(operation.attachments[0].uploadId,creates[0].clientUploadId);
+  assert.equal(operation.attachments[0].progress.clientUploadId,creates[2].clientUploadId);
+  assert.equal(operation.attachments[0].progress.originalClientUploadId,creates[0].clientUploadId);
+  now+=2000;app=deliveryHarness(options);app.render();await settle();assert.equal(await app.render().retry(original),true);
+  assert.equal(creates.length,3);assert.equal(transfers,2);assert.equal(sends.length,2);assert.equal(sends[0],sends[1]);
+  const payload=JSON.parse(sends[0]);assert.equal(payload.clientMessageId,original);assert.equal(payload.attachmentMediaIds[0],'fresh-media');
 });
 test('F4: unexpired authorization survives a transient failure without another creation request',async()=>{
   let creates=0,transfers=0;const now=Date.now();
@@ -574,11 +588,11 @@ test('F4: unexpired authorization survives a transient failure without another c
   const params={uri:'file',progress:{}};await assert.rejects(upload(params),/offline/);await upload(params);
   assert.equal(creates,1);assert.equal(transfers,2);assert.equal(params.progress.clientUploadId,'stable-upload');
 });
-test('F4: expired signature rejection renews once and ready media skips all transfers',async()=>{
+test('F4: rejected signing fields start a fresh attempt and ready media skips all transfers',async()=>{
   let creates=0,transfers=0,completed=0;const now=Date.now();
-  const upload=uploadHarness({create:async()=>{creates++;return uploadAuthorization(now+60000,`signature-${creates}`);},transfer:async()=>{if(++transfers===1)throw Error('Invalid Signature: timestamp expired');},complete:async id=>{completed++;return {id,status:'ready'};}});
+  const upload=uploadHarness({create:async payload=>{creates++;const auth=uploadAuthorization(now+60000,payload.clientUploadId==='stable-upload'?'original-signature':'fresh-signature');if(payload.clientUploadId!=='stable-upload')auth.media.id='fresh-media';return auth;},transfer:async()=>{if(++transfers===1)throw Error('Invalid Signature: timestamp expired');},complete:async id=>{completed++;return {id,status:'ready'};}});
   const params={uri:'file',progress:{}};await upload(params);await upload(params);
-  assert.equal(creates,2);assert.equal(transfers,2);assert.equal(completed,1);
+  assert.equal(creates,3);assert.equal(transfers,2);assert.equal(completed,1);
 });
 test('F4: completion retry after expiry preserves the completed transfer',async()=>{
   let now=Date.now(),creates=0,transfers=0,completes=0;
@@ -586,7 +600,7 @@ test('F4: completion retry after expiry preserves the completed transfer',async(
   const params={uri:'file',progress:{}};await assert.rejects(upload(params),/completion offline/);now+=2000;await upload(params);
   assert.equal(creates,1);assert.equal(transfers,1);assert.equal(completes,2);
 });
-test('F4: renewal rejects a changed media identity instead of silently duplicating the upload',async()=>{
+test('F4: replay rejects a changed media identity for the same attempt',async()=>{
   let now=Date.now(),creates=0,transfers=0;
   const upload=uploadHarness({now:()=>now,create:async()=>{const response=uploadAuthorization(now+1000);if(++creates===2)response.media.id='different';return response;},transfer:async()=>{transfers++;throw Error('offline');}});
   const params={uri:'file',progress:{}};await assert.rejects(upload(params),/offline/);now+=2000;
@@ -860,4 +874,50 @@ test('R1: an older successful response cannot discard ownership of a later pendi
   assert.equal(app.client.getQueryData(key).pages[0].items[0].reactions[0].emoji,'two');
   responses[1].reject(Error('offline'));await rejected;
   assert.equal(app.client.getQueryData(key).pages[0].items[0].reactions[0].emoji,'base');assert.equal(app.client.getQueryData(key).pages[0].items[0].version,3);app.client.clear();
+});
+
+test('backend contract: a lost fresh-attempt authorization response replays the persisted new ID after restart',async()=>{
+  const calls=[];let durable,transfers=0;
+  const params={uri:'voice.m4a',clientUploadId:'original-upload',purpose:'message_attachment',contentType:'audio/mp4',sizeBytes:10,originalFilename:'voice.m4a',progress:{clientUploadId:'original-upload'}};
+  const upload=uploadHarness({create:async payload=>{calls.push({...payload});if(payload.clientUploadId==='original-upload')throw mediaUploadExpired();throw Error('fresh response lost');},transfer:async()=>{transfers++;}});
+  params.onProgress=async()=>{durable=JSON.parse(JSON.stringify(params.progress));};
+  await assert.rejects(upload(params),/fresh response lost/);
+  const replacement=durable.clientUploadId;assert.notEqual(replacement,'original-upload');assert.equal(durable.originalClientUploadId,'original-upload');assert.equal(durable.authorization,undefined);assert.equal(transfers,0);
+  const restored={...params,progress:JSON.parse(JSON.stringify(durable))};
+  restored.onProgress=async()=>{durable=JSON.parse(JSON.stringify(restored.progress));};
+  const restarted=uploadHarness({create:async payload=>{calls.push({...payload});const result=uploadAuthorization(Date.now()+60000,'fresh-fields');result.media.id='fresh-media';return result;},transfer:async()=>{transfers++;}});
+  const media=await restarted(restored);
+  assert.equal(media.id,'fresh-media');assert.equal(calls.length,3);assert.equal(calls[1].clientUploadId,replacement);assert.equal(calls[2].clientUploadId,replacement);assert.equal(transfers,1);
+  for(const payload of calls)assert.deepEqual({...payload,clientUploadId:'ignored'},{clientUploadId:'ignored',purpose:'message_attachment',contentType:'audio/mp4',sizeBytes:10,originalFilename:'voice.m4a'});
+  assert.equal(durable.authorization.media.status,'ready');
+});
+test('backend contract: expired cached authorization replays a ready asset without a new upload attempt',async()=>{
+  let creates=0,transfers=0,completions=0;
+  const authorization=uploadAuthorization(Date.now()-1000);
+  const upload=uploadHarness({create:async payload=>{creates++;assert.equal(payload.clientUploadId,'original-upload');return {media:{id:'media',status:'ready'},upload:null};},transfer:async()=>{transfers++;},complete:async()=>{completions++;}});
+  const progress={clientUploadId:'original-upload',authorization};
+  const result=await upload({uri:'file',clientUploadId:'original-upload',progress});
+  assert.equal(result.id,'media');assert.equal(creates,1);assert.equal(transfers,0);assert.equal(completions,0);assert.equal(progress.clientUploadId,'original-upload');assert.equal(progress.authorization.upload,null);
+});
+test('backend contract: only the explicit 410 expiry code replaces an upload attempt',async()=>{
+  for(const [status,code] of [[410,'OTHER_ERROR'],[403,'MEDIA_UPLOAD_EXPIRED'],[409,'MEDIA_UPLOAD_EXPIRED'],[503,'MEDIA_UPLOAD_EXPIRED']]) {
+    const failure={response:{status,data:{error:{code}}}};let creates=0,transfers=0;
+    const upload=uploadHarness({create:async()=>{creates++;throw failure;},transfer:async()=>{transfers++;}});
+    const progress={clientUploadId:'original-upload'};
+    await assert.rejects(upload({uri:'file',clientUploadId:'original-upload',progress}),error=>error===failure);
+    assert.equal(progress.clientUploadId,'original-upload');assert.equal(creates,1);assert.equal(transfers,0);
+  }
+});
+test('backend contract: repeated expiry cannot loop through unlimited new attempts in one retry',async()=>{
+  const calls=[];const upload=uploadHarness({create:async payload=>{calls.push(payload.clientUploadId);throw mediaUploadExpired();},transfer:async()=>assert.fail('must not transfer expired authorization')});
+  const params={uri:'file',clientUploadId:'original-upload',progress:{}};
+  for(let attempt=0;attempt<2;attempt++)await assert.rejects(upload(params),error=>error.response.status===410);
+  assert.equal(calls.length,4);assert.equal(calls[0],'original-upload');assert.equal(calls[1],calls[2]);assert.notEqual(calls[2],calls[3]);assert.equal(params.progress.originalClientUploadId,'original-upload');
+});
+test('backend contract: session switch while saving a replacement attempt prevents its authorization request',async()=>{
+  let generation=1,creates=0;const save=deferred();
+  const progress={clientUploadId:'original-upload'};
+  const upload=uploadHarness({generation:()=>generation,create:async()=>{creates++;throw mediaUploadExpired();},transfer:async()=>assert.fail('wrong session')});
+  const pending=upload({uri:'file',clientUploadId:'original-upload',progress,onProgress:async()=>{if(progress.clientUploadId!=='original-upload')await save.promise;}});
+  const rejected=assert.rejects(pending,/Account changed/);await settle();assert.equal(creates,1);generation=2;save.resolve();await rejected;assert.equal(creates,1);
 });

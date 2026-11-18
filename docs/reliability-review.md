@@ -45,7 +45,7 @@ log access tokens, refresh tokens, signed upload fields, or private message text
 Composer text/images and queued operations now persist in AsyncStorage under account
 and conversation IDs. Attachment files are copied into the app document directory
 so cache eviction does not invalidate retries. Queue entries are saved before
-sending; clientMessageId, clientUploadId, original payload, completed media IDs,
+sending; clientMessageId, the current upload-attempt ID, original payload, completed media IDs,
 and upload progress are reused after restart. A restored operation is bound to
 the current session only after loading the same authenticated account. Nothing
 from another account is loaded into that account's composer or outbox.
@@ -158,17 +158,14 @@ and the two-account recording remain pending.
   reconnects invalidate the actual `["messages", "search", conversationId]` keys.
   Tests include search-only results outside initial history and held search
   responses finishing after mutations.
-- **F4:** Unfinished transfers renew expired/rejected authorization using the same
-  `clientUploadId` and metadata. Renewal must return the same media ID; a different
-  identity fails visibly. Ready media and completed transfers remain reusable.
-  Tests cover transient failures, expiry after a persisted outbox restart,
-  signature-expiry rejection, completion-only retry and identity mismatch.
-  **Backend confirmation remains required:** the current client uses repeated
-  `POST /v1/media/uploads` as the idempotent renewal flow. The repository contains
-  the client request/response types, but no backend implementation or renewal
-  contract. Confirm that the same ID returns fresh signed fields for the same
-  pending media, or adapt `authorize` in `mediaUpload.ts` to the documented renewal
-  endpoint. Mocked renewal tests do not establish that contract.
+- **F4:** Upload attempts follow the instructor-confirmed contract documented
+  below. Replay before expiry reuses the current ID and signing fields; an
+  expired pending attempt returns `410 MEDIA_UPLOAD_EXPIRED` and requires a new
+  `clientUploadId` and media ID. The logical attachment retains its original ID;
+  the current attempt is checkpointed before requesting authorization. Ready
+  media and known completed transfers are reused. Message retries retain the
+  original clientMessageId and submitted payload. Contract confirmation is now
+  available; live backend/device verification is still pending.
 - **F5:** OTP route length is validated before allocating input state. Hooks remain
   unconditional. The screen and resend handler reject fractional, negative,
   non-finite, missing, array-valued and oversized lengths; valid lengths 1–10 are
@@ -195,8 +192,10 @@ push credentials described in `push-notifications.md`.
    outside A's initially loaded history. Repeat after reconnect. Show deleted or
    nonmatching text disappearing from matches and updated reactions remaining.
 4. Fail a transfer, let signed authorization expire, terminate/relaunch, and retry.
-   Verify a renewed authorization request retains clientUploadId and media ID,
-   then verify the sent message retains clientMessageId and ready media IDs.
+   Verify replay of the expired attempt returns 410, then a fresh clientUploadId
+   obtains a new media ID. Verify its attempt ID is durable before authorization
+   and the submitted message retains clientMessageId and identical ready-media
+   attachment IDs on every message retry.
 5. Record create-group success/failure and relaunch/reopen, settings consistency
    across All/Favourites/Archived/Details, denied permissions, received audio
    playback, private routes and malformed OTP links, notification routing through
@@ -226,7 +225,7 @@ The GitHub workflow runs the same commands on pull requests and pushes to `dev`.
 A local verification does not claim that GitHub Actions has run.
 
 Validated in an isolated copy after a fresh locked installation with Node
-22.23.3: the full verification command exits successfully, **73/73 tests pass**,
+22.23.3: the full verification command exits successfully, **78/78 tests pass**,
 TypeScript passes, and all three exports pass. Lint reports **0 errors and 98
 warnings**. Local output is saved under ignored `artifacts/verification/`;
 the committed command reproduces it without requiring those generated files.
@@ -263,7 +262,7 @@ an automatic bootstrap because `npm run lint` invokes the locked ESLint directly
   prevents the next network stage. A restart during held completion can retry
   completion without another byte transfer.
 
-The suite contains **73 checks**, including 21 R1–R3 scenarios. As a negative
+The suite contains **78 checks**, including 21 R1–R3 scenarios. As a negative
 control, the new scenarios were also run against the previous reviewed production
 modules: 19 fail there, while the two held-authorization restart controls already
 pass. All must pass with the fixes. The restart tests capture serialized outbox
@@ -279,12 +278,9 @@ still reports pending media when the client restarts.
 
 ### Remaining acceptance gates
 
-1. Ask the instructor to confirm repeated `POST /v1/media/uploads` with the same
-   `clientUploadId` returns fresh signed fields/`expiresAt` for the same pending
-   media ID, or provide the separate renewal endpoint contract. Also confirm
-   repeated `POST /v1/media/uploads/{mediaId}/complete` is idempotent and repeated
-   message submission with the same `clientMessageId` returns one message.
-   No live renewal verification is claimed by the mocked suite.
+1. The instructor has confirmed the upload/message contract below. Verify it
+   against the live API and record the results; mocked tests establish client
+   behavior, not observed server behavior. No separate renewal endpoint exists.
 2. Add the three scenarios to the existing two-account recording: reject set and
    remove reaction requests after remote edit/deletion/new arrival; replay or
    reconnect after an old created event; force-stop/relaunch during authorization,
@@ -298,3 +294,46 @@ still reports pending media when the client restarts.
    native credential configuration remains an external prerequisite.
 4. Submit the final full commit SHA, verification output, backend confirmation
    and recording link. No device or backend acceptance is implied by local checks.
+
+
+## Instructor-confirmed upload and message contract (2026-11-18)
+
+This replaces the earlier assumption that an expired upload could renew signing
+fields under its original clientUploadId/media ID. Confirmation was supplied by
+the instructor through the project owner; no live backend probe is claimed here.
+
+- Repeating `POST /v1/media/uploads` with the same clientUploadId and metadata
+  before expiry returns the same pending media ID, original signing timestamp
+  and expiresAt. If already ready, replay returns that media with upload: null.
+- An expired pending attempt returns **410 MEDIA_UPLOAD_EXPIRED**. Create a new
+  attempt using a fresh clientUploadId and the same file metadata. Use the new
+  media.id, signed fields and upload.expiresAt returned by the **201** response.
+  There is no separate renewal endpoint.
+- `POST /v1/media/uploads/{mediaId}/complete` is idempotent once ready: repeat
+  completion returns **200** with the existing media. When transfer succeeded
+  and a completion response was lost, retry completion alone.
+- Message replay by the same sender with the same clientMessageId and original
+  payload returns **200** and the original message ID. Changing content,
+  attachments, reply target or conversation under that ID returns **409
+  MESSAGE_IDEMPOTENCY_CONFLICT**.
+
+The client stores originalClientUploadId as the logical attachment identity and
+clientUploadId as its current authorization attempt. A new attempt ID is saved
+before its POST, so loss of that response or termination replays the new attempt
+rather than allocating another ID. Same-attempt media identity is still checked;
+new media identity is accepted only after starting a fresh attempt. Authorization
+replay first checks whether the old media became ready. Non-expiry HTTP errors
+cannot silently allocate a new attempt. At most one replacement occurs in one
+retry invocation.
+
+A provider's explicit expired-signature rejection also makes its signing fields
+unusable. If replay still reports pending with those same fields, the client
+starts one fresh attempt; it does not pretend that replay renewed the fields.
+
+Known completed transfers continue straight to completion with the same media ID,
+even after authorization expiry. Once attachments are ready and a message POST
+starts, their IDs and the rest of that message payload remain unchanged on retry.
+The expiry/outbox regression now includes a lost message response and verifies
+identical message replay after another restart. Five additional contract tests
+cover lost new-attempt responses, old ready-media replay, exact 410 matching,
+bounded replacement, and a session switch while persisting the replacement.

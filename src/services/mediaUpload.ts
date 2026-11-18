@@ -10,7 +10,7 @@ import { uploadToCloudinary } from "@/services/cloudinary";
 import { getSessionGeneration } from "@/services/authStorage";
 import * as Crypto from "expo-crypto";
 
-export type UploadProgress = { generation?: number; clientUploadId?: string; authorization?: CreateMediaUploadResponse; authorizationRejected?: boolean; uploaded?: boolean };
+export type UploadProgress = { generation?: number; originalClientUploadId?: string; clientUploadId?: string; authorization?: CreateMediaUploadResponse; authorizationRejected?: boolean; uploaded?: boolean };
 export type UploadCheckpoint = () => Promise<void>;
 
 type UploadMediaParams = {
@@ -43,8 +43,10 @@ export async function uploadMedia({
     checkSession();
   };
   checkSession();
-  if (progress.clientUploadId && clientUploadId && progress.clientUploadId !== clientUploadId) throw new Error("Upload identity changed");
-  progress.clientUploadId ??= clientUploadId ?? Crypto.randomUUID();
+  const originalId = progress.originalClientUploadId ?? progress.clientUploadId ?? clientUploadId ?? Crypto.randomUUID();
+  if (clientUploadId && originalId !== clientUploadId) throw new Error("Upload identity changed");
+  progress.originalClientUploadId = originalId;
+  progress.clientUploadId ??= originalId;
   await checkpoint();
   const expired = (authorization: CreateMediaUploadResponse) => {
     const expiresAt = Date.parse(authorization.upload?.expiresAt ?? "");
@@ -54,24 +56,56 @@ export async function uploadMedia({
     const message = error instanceof Error ? error.message : String(error);
     return /(expired|stale).*(signature|timestamp|authorization)|(signature|timestamp|authorization).*expir/i.test(message);
   };
-  const authorize = async () => {
-    const previousMediaId = progress.authorization?.media.id;
-    // Repeat the idempotent creation request with the original upload ID.
-    // The backend must renew pending authorization for this same media record.
-    const response = await createMediaUpload({
-      clientUploadId: progress.clientUploadId!, purpose, contentType, sizeBytes, originalFilename,
-    }, generation);
+  const expiredAttempt = (error: unknown) => {
+    const response = (error as { response?: { status?: number; data?: { code?: string; error?: { code?: string } } } })?.response;
+    return response?.status === 410 && (response.data?.error?.code ?? response.data?.code) === "MEDIA_UPLOAD_EXPIRED";
+  };
+  let replacedAttempt = false;
+  const startNewAttempt = async () => {
     checkSession();
-    if (previousMediaId && response.media.id !== previousMediaId) throw new Error("Upload renewal returned a different media record. Please retry later.");
+    if (replacedAttempt) throw new Error("Upload authorization expired again. Please retry.");
+    // The backend cannot renew an expired pending record. The logical attachment
+    // keeps its original ID, while this new upload attempt owns a new media ID.
+    progress.clientUploadId = Crypto.randomUUID();
+    progress.authorization = undefined;
+    progress.authorizationRejected = false;
+    progress.uploaded = false;
+    replacedAttempt = true;
+    // Persist the attempt ID before POST: a lost response must replay this ID.
+    await checkpoint();
+  };
+  const requestAuthorization = () => createMediaUpload({
+    clientUploadId: progress.clientUploadId!, purpose, contentType, sizeBytes, originalFilename,
+  }, generation);
+  const authorize = async (replaceRejected = false) => {
+    let response: CreateMediaUploadResponse;
+    try {
+      // Replay first: an already-ready original asset must still be reused.
+      response = await requestAuthorization();
+    } catch (error) {
+      checkSession();
+      if (!expiredAttempt(error)) throw error;
+      await startNewAttempt();
+      response = await requestAuthorization();
+    }
+    checkSession();
+    const previousMediaId = progress.authorization?.media.id;
+    if (previousMediaId && response.media.id !== previousMediaId) throw new Error("Upload replay returned a different media record for the same attempt. Please retry later.");
+    if (replaceRejected && response.media.status !== "ready" && !replacedAttempt) {
+      // A pre-expiry replay returns the same signing fields. A signature already
+      // rejected by the provider therefore needs a fresh attempt too.
+      await startNewAttempt();
+      response = await requestAuthorization();
+      checkSession();
+    }
     progress.authorization = response;
     progress.authorizationRejected = false;
-    // Persist the authorized identity before transferring any bytes.
     await checkpoint();
     return response;
   };
   let response = progress.authorization;
   if (response?.media.status === "ready") return response.media;
-  if (!response || (!progress.uploaded && (progress.authorizationRejected || expired(response)))) response = await authorize();
+  if (!response || (!progress.uploaded && (progress.authorizationRejected || expired(response)))) response = await authorize(!!progress.authorizationRejected);
 
   if (response.media.status === "ready") return response.media;
 
@@ -87,9 +121,10 @@ export async function uploadMedia({
       checkSession();
       if (!rejectedAuthorization(error)) throw error;
       progress.authorizationRejected = true;
-      response = await authorize();
+      await checkpoint();
+      response = await authorize(true);
       if (response.media.status === "ready") return response.media;
-      // Only one renewal/transfer per attempt; repeated failures remain retryable.
+      // Replace at most one attempt per invocation; further failures stay retryable.
       try { await transfer(response); }
       catch (retryError) {
         if (expired(response) || rejectedAuthorization(retryError)) progress.authorizationRejected = true;
