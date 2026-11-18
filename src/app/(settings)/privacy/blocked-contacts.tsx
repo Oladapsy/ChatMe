@@ -100,7 +100,7 @@ export default function BlockedContactsScreen() {
           ) : isError ? (
             <View style={styles.center}>
               <Typography size={14} color={themeColors.textSecondary}>
-                Couldn't load blocked contacts.
+                Couldn&apos;t load blocked contacts.
               </Typography>
 
               <Typography
@@ -147,7 +147,7 @@ export default function BlockedContactsScreen() {
             color={isDark ? themeColors.descText : "#8EA3B3"}
             style={styles.footerNote}
           >
-            Blocked contacts can't send messages and call you.
+            Blocked contacts can&apos;t send messages and call you.
           </Typography>
         </ScrollView>
       </MySafeAreaView>

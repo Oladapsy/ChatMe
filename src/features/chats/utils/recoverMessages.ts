@@ -1,4 +1,5 @@
 import type { Message, MessageHistoryResponse } from "@/features/chats/types/message";
+import { newestMessage } from "@/features/chats/utils/messageReconciliation";
 
 // Refresh all history: a known ID does not imply older edits or deletions are current.
 export async function recoverMessages(
@@ -12,7 +13,7 @@ export async function recoverMessages(
     const page = await fetchPage(cursor);
     for (const message of page.items) {
       const previous = recovered.get(message.id);
-      if (!previous || message.version >= previous.version) recovered.set(message.id, message);
+      recovered.set(message.id, previous ? newestMessage(previous, message) : message);
     }
     if (!page.pageInfo.hasNextPage) break;
     cursor = page.pageInfo.nextCursor ?? undefined;

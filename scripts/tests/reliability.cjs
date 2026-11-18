@@ -1,3 +1,4 @@
+const { Buffer } = require('node:buffer');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -6,7 +7,7 @@ const ts = require('typescript');
 function load(path, mocks, globals = {}) {
   const exports = {};
   const js = ts.transpileModule(fs.readFileSync(path, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
-  vm.runInNewContext(js, { exports, require: name => { if (!(name in mocks)) throw Error(name); return mocks[name]; }, process, console, setTimeout, clearTimeout, ...globals });
+  vm.runInNewContext(js, { exports, require: name => { if (name === '@/features/chats/utils/messageReconciliation') return load('src/features/chats/utils/messageReconciliation.ts', {}); if (!(name in mocks)) throw Error(name); return mocks[name]; }, process, console, setTimeout, clearTimeout, ...globals });
   return exports;
 }
 const deferred = () => { let resolve, reject; const promise = new Promise((a,b) => { resolve=a; reject=b; }); return {promise,resolve,reject}; };
@@ -58,7 +59,7 @@ function hooks() {
   };
   return {react,render:fn=>{index=0;const value=fn();effects.splice(0).forEach(({i,fn})=>{cleanups.get(i)?.();cleanups.set(i,fn());});return value;},unmount:()=>{cleanups.forEach(fn=>fn?.());cleanups.clear();state=[];effects=[];}};
 }
-function deliveryHarness({saved=new Map(),send=async()=>{},upload=async()=> 'media-1',generation=()=>0}={}) {
+function deliveryHarness({saved=new Map(),send=async()=>{},upload=async()=> 'media-1',mediaModule,generation=()=>0}={}) {
   const h=hooks(); let ids=0;
   const cache=new Map();
   const queryClient={getQueryData:key=>key[0]==='me'?{id:'account-A'}:cache.get(JSON.stringify(key)),setQueryData:(key,update)=>{const value=typeof update==='function'?update(cache.get(JSON.stringify(key))):update;cache.set(JSON.stringify(key),value);},invalidateQueries:async()=>{}};
@@ -70,7 +71,7 @@ function deliveryHarness({saved=new Map(),send=async()=>{},upload=async()=> 'med
     '@tanstack/react-query':{useQueryClient:()=>queryClient},
     '@/services/authStorage':{getSessionGeneration:generation},
     '@/features/chats/api/chatApi':{sendMessage:send},
-    '@/features/chats/utils/uploadChatMedia':{uploadChatImage:upload}
+    '@/features/chats/utils/uploadChatMedia':mediaModule??{uploadChatImage:upload,uploadChatAudio:upload}
   });
   return {render:()=>h.render(()=>module.useMessageDelivery('conversation')),remount:()=>h.unmount(),saved,cache};
 }
@@ -681,15 +682,182 @@ test('F3: a search response started before a mutation cannot restore an older se
   const reconciliation=load('src/features/chats/utils/reconcileMessageSearch.ts',{});
   for(const changes of [{text:'no match'},{deletedAt:'now'},{reactions:[{userId:'B',emoji:'heart'}]}]) {
     const client=new QueryClient({defaultOptions:{queries:{gcTime:Infinity}}}),response=deferred();
-    const {useSearchMessages}=load('src/features/chats/hooks/useSearchMessages.ts',{
+    const {useSearchMessages: searchOptions}=load('src/features/chats/hooks/useSearchMessages.ts',{
       '@tanstack/react-query':{useInfiniteQuery:options=>options,useQueryClient:()=>client},
       '@/features/chats/api/chatApi':{searchMessages:()=>response.promise},
       '@/features/chats/utils/reconcileMessageSearch':reconciliation,
     });
     client.setQueryData(['messages','room'],{pages:[{items:[message('baseline')]}],pageParams:[undefined]});
-    const pending=useSearchMessages('room','needle').queryFn({pageParam:undefined});
+    const pending=searchOptions('room','needle').queryFn({pageParam:undefined});
     reconciliation.applyMessageUpdate(client,'room',message('target',{...changes,version:2}));
     response.resolve({items:[message('target')],pageInfo:{hasNextPage:false}});const page=await pending;
     assert.equal(page.items.length,changes.reactions?1:0);if(page.items.length)assert.equal(page.items[0].version,2);client.clear();
   }
+});
+
+for (const action of ['set','remove']) {
+  for (const remote of ['none','edit','delete']) {
+    test(`R1: rejected ${action} reaction preserves ${remote}, confirmed work and pagination without refetch`,async()=>{
+      const auth=storage();await auth.saveSession(session('A'));const response=deferred();
+      const reactionCache=load('src/features/chats/utils/reactionCache.ts',{});
+      const initial=message('target',{reactions:[{userId:'A',emoji:'base'},{userId:'B',emoji:'old'}]});
+      const other=message('other');
+      const app=ownedMutationHarness(auth,{'@/features/chats/api/chatApi':{
+        setMessageReaction:async(_,id)=>id==='target'?response.promise:message('other',{version:2,reactions:[{userId:'A',emoji:'confirmed'}]}),
+        removeMessageReaction:()=>response.promise,
+      },'@/features/chats/utils/reactionCache':reactionCache});
+      const key=['messages','room'];const pages=[{items:[initial],pageInfo:{hasNextPage:true,nextCursor:'next'}},{items:[other,message('edited'),message('deleted')],pageInfo:{hasNextPage:false,nextCursor:null}}];
+      app.client.setQueryData(key,{pages,pageParams:[undefined,'next']});
+      // No active history fetch can repair a destructive rollback in this test.
+      const mutation=app.hook(`src/features/chats/hooks/use${action==='set'?'Set':'Remove'}MessageReaction.ts`)[`use${action==='set'?'Set':'Remove'}MessageReaction`]('room');
+      const pending=mutation[action==='set'?'setReaction':'removeReaction']({messageId:'target',userId:'A',emoji:'optimistic'});
+      const rejected=assert.rejects(pending,/rejected/);await settle();
+      const reconciliation=load('src/features/chats/utils/reconcileMessageSearch.ts',{});
+      reconciliation.applyMessageUpdate(app.client,'room',message('incoming'));
+      reconciliation.applyMessageUpdate(app.client,'room',message('edited',{version:2,text:'new confirmed text'}));
+      reconciliation.applyMessageUpdate(app.client,'room',message('deleted',{version:2,deletedAt:'now'}));
+      const second=app.hook('src/features/chats/hooks/useSetMessageReaction.ts').useSetMessageReaction('room');
+      await second.setReaction({messageId:'other',userId:'A',emoji:'confirmed'});
+      if(remote!=='none') reconciliation.applyMessageUpdate(app.client,'room',message('target',{
+        version:2,text:'remote text',deletedAt:remote==='delete'?'now':null,
+        reactions:[{userId:'A',emoji:'server'},{userId:'B',emoji:'remote'}],
+      }));
+      else app.client.setQueryData(key,data=>reactionCache.updateCachedMessage(data,'target',item=>({...item,reactions:[...item.reactions.filter(r=>r.userId!=='B'),{userId:'B',emoji:'new'}]})));
+      response.reject(Error('rejected'));await rejected;
+      const history=app.client.getQueryData(key),items=history.pages.flatMap(page=>page.items),target=items.find(item=>item.id==='target');
+      assert.equal(items.find(item=>item.id==='incoming').version,1);
+      assert.equal(items.find(item=>item.id==='edited').text,'new confirmed text');
+      assert.equal(items.find(item=>item.id==='deleted').deletedAt,'now');
+      assert.equal(items.find(item=>item.id==='other').reactions[0].emoji,'confirmed');
+      assert.equal(target.reactions.find(r=>r.userId==='A').emoji,remote==='none'?'base':'server');
+      assert.equal(target.reactions.find(r=>r.userId==='B').emoji,remote==='none'?'new':'remote');
+      assert.equal(target.version,remote==='none'?1:2);assert.equal(target.deletedAt,remote==='delete'?'now':null);
+      assert.deepEqual(history.pageParams,[undefined,'next']);assert.equal(history.pages[0].pageInfo.nextCursor,'next');app.client.clear();
+    });
+  }
+}
+test('R1: overlapping same-user failures undo only their own layers in either rejection order',async()=>{
+  for(const order of [[0,1],[1,0]]) {
+    const auth=storage();await auth.saveSession(session('A'));const responses=[deferred(),deferred()];
+    const app=ownedMutationHarness(auth,{'@/features/chats/api/chatApi':{setMessageReaction:(_,__,payload)=>responses[payload.emoji==='one'?0:1].promise},'@/features/chats/utils/reactionCache':load('src/features/chats/utils/reactionCache.ts',{})});
+    const key=['messages','room'];app.client.setQueryData(key,{pages:[{items:[message('target',{reactions:[{userId:'A',emoji:'base'}]})]}],pageParams:[undefined]});
+    const first=app.hook('src/features/chats/hooks/useSetMessageReaction.ts').useSetMessageReaction('room');
+    const second=app.hook('src/features/chats/hooks/useSetMessageReaction.ts').useSetMessageReaction('room');
+    const rejected=[];
+    rejected.push(assert.rejects(first.setReaction({messageId:'target',userId:'A',emoji:'one'}),/offline/));await settle();
+    rejected.push(assert.rejects(second.setReaction({messageId:'target',userId:'A',emoji:'two'}),/offline/));await settle();
+    for(const index of order){responses[index].reject(Error('offline'));await rejected[index];}
+    assert.equal(app.client.getQueryData(key).pages[0].items[0].reactions[0].emoji,'base');app.client.clear();
+  }
+});
+
+function roomSocketHarness(initial,searchItems=[]) {
+  const {QueryClient}=require('@tanstack/react-query');
+  const h=hooks(),handlers=new Map();let server=initial.pages.flatMap(page=>page.items);
+  const client=new QueryClient({defaultOptions:{queries:{gcTime:Infinity}}});
+  const key=['messages','room'],searchKey=['messages','search','room','needle'];
+  client.setQueryData(key,initial);client.setQueryData(searchKey,{pages:[{items:searchItems}],pageParams:[undefined]});
+  const socket={connected:true,on:(event,fn)=>handlers.set(event,fn),off:()=>{},onAny:()=>{},offAny:()=>{},removeAllListeners:()=>{},disconnect:()=>{},emit:()=>{},volatile:{emit:()=>{}}};
+  const {useChatSocket}=load('src/features/chats/hooks/useChatSocket.ts',{
+    react:h.react,'react-native':{AppState:{currentState:'active',addEventListener:()=>({remove:()=>{}})}},
+    '@/services/authStorage':{getSessionGeneration:()=>1},
+    '@/features/chats/services/socketRecovery':{installSocketRecovery:()=>({start:()=>{},stop:()=>{},dispose:()=>{}})},
+    '@/features/chats/services/chatSocket':{createChatSocket:()=>socket},
+    '@/features/chats/api/chatApi':{getMessages:async()=>({items:server,pageInfo:{hasNextPage:false,nextCursor:null}})},
+    '@/features/chats/utils/recoverMessages':load('src/features/chats/utils/recoverMessages.ts',{}),
+    '@/features/chats/utils/reconcileMessageSearch':load('src/features/chats/utils/reconcileMessageSearch.ts',{}),
+    '@tanstack/react-query':{useQueryClient:()=>client},
+  });
+  h.render(()=>useChatSocket('room','A'));
+  return {client,event:item=>handlers.get('message.created')(item),history:()=>client.getQueryData(key),search:()=>client.getQueryData(searchKey).pages.flatMap(page=>page.items),recover:async items=>{server=items;handlers.get('connect')();await settle();},dispose:()=>{h.unmount();client.clear();}};
+}
+for(const deleted of [false,true]) {
+  test(`R2: old created replay cannot downgrade a version-3 ${deleted?'deletion':'edit'} with search open`,async()=>{
+    const current=message('target',{version:3,text:'needle edited',deletedAt:deleted?'now':null});
+    const app=roomSocketHarness({pages:[{items:[current],pageInfo:{hasNextPage:true,nextCursor:'next'}},{items:[message('alias',{clientMessageId:'target'}),message('other',{senderId:'other',clientMessageId:'target'})],pageInfo:{hasNextPage:false,nextCursor:null}}],pageParams:[undefined,'next']},[message('target')]);
+    for(let i=0;i<2;i++)app.event(message('target'));
+    let history=app.history(),items=history.pages.flatMap(page=>page.items),target=items.find(item=>item.id==='target');
+    assert.equal(items.length,2);assert.equal(target.version,3);assert.equal(target.text,'needle edited');assert.equal(target.deletedAt,deleted?'now':null);
+    assert.equal(app.search().length,deleted?0:1);if(!deleted)assert.equal(app.search()[0].version,3);
+    assert.deepEqual(history.pageParams,[undefined,'next']);assert.equal(history.pages[0].pageInfo.nextCursor,'next');
+    app.event(message('target',{version:4,text:'needle newer',deletedAt:deleted?'later':null}));
+    target=app.history().pages.flatMap(page=>page.items).find(item=>item.id==='target');assert.equal(target.version,4);assert.equal(target.text,'needle newer');
+    app.dispose();
+  });
+}
+test('R2: REST recovery and subsequent duplicate created events obey the same version rule',async()=>{
+  const app=roomSocketHarness({pages:[{items:[message('target')],pageInfo:{hasNextPage:false,nextCursor:null}}],pageParams:[undefined]},[message('target')]);
+  await app.recover([message('target',{version:3,deletedAt:'now'})]);app.event(message('target'));app.event({message:message('target')});
+  assert.equal(app.history().pages[0].items.length,1);assert.equal(app.history().pages[0].items[0].version,3);assert.equal(app.history().pages[0].items[0].deletedAt,'now');assert.equal(app.search().length,0);
+  app.event(message('different',{clientMessageId:''}));app.event(message('another',{clientMessageId:''}));assert.equal(app.history().pages[0].items.length,3);app.dispose();
+});
+
+function durableMediaModule({phase,counts,gate,generation=()=>0}) {
+  const now=Date.now();
+  const media={id:'media',status:'pending'};
+  const {uploadMedia}=load('src/services/mediaUpload.ts',{
+    '@/services/authStorage':{getSessionGeneration:generation},'expo-crypto':{randomUUID:()=>assert.fail('the outbox must supply stable upload identity')},
+    '@/services/mediaApi':{
+      createMediaUpload:async payload=>{counts.authorizations.push(payload.clientUploadId);if(phase==='authorization')return gate.promise;return {...uploadAuthorization(now+600000),media};},
+      completeMediaUpload:async id=>{counts.completions.push(id);if(phase==='completion')return gate.promise;return {id,status:'ready'};},
+    },
+    '@/services/cloudinary':{uploadToCloudinary:async()=>{counts.transfers++;if(phase==='transfer')await gate.promise;}},
+  });
+  class File {constructor(uri){this.exists=true;this.size=10;this.name=uri.endsWith('.m4a')?'voice.m4a':'photo.png';this.extension=uri.endsWith('.m4a')?'.m4a':'.png';}}
+  return load('src/features/chats/utils/uploadChatMedia.ts',{'expo-file-system':{File},'@/services/mediaUpload':{uploadMedia}});
+}
+for(const kind of ['photo','voice']) {
+  for(const phase of ['authorization','transfer','completion','message']) {
+    test(`R3: ${kind} abrupt termination during held ${phase} resumes only unfinished stages from persisted bytes`,async()=>{
+      const saved=new Map(),gate=deferred(),counts={authorizations:[],transfers:0,completions:[],messages:[]};
+      const send=async(_,payload)=>{counts.messages.push(JSON.parse(JSON.stringify(payload)));if(phase==='message')return gate.promise;};
+      const original=deliveryHarness({saved,send,mediaModule:durableMediaModule({phase,counts,gate})});
+      original.render();await settle();
+      // This execution is intentionally never released, matching a terminated process.
+      void original.render().submit('stable message',kind==='photo'?['photo.png']:[],undefined,kind==='voice'?{uri:'voice.m4a',duration:4}:undefined);
+      await settle();const snapshot=new Map(saved);
+      const operation=JSON.parse([...snapshot.values()][0])[0],attachment=operation.attachments[0];
+      assert.ok(operation.payload.clientMessageId);assert.ok(attachment.uploadId);
+      if(phase!=='authorization')assert.equal(attachment.progress.authorization.media.id,'media');
+      if(phase==='completion'||phase==='message')assert.equal(attachment.progress.uploaded,true);
+      if(phase==='message'){assert.equal(attachment.progress.authorization.media.status,'ready');assert.equal(attachment.mediaId,'media');assert.equal(operation.payload.attachmentMediaIds[0],'media');}
+      const restarted=deliveryHarness({saved:snapshot,send:async(_,payload)=>{counts.messages.push(JSON.parse(JSON.stringify(payload)));},mediaModule:durableMediaModule({phase:'done',counts,gate:deferred()})});
+      restarted.render();await settle();assert.equal(restarted.render().failedCount,1);
+      assert.equal(await restarted.render().retry(operation.payload.clientMessageId),true);await settle();
+      assert.equal(counts.authorizations.length,phase==='authorization'?2:1);
+      assert.ok(counts.authorizations.every(id=>id===attachment.uploadId));
+      assert.equal(counts.transfers,phase==='transfer'?2:1);
+      assert.equal(counts.completions.length,phase==='completion'?2:1);
+      assert.equal(counts.messages.length,phase==='message'?2:1);
+      assert.ok(counts.messages.every(payload=>payload.clientMessageId===operation.payload.clientMessageId&&payload.attachmentMediaIds[0]==='media'));
+      assert.equal(restarted.render().pendingMessages.length,0);
+    });
+  }
+}
+test('R3: successful-transfer checkpoint is awaited before completion and failed persistence stops the request',async()=>{
+  const checkpoint=deferred();let completions=0,transfers=0,stored;
+  const upload=uploadHarness({create:async()=>uploadAuthorization(Date.now()+60000),transfer:async()=>{transfers++;},complete:async id=>{completions++;return {id,status:'ready'};},generation:()=>0});
+  const progress={};const pending=upload({uri:'file',progress,onProgress:async()=>{if(progress.uploaded){await checkpoint.promise;}stored=JSON.parse(JSON.stringify(progress));}});
+  const rejected=assert.rejects(pending,/storage unavailable/);await settle();assert.equal(transfers,1);assert.equal(completions,0);assert.equal(stored.authorization.media.id,'media');assert.equal(stored.uploaded,undefined);
+  checkpoint.reject(Error('storage unavailable'));await rejected;assert.equal(completions,0);
+});
+test('R3: account switch during an authorization checkpoint stops transfer and completion',async()=>{
+  const checkpoint=deferred();let generation=0,transfers=0,completions=0;
+  const upload=uploadHarness({create:async()=>uploadAuthorization(Date.now()+60000),transfer:async()=>{transfers++;},complete:async()=>{completions++;},generation:()=>generation});
+  const progress={};const pending=upload({uri:'file',progress,onProgress:async()=>{if(progress.authorization)await checkpoint.promise;}});
+  const rejected=assert.rejects(pending,/Account changed/);await settle();generation++;checkpoint.resolve();await rejected;assert.equal(transfers,0);assert.equal(completions,0);
+});
+
+test('R1: an older successful response cannot discard ownership of a later pending reaction',async()=>{
+  const auth=storage();await auth.saveSession(session('A'));const responses=[deferred(),deferred()];
+  const app=ownedMutationHarness(auth,{'@/features/chats/api/chatApi':{setMessageReaction:(_,__,payload)=>responses[payload.emoji==='one'?0:1].promise},'@/features/chats/utils/reactionCache':load('src/features/chats/utils/reactionCache.ts',{})});
+  const key=['messages','room'];app.client.setQueryData(key,{pages:[{items:[message('target',{version:3,reactions:[{userId:'A',emoji:'base'}]})]}],pageParams:[undefined]});
+  const first=app.hook('src/features/chats/hooks/useSetMessageReaction.ts').useSetMessageReaction('room');
+  const second=app.hook('src/features/chats/hooks/useSetMessageReaction.ts').useSetMessageReaction('room');
+  const pending=first.setReaction({messageId:'target',userId:'A',emoji:'one'});await settle();
+  const rejected=assert.rejects(second.setReaction({messageId:'target',userId:'A',emoji:'two'}),/offline/);await settle();
+  responses[0].resolve(message('target',{version:2,reactions:[{userId:'A',emoji:'one'}]}));await pending;
+  assert.equal(app.client.getQueryData(key).pages[0].items[0].reactions[0].emoji,'two');
+  responses[1].reject(Error('offline'));await rejected;
+  assert.equal(app.client.getQueryData(key).pages[0].items[0].reactions[0].emoji,'base');assert.equal(app.client.getQueryData(key).pages[0].items[0].version,3);app.client.clear();
 });

@@ -11,9 +11,11 @@ import { getSessionGeneration } from "@/services/authStorage";
 import * as Crypto from "expo-crypto";
 
 export type UploadProgress = { generation?: number; clientUploadId?: string; authorization?: CreateMediaUploadResponse; authorizationRejected?: boolean; uploaded?: boolean };
+export type UploadCheckpoint = () => Promise<void>;
 
 type UploadMediaParams = {
   progress?: UploadProgress;
+  onProgress?: UploadCheckpoint;
   clientUploadId?: string;
   uri: string;
   purpose: MediaPurpose;
@@ -24,6 +26,7 @@ type UploadMediaParams = {
 
 export async function uploadMedia({
   progress = {},
+  onProgress,
   clientUploadId,
   uri,
   purpose,
@@ -34,9 +37,15 @@ export async function uploadMedia({
   const generation = progress.generation ?? getSessionGeneration();
   progress.generation = generation;
   const checkSession = () => { if (generation !== getSessionGeneration()) throw new Error("Account changed. Start this upload again in the original account."); };
+  const checkpoint = async () => {
+    checkSession();
+    await onProgress?.();
+    checkSession();
+  };
   checkSession();
   if (progress.clientUploadId && clientUploadId && progress.clientUploadId !== clientUploadId) throw new Error("Upload identity changed");
   progress.clientUploadId ??= clientUploadId ?? Crypto.randomUUID();
+  await checkpoint();
   const expired = (authorization: CreateMediaUploadResponse) => {
     const expiresAt = Date.parse(authorization.upload?.expiresAt ?? "");
     return !Number.isFinite(expiresAt) || expiresAt <= Date.now();
@@ -56,6 +65,8 @@ export async function uploadMedia({
     if (previousMediaId && response.media.id !== previousMediaId) throw new Error("Upload renewal returned a different media record. Please retry later.");
     progress.authorization = response;
     progress.authorizationRejected = false;
+    // Persist the authorized identity before transferring any bytes.
+    await checkpoint();
     return response;
   };
   let response = progress.authorization;
@@ -89,8 +100,12 @@ export async function uploadMedia({
 
   checkSession();
   progress.uploaded = true;
+  // A fresh process can now retry completion without repeating the transfer.
+  // Await this even on a retry: a previous checkpoint may have failed to write.
+  await checkpoint();
   const media = await completeMediaUpload(response.media.id, generation);
   checkSession();
   if (media.status === "ready") progress.authorization = { media, upload: null };
+  await checkpoint();
   return media;
 }

@@ -1,3 +1,4 @@
+import { reconcileMessageHistory } from "@/features/chats/utils/messageReconciliation";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AppState } from "react-native";
@@ -5,7 +6,7 @@ import { getSessionGeneration } from "@/services/authStorage";
 import { installSocketRecovery } from "@/features/chats/services/socketRecovery";
 import { getMessages } from "@/features/chats/api/chatApi";
 import { recoverMessages } from "@/features/chats/utils/recoverMessages";
-import { messageSearchKey, reconcileMessageSearch } from "@/features/chats/utils/reconcileMessageSearch";
+import { applyMessageUpdate, messageSearchKey, reconcileMessageSearch } from "@/features/chats/utils/reconcileMessageSearch";
 import {
   useQueryClient,
   type InfiniteData,
@@ -93,15 +94,13 @@ export function useChatSocket(conversationId: string, userId?: string) {
           if (disposed || generation !== getSessionGeneration()) return;
           await queryClient.cancelQueries({ queryKey: messageSearchKey(conversationId) });
           if (disposed || generation !== getSessionGeneration()) return;
-          queryClient.setQueryData<InfiniteData<MessageHistoryResponse>>(key, latest => {
-            if (!latest) return latest;
-            const updates = new Map(missed.map(message => [message.id, message]));
-            const existing = new Set(latest.pages.flatMap(page => page.items.map(message => message.id)));
-            return { ...latest, pages: latest.pages.map((page, index) => ({
-              ...page,
-              items: [...(index === 0 ? missed.filter(message => !existing.has(message.id)) : []), ...page.items.filter(message => updates.has(message.id) || !known.has(message.id)).map(message => { const update = updates.get(message.id); return update && update.version >= message.version ? update : message; })],
-            })) };
-          });
+          const recoveredIds = new Set(missed.map(message => message.id));
+          const removed = new Map<string, number>();
+          current?.pages.forEach(page => page.items.forEach(message => {
+            if (!recoveredIds.has(message.id)) removed.set(message.id, Math.max(removed.get(message.id) ?? 0, message.version));
+          }));
+          queryClient.setQueryData<InfiniteData<MessageHistoryResponse>>(key, latest =>
+            reconcileMessageHistory(latest, missed, removed));
           reconcileMessageSearch(queryClient, conversationId, missed, true);
           void queryClient.invalidateQueries({ queryKey: ["conversations"] });
         }
@@ -146,46 +145,8 @@ export function useChatSocket(conversationId: string, userId?: string) {
       const incomingMessage = extractMessage(event);
 
       if (!incomingMessage?.conversationId) return;
-      reconcileMessageSearch(queryClient, incomingMessage.conversationId, [incomingMessage]);
+      applyMessageUpdate(queryClient, incomingMessage.conversationId, incomingMessage);
       stopRemoteTyping(incomingMessage.senderId);
-
-      queryClient.setQueryData<
-        InfiniteData<MessageHistoryResponse>
-      >(
-        ["messages", incomingMessage.conversationId],
-        (current) => {
-          // If history has not loaded, let the normal query fetch it.
-          if (!current || current.pages.length === 0) {
-            return current;
-          }
-
-          // Check every cached page to prevent duplicate messages.
-          const alreadyExists = current.pages.some((page) =>
-            page.items.some(
-              (message) =>
-                message.id === incomingMessage.id ||
-                (message.senderId === incomingMessage.senderId && message.clientMessageId &&
-                  message.clientMessageId ===
-                    incomingMessage.clientMessageId),
-            ),
-          );
-
-          if (alreadyExists) return { ...current, pages: current.pages.map(page => ({ ...page, items: page.items.map(message => message.id === incomingMessage.id || (message.senderId === incomingMessage.senderId && message.clientMessageId === incomingMessage.clientMessageId) ? { ...message, ...incomingMessage } : message) })) };
-
-          // Add the newest message to the first page.
-          return {
-            ...current,
-            pages: current.pages.map((page, index) =>
-              index === 0
-                ? {
-                    ...page,
-                    items: [incomingMessage, ...page.items],
-                  }
-                : page,
-            ),
-          };
-        },
-      );
 
       // Refresh conversation previews and unread counts.
       void queryClient.invalidateQueries({

@@ -205,3 +205,96 @@ push credentials described in `push-notifications.md`.
 The final submission still needs the live backend renewal result, two-account
 recording link, device/push/accessibility evidence and final committed SHA. No
 recording or backend verification is implied by passing the local checks.
+
+## R1–R3 follow-up (2026-11-18)
+
+### Reproduce verification
+
+Use Node **22.23.3**, the version selected by `.github/workflows/verify.yml`:
+
+```sh
+npm ci --ignore-scripts --no-audit --no-fund
+npm run verify
+```
+
+`verify` runs the locked ESLint configuration, TypeScript, all reliability tests,
+and Android/iOS/web exports in sequence. A failure stops the workflow. Exports
+always use `https://api.example.invalid`, require no backend credentials, and go
+to ignored `artifacts/verification/<platform>` directories. These are bundle/
+static-render checks, not native builds, backend checks or device recordings.
+The GitHub workflow runs the same commands on pull requests and pushes to `dev`.
+A local verification does not claim that GitHub Actions has run.
+
+Validated in an isolated copy after a fresh locked installation with Node
+22.23.3: the full verification command exits successfully, **73/73 tests pass**,
+TypeScript passes, and all three exports pass. Lint reports **0 errors and 98
+warnings**. Local output is saved under ignored `artifacts/verification/`;
+the committed command reproduces it without requiring those generated files.
+
+The ESLint configuration extends Expo's SDK-57 configuration and enforces core
+correctness and hook-ordering rules as errors. Existing compiler migration
+issues (`set-state-in-effect`, `refs`, `preserve-manual-memoization`) are explicitly
+reported as warnings, alongside the preset's existing unused-variable/style
+warnings. Warnings remain visible; lint success does not mean zero warnings or
+completion of a compiler migration. Missing lint dependencies no longer trigger
+an automatic bootstrap because `npm run lint` invokes the locked ESLint directly.
+
+### Changes and regression scope
+
+- **R1:** Reaction rollback records only the affected user's optimistic layer.
+  Removing a failed layer patches current reactions without restoring a history
+  snapshot. Newer confirmed message versions/tombstones remain authoritative;
+  unrelated reactions, arrivals, page metadata and cursors remain intact. Layers
+  for overlapping operations are independent, including out-of-order failures
+  and an older successful response arriving while another reaction is pending.
+  Tests use real TanStack mutation observers with no active repairing refetch.
+- **R2:** Socket events, REST recovery and local authoritative responses use the
+  shared `newestMessage`/`reconcileMessageHistory` rule. Older events cannot
+  downgrade an edit or clear a deletion tombstone. Matching server IDs and
+  nonempty sender/client IDs are deduplicated across all cached pages. Search
+  reconciliation receives the version actually retained in history. Adapter
+  tests replay version-1 created events against version-3 edits/deletions, repeat
+  duplicates after recovery, and accept genuinely newer events with search open.
+- **R3:** The operation supplies an awaited progress checkpoint to both image and
+  voice upload helpers. Authorization is saved before transfer; successful
+  transfer is saved before completion; ready media is saved before returning;
+  attachment media IDs and the final payload are saved before message submission.
+  Session ownership is checked before and after each checkpoint. A failed write
+  prevents the next network stage. A restart during held completion can retry
+  completion without another byte transfer.
+
+The suite contains **73 checks**, including 21 R1–R3 scenarios. As a negative
+control, the new scenarios were also run against the previous reviewed production
+modules: 19 fail there, while the two held-authorization restart controls already
+pass. All must pass with the fixes. The restart tests capture serialized outbox
+storage, discard the old held execution, and restore fresh production modules.
+They do not simulate a physical device force-stop.
+
+A request whose response was never received remains uncertain after termination.
+Retrying an unacknowledged authorization, byte transfer or message request can
+repeat that request. The client preserves the original upload/message identity;
+backend idempotency is still required to establish one remote asset/message.
+A known, durably checkpointed successful transfer is reused even if the backend
+still reports pending media when the client restarts.
+
+### Remaining acceptance gates
+
+1. Ask the instructor to confirm repeated `POST /v1/media/uploads` with the same
+   `clientUploadId` returns fresh signed fields/`expiresAt` for the same pending
+   media ID, or provide the separate renewal endpoint contract. Also confirm
+   repeated `POST /v1/media/uploads/{mediaId}/complete` is idempotent and repeated
+   message submission with the same `clientMessageId` returns one message.
+   No live renewal verification is claimed by the mocked suite.
+2. Add the three scenarios to the existing two-account recording: reject set and
+   remove reaction requests after remote edit/deletion/new arrival; replay or
+   reconnect after an old created event; force-stop/relaunch during authorization,
+   transfer, completion and message response for both a photo and a voice note.
+   Show the recipient opening/playing the resulting media and inspect request
+   counts/IDs without exposing credentials or signed fields.
+3. Retain the earlier profile/account-switch, group creation/failure/relaunch,
+   list/detail settings consistency, restarted drafts/outbox, app-icon changes,
+   private/invalid routes, permissions, notification-through-login/PIN, actual
+   push delivery, received audio and VoiceOver/TalkBack evidence. Push project/
+   native credential configuration remains an external prerequisite.
+4. Submit the final full commit SHA, verification output, backend confirmation
+   and recording link. No device or backend acceptance is implied by local checks.

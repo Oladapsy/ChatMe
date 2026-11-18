@@ -61,7 +61,7 @@ export default function UserDetailsRoute() {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Typography size={16}>
-          The selected contact doesn't match this conversation.
+          The selected contact doesn&apos;t match this conversation.
         </Typography>
       </View>
     );

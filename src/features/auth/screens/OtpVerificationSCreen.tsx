@@ -245,7 +245,7 @@ export default function OtpVerificationScreen() {
                 color={themeColors.textSecondary}
                 align="center"
               >
-                If you don't get the code, resend it in{" "}
+                If you don&apos;t get the code, resend it in{" "}
                 <Typography
                   variant="body"
                   size={13}

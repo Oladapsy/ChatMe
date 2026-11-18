@@ -1,5 +1,6 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import type { Message, MessageHistoryResponse } from "@/features/chats/types/message";
+import { newestMessage, reconcileMessageHistory, sameMessage } from "@/features/chats/utils/messageReconciliation";
 
 export const messageSearchKey = (conversationId: string) => ["messages", "search", conversationId] as const;
 
@@ -11,7 +12,7 @@ export function reconcileSearchItems(items: Message[], history: Message[], query
   const latest = new Map(mergeSearchWithHistory(history, [], query).map(message => [message.id, message]));
   return items.flatMap(message => {
     const known = latest.get(message.id);
-    const authoritative = known && known.version >= message.version ? known : message;
+    const authoritative = known ? newestMessage(message, known) : message;
     return matches(authoritative, query) ? [authoritative] : [];
   });
 }
@@ -48,7 +49,7 @@ export function reconcileMessageSearch(
         items: page.items.flatMap(message => {
           const update = updates.get(message.id);
           if (!update && completeHistory) return [];
-          const latest = update && update.version >= message.version ? update : message;
+          const latest = update ? newestMessage(message, update) : message;
           return matches(latest, query) ? [latest] : [];
         }),
       })),
@@ -59,15 +60,9 @@ export function reconcileMessageSearch(
 
 export function applyMessageUpdate(client: QueryClient, conversationId: string, message: Message) {
   client.setQueryData<InfiniteData<MessageHistoryResponse>>(["messages", conversationId], current => {
-    if (!current) return current;
-    const exists = current.pages.some(page => page.items.some(existing => existing.id === message.id));
-    return {
-      ...current,
-      pages: current.pages.map((page, index) => ({ ...page, items: [
-        ...(!exists && index === 0 ? [message] : []),
-        ...page.items.map(existing => existing.id === message.id && message.version >= existing.version ? message : existing),
-      ] })),
-    };
+    return reconcileMessageHistory(current, [message]);
   });
-  reconcileMessageSearch(client, conversationId, [message]);
+  const applied = client.getQueryData<InfiniteData<MessageHistoryResponse>>(["messages", conversationId])
+    ?.pages.flatMap(page => page.items).find(item => sameMessage(item, message)) ?? message;
+  reconcileMessageSearch(client, conversationId, [applied]);
 }

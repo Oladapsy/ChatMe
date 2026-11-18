@@ -5,8 +5,7 @@ import { SessionChangedError, useSessionMutation } from "@/shared/hooks/useSessi
 import { useQueryClient } from "@tanstack/react-query";
 
 import { setMessageReaction } from "@/features/chats/api/chatApi";
-import type { MessagesCache } from "@/features/chats/utils/reactionCache";
-import { updateCachedMessage } from "@/features/chats/utils/reactionCache";
+import { beginReactionPatch, rollbackReactionPatch, confirmReactionPatch } from "@/features/chats/utils/reactionCache";
 
 interface SetReactionVariables {
   messageId: string;
@@ -28,32 +27,16 @@ export const useSetMessageReaction = (conversationId: string) => {
       await queryClient.cancelQueries({ queryKey });
       if (generation !== getSessionGeneration()) throw new SessionChangedError();
 
-      const previousData =
-        queryClient.getQueryData<MessagesCache>(queryKey);
-
-      queryClient.setQueryData<MessagesCache>(queryKey, (oldData) =>
-        updateCachedMessage(oldData, messageId, (message) => ({
-          ...message,
-          reactions: [
-            ...message.reactions.filter(
-              (reaction) => reaction.userId !== userId,
-            ),
-            { userId, emoji },
-          ],
-        })),
-      );
-
-      return { previousData };
+      return beginReactionPatch(queryClient, conversationId, messageId, userId, generation, emoji);
     },
 
-    onSuccess: (message) => {
+    onSuccess: (message, _variables, patch) => {
+      confirmReactionPatch(queryClient, conversationId, patch);
       applyMessageUpdate(queryClient, conversationId, message);
     },
 
-    onError: (_error, _variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(queryKey, context.previousData);
-      }
+    onError: (_error, _variables, patch) => {
+      rollbackReactionPatch(queryClient, conversationId, patch);
     },
 
     onSettled: () => {

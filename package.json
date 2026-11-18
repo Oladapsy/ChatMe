@@ -50,6 +50,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "eslint": "9.39.5",
+    "eslint-config-expo": "57.0.2",
     "react-native-svg-transformer": "^1.5.3",
     "typescript": "~6.0.3"
   },
@@ -59,8 +61,10 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint",
-    "test:reliability": "node --test scripts/tests/reliability.cjs"
+    "lint": "eslint .",
+    "test:reliability": "node --test scripts/tests/reliability.cjs",
+    "typecheck": "tsc --noEmit",
+    "verify": "node scripts/verify.cjs"
   },
   "private": true
 }

@@ -1,8 +1,8 @@
 
 import { File } from "expo-file-system";
-import { uploadMedia, type UploadProgress } from "@/services/mediaUpload";
+import { uploadMedia, type UploadProgress, type UploadCheckpoint } from "@/services/mediaUpload";
 
-export async function uploadChatImage(uri: string, clientUploadId?: string, progress?: UploadProgress): Promise<string> {
+export async function uploadChatImage(uri: string, clientUploadId?: string, progress?: UploadProgress, onProgress?: UploadCheckpoint): Promise<string> {
   const file = new File(uri);
   const extension = file.name.split(".").pop()?.toLowerCase();
 
@@ -15,6 +15,7 @@ export async function uploadChatImage(uri: string, clientUploadId?: string, prog
     uri,
     clientUploadId,
     progress,
+    onProgress,
     purpose: "message_attachment",
     contentType: mimeType,
     sizeBytes: file.size,
@@ -25,12 +26,12 @@ export async function uploadChatImage(uri: string, clientUploadId?: string, prog
 }
 
 
-export async function uploadChatAudio(uri: string, durationSec: number, clientUploadId?: string, progress?: UploadProgress): Promise<string> {
+export async function uploadChatAudio(uri: string, durationSec: number, clientUploadId?: string, progress?: UploadProgress, onProgress?: UploadCheckpoint): Promise<string> {
   const file = new File(uri);
   if (!file.exists || file.size <= 0) throw new Error("Recording is missing or empty");
   const types: Record<string, string> = { m4a: "audio/mp4", mp4: "audio/mp4", aac: "audio/aac", wav: "audio/wav", webm: "audio/webm", caf: "audio/x-caf" };
   const contentType = types[file.extension.replace(".", "").toLowerCase()] || file.type;
   if (!contentType) throw new Error("Unknown recording format");
-  const media = await uploadMedia({ uri, purpose: "message_attachment", contentType, sizeBytes: file.size, originalFilename: file.name, clientUploadId, progress });
+  const media = await uploadMedia({ uri, purpose: "message_attachment", contentType, sizeBytes: file.size, originalFilename: file.name, clientUploadId, progress, onProgress });
   return media.id;
 }

@@ -83,6 +83,11 @@ export function useMessageDelivery(conversationId: string) {
     const checkSession = () => {
       if (operation.generation !== getSessionGeneration()) throw new Error("Session changed");
     };
+    const checkpoint = async () => {
+      checkSession();
+      await updateOutbox(key, items => [...items]);
+      checkSession();
+    };
     try {
       checkSession();
       operation.state = "pending";
@@ -96,15 +101,17 @@ export function useMessageDelivery(conversationId: string) {
       for (const attachment of operation.attachments) {
         if (!attachment.mediaId) {
           attachment.mediaId = attachment.kind === "audio"
-            ? await uploadChatAudio(attachment.uri, attachment.duration ?? 0, attachment.uploadId, attachment.progress)
-            : await uploadChatImage(attachment.uri, attachment.uploadId, attachment.progress);
+            ? await uploadChatAudio(attachment.uri, attachment.duration ?? 0, attachment.uploadId, attachment.progress, checkpoint)
+            : await uploadChatImage(attachment.uri, attachment.uploadId, attachment.progress, checkpoint);
         }
         checkSession();
-        await updateOutbox(key, items => [...items]);
+        await checkpoint();
       }
       if (operation.attachments.length) {
         operation.payload.attachmentMediaIds = operation.attachments.map(item => item.mediaId!);
       }
+      // Save the completed-media payload before starting the message request.
+      await checkpoint();
       const confirmed = await sendMessage(operation.conversationId, operation.payload, operation.generation);
       checkSession();
       if (confirmed?.id) queryClient.setQueryData<InfiniteData<MessageHistoryResponse>>(["messages", conversationId], current => {

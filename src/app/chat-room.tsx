@@ -90,6 +90,7 @@ export default function ChatRoomScreen() {
   const router = useRouter();
   const { isDark, themeColors } = useAppTheme();
   const [isAtLatest, setIsAtLatest] = useState(true);
+  const [attachmentVisible, setAttachmentVisible] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [showMessageActions, setShowMessageActions] = useState(false);
@@ -400,7 +401,6 @@ export default function ChatRoomScreen() {
   activeChatIdRef.current = activeChatId;
 
   const { text: messageText, images: selectedImageUris, setText: setMessageText, setImages: setSelectedImageUris, ready: draftReady } = useComposerDraft(currentUser?.id, activeChatId);
-  const [attachmentVisible, setAttachmentVisible] = useState(false);
 
   const { takePhoto, pickImages } = useCameraHandler();
   const flatListRef = useRef<FlatList>(null);
@@ -1325,7 +1325,7 @@ export default function ChatRoomScreen() {
                 </>
               ) : (
                 <Typography size={14} color={themeColors.textSecondary}>
-                  No messages found for "{normalizedSearchQuery}".
+                  No messages found for &quot;{normalizedSearchQuery}&quot;.
                 </Typography>
               )}
             </View>

@@ -11,21 +11,21 @@ export default function Index() {
   const { themeColors } = useAppTheme();
 
   useEffect(() => {
-    checkOnboarding();
-  }, []);
-
-  const checkOnboarding = async () => {
-    try {
-      const hasSeen = await AsyncStorage.getItem("@has_seen_onboarding");
-      if (!hasSeen) {
-        router.replace("/onboarding");
-      } else {
+    const checkOnboarding = async () => {
+      try {
+        const hasSeen = await AsyncStorage.getItem("@has_seen_onboarding");
+        if (!hasSeen) {
+          router.replace("/onboarding");
+        } else {
+          setLoading(false);
+        }
+      } catch {
         setLoading(false);
       }
-    } catch {
-      setLoading(false);
-    }
-  };
+    };
+
+    void checkOnboarding();
+  }, [router]);
 
   if (loading) {
     return (

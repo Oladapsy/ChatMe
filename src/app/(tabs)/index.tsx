@@ -299,7 +299,7 @@ export default function HomeScreen() {
                       color={themeColors.textSecondary}
                       style={styles.statusText}
                     >
-                      Couldn't search for people. Please try again.
+                      Couldn&apos;t search for people. Please try again.
                     </Typography>
                   )}
 
