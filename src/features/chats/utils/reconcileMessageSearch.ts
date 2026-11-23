@@ -1,6 +1,6 @@
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import type { Message, MessageHistoryResponse } from "@/features/chats/types/message";
-import { newestMessage, reconcileMessageHistory, sameMessage } from "@/features/chats/utils/messageReconciliation";
+import { newestMessage, sameMessage, updateCachedMessageHistory } from "@/features/chats/utils/messageReconciliation";
 
 export const messageSearchKey = (conversationId: string) => ["messages", "search", conversationId] as const;
 
@@ -59,9 +59,7 @@ export function reconcileMessageSearch(
 }
 
 export function applyMessageUpdate(client: QueryClient, conversationId: string, message: Message) {
-  client.setQueryData<InfiniteData<MessageHistoryResponse>>(["messages", conversationId], current => {
-    return reconcileMessageHistory(current, [message]);
-  });
+  updateCachedMessageHistory(client, conversationId, [message]);
   const applied = client.getQueryData<InfiniteData<MessageHistoryResponse>>(["messages", conversationId])
     ?.pages.flatMap(page => page.items).find(item => sameMessage(item, message)) ?? message;
   reconcileMessageSearch(client, conversationId, [applied]);

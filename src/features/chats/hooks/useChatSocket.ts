@@ -1,5 +1,3 @@
-import { reconcileMessageHistory } from "@/features/chats/utils/messageReconciliation";
-
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AppState } from "react-native";
 import { getSessionGeneration } from "@/services/authStorage";
@@ -7,6 +5,7 @@ import { installSocketRecovery } from "@/features/chats/services/socketRecovery"
 import { getMessages } from "@/features/chats/api/chatApi";
 import { recoverMessages } from "@/features/chats/utils/recoverMessages";
 import { applyMessageUpdate, messageSearchKey, reconcileMessageSearch } from "@/features/chats/utils/reconcileMessageSearch";
+import { updateCachedMessageHistory } from "@/features/chats/utils/messageReconciliation";
 import {
   useQueryClient,
   type InfiniteData,
@@ -99,8 +98,7 @@ export function useChatSocket(conversationId: string, userId?: string) {
           current?.pages.forEach(page => page.items.forEach(message => {
             if (!recoveredIds.has(message.id)) removed.set(message.id, Math.max(removed.get(message.id) ?? 0, message.version));
           }));
-          queryClient.setQueryData<InfiniteData<MessageHistoryResponse>>(key, latest =>
-            reconcileMessageHistory(latest, missed, removed));
+          updateCachedMessageHistory(queryClient, conversationId, missed, removed);
           reconcileMessageSearch(queryClient, conversationId, missed, true);
           void queryClient.invalidateQueries({ queryKey: ["conversations"] });
         }

@@ -806,6 +806,122 @@ test('R2: REST recovery and subsequent duplicate created events obey the same ve
   app.event(message('different',{clientMessageId:''}));app.event(message('another',{clientMessageId:''}));assert.equal(app.history().pages[0].items.length,3);app.dispose();
 });
 
+function historyObserver(client, getMessages, options) {
+  const query = require('@tanstack/react-query');
+  const {useMessages: historyOptions} = load('src/features/chats/hooks/useMessages.ts', {
+    '@tanstack/react-query': {...query, useInfiniteQuery: options => options},
+    '@/features/chats/api/chatApi': {getMessages},
+  });
+  return new query.InfiniteQueryObserver(client, {...historyOptions('room'), ...options});
+}
+
+for (const kind of ['edit', 'deletion', 'arrival', 'removal', 'pagination']) {
+  test(`R4: a delayed history fetch preserves a newer ${kind} with search open`, async () => {
+    const target = message('target');
+    const anchor = message('anchor');
+    const omitted = message('omitted');
+    const newer = message('target', {version:3, text:'needle edited', deletedAt:kind==='deletion'?'now':null});
+    const arrival = message('arrival');
+    const firstPage = {items:[anchor, omitted], pageInfo:{hasNextPage:true, nextCursor:'next'}};
+    const secondPage = {items:[target], pageInfo:{hasNextPage:true, nextCursor:'older'}};
+    const app = roomSocketHarness({pages:[firstPage, secondPage], pageParams:[undefined, 'next']}, [target]);
+    const pendingPage = deferred();
+    const requested = deferred();
+    const cursors = [];
+    const observer = historyObserver(app.client, async (_, {cursor}) => {
+      cursors.push(cursor);
+      if (!cursor) return {...firstPage, items:[anchor]};
+      requested.resolve();
+      return pendingPage.promise;
+    });
+    try {
+      const fetching = kind==='pagination' ? observer.fetchNextPage() : observer.refetch();
+      await requested.promise;
+      if (kind==='arrival') app.event(arrival);
+      else if (kind==='removal') await app.recover([anchor, omitted]);
+      else await app.recover([anchor, omitted, newer]);
+      pendingPage.resolve(kind==='pagination' ? {
+        items:[message('alias', {clientMessageId:'target'}), message('older')],
+        pageInfo:{hasNextPage:false, nextCursor:null},
+      } : {...secondPage, items:kind==='arrival' ? [target] : [target, message('alias', {clientMessageId:'target'})]});
+      await fetching;
+
+      const history = app.history();
+      const items = history.pages.flatMap(page => page.items);
+      const expectedParams = kind==='pagination' ? [undefined, 'next', 'older'] : [undefined, 'next'];
+      assert.deepEqual(cursors, kind==='pagination' ? ['older'] : [undefined, 'next']);
+      assert.deepEqual([...history.pageParams], expectedParams);
+      assert.equal(history.pages[0].pageInfo.nextCursor, 'next');
+      assert.equal(items.some(item => item.id==='omitted'), kind==='pagination');
+      assert.equal(items.some(item => item.id==='alias'), false);
+      assert.equal(items.some(item => item.id==='arrival'), kind==='arrival');
+      const confirmed = items.find(item => item.id==='target');
+      const visible = actualRoomSelector(items, app.search()).find(item => item.id==='target');
+      if (kind==='removal') {
+        assert.equal(confirmed, undefined);
+        assert.equal(visible, undefined);
+      } else {
+        assert.equal(confirmed.version, kind==='arrival'?1:3);
+        assert.equal(visible.version, confirmed.version);
+        assert.equal(confirmed.deletedAt, kind==='deletion'?'now':null);
+        assert.equal(visible.deletedAt, confirmed.deletedAt);
+        if (kind!=='arrival') assert.equal(confirmed.text, 'needle edited');
+      }
+      if (kind==='deletion' || kind==='removal') assert.equal(app.search().length, 0);
+      if (kind==='pagination') assert.equal(history.pages[2].items[0].id, 'older');
+    } finally {
+      observer.destroy();
+      app.dispose();
+    }
+  });
+}
+
+test('R4: the first history page preserves an arrival and uses the server cursor', async () => {
+  const app = roomSocketHarness({pages:[], pageParams:[]});
+  app.client.removeQueries({queryKey:['messages', 'room'], exact:true});
+  const pendingPage = deferred();
+  const observer = historyObserver(app.client, () => pendingPage.promise);
+  try {
+    const fetching = observer.refetch();
+    app.event(message('arrival'));
+    pendingPage.resolve({items:[message('anchor')], pageInfo:{hasNextPage:true, nextCursor:'next'}});
+    await fetching;
+    const history = app.history();
+    assert.deepEqual(Array.from(history.pages[0].items, item => item.id), ['arrival', 'anchor']);
+    assert.deepEqual([...history.pageParams], [undefined]);
+    assert.equal(history.pages[0].pageInfo.nextCursor, 'next');
+    assert.equal(observer.getCurrentResult().hasNextPage, true);
+  } finally {
+    observer.destroy();
+    app.dispose();
+  }
+});
+
+test('R4: retrying a later history page still preserves arrivals after the first page', async () => {
+  const firstPage = {items:[message('anchor')], pageInfo:{hasNextPage:true, nextCursor:'next'}};
+  const lastPage = {items:[message('older')], pageInfo:{hasNextPage:false, nextCursor:null}};
+  const app = roomSocketHarness({pages:[firstPage, lastPage], pageParams:[undefined, 'next']});
+  const cursors = [];
+  const observer = historyObserver(app.client, async (_, {cursor}) => {
+    cursors.push(cursor);
+    if (!cursor) return firstPage;
+    if (cursors.length === 2) {
+      app.event(message('arrival'));
+      throw Error('temporary failure');
+    }
+    return lastPage;
+  }, {retry:1, retryDelay:0});
+  try {
+    const result = await observer.refetch();
+    assert.equal(result.isSuccess, true);
+    assert.deepEqual(cursors, [undefined, 'next', 'next']);
+    assert.deepEqual(Array.from(app.history().pages[0].items, item => item.id), ['arrival', 'anchor']);
+  } finally {
+    observer.destroy();
+    app.dispose();
+  }
+});
+
 function durableMediaModule({phase,counts,gate,generation=()=>0}) {
   const now=Date.now();
   const media={id:'media',status:'pending'};
