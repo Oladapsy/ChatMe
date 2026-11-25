@@ -12,6 +12,7 @@ import MicIcon from "@/assets/icons/chat/mic.svg";
 import TrashIcon from "@/assets/icons/chat/trash.svg";
 import { useAppTheme } from "@/shared/hooks/useAppTheme";
 import { stopActiveAudio } from "@/features/chats/utils/audioPlaybackController";
+import { canSendMessage } from "@/features/chats/utils/canSendMessage";
 
 import { File } from "expo-file-system"; // to get the file data for media upload
 
@@ -52,10 +53,7 @@ export function ChatInputBar({
     typeof setInterval
   > | null>(null);
 
-  const canSend =
-    (isEditing
-      ? text.trim().length > 0
-      : text.trim().length > 0 || hasAttachments) && !isSending;
+  const canSend = !isSending && canSendMessage(text, !isEditing && hasAttachments);
 
   const recorderBusy = useRef(false);
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);

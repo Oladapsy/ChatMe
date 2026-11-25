@@ -10,6 +10,7 @@ function run(script, args = [], env = process.env) {
 
 run(path.join(path.dirname(require.resolve('eslint/package.json')), 'bin/eslint.js'), ['.']);
 run(require.resolve('typescript/bin/tsc'), ['--noEmit']);
+run(require.resolve('jest/bin/jest'), ['--ci', '--runInBand']);
 run('--test', ['scripts/tests/reliability.cjs']);
 for (const platform of ['android', 'ios', 'web']) {
   run(require.resolve('expo/bin/cli'), [

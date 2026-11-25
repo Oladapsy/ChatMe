@@ -38,7 +38,6 @@ This command will move the starter code to the **app-example** directory and cre
 ### Other setup steps
 
 - To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
 - Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
 
 ## Learn more
@@ -56,7 +55,21 @@ Join our community of developers creating universal apps.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
 # ChatMe
 
+## Testing
 
+Use Node 22.23.3 (`.nvmrc`) and npm (verified with 10.9.9). Install the locked dependencies with `npm ci --ignore-scripts`. The app uses Expo 57.0.31, React 19.2.3, and React Native 0.86.3. Jest 29 uses the SDK 57 `jest-expo` preset, and React Native Testing Library 14 uses `test-renderer` 1.2.0 for React 19.2.
+
+| Command | What it runs |
+| --- | --- |
+| `npm test` | Jest unit and component tests in `tests/` |
+| `npm test -- ChatInputBar.test.tsx` | The composer interaction suite |
+| `npm run test:watch` | Jest watch mode |
+| `npm run test:coverage` | Jest coverage for app source |
+| `npm run test:ci` | Jest in non-interactive mode |
+| `npm run test:reliability` | Existing session, messaging, and media regression tests |
+| `npm run verify` | ESLint, TypeScript, both test suites, and Android, iOS, and web bundle exports |
+
+Run `npm run verify` before pushing. The GitHub Verify workflow runs the same command on pull requests and pushes to `dev`. The composer tests use the real chat input and safe-area provider with mocked audio and storage. For live backend and device checks, see [the reliability review](docs/reliability-review.md).
 
 ### extras
 On Emulator -> Android to switch from Dark to light Mode

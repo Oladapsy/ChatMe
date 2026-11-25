@@ -2,7 +2,7 @@ const { defineConfig, globalIgnores } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
 
 module.exports = defineConfig([
-  globalIgnores(['node_modules/**', '.expo/**', 'ios/**', 'android/**', 'dist/**', 'web-build/**', 'artifacts/**']),
+  globalIgnores(['node_modules/**', '.expo/**', 'ios/**', 'android/**', 'dist/**', 'web-build/**', 'artifacts/**', 'coverage/**', 'test-output/**']),
   expoConfig,
   {
     // Report compiler migration work without refactoring unrelated screens in

@@ -8,6 +8,8 @@ node_modules/
 dist/
 web-build/
 artifacts/
+coverage/
+test-output/
 expo-env.d.ts
 
 # Native
